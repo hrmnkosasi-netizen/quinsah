@@ -19266,6 +19266,11 @@ let item = {
                         }
                     }
                 }
+
+                // 🌟 TAMBAHKAN VALIDASI SUPPLIER
+                if (!this.formPurchase.supplierId || this.formPurchase.supplierId === '') {
+                    return Swal.fire('Peringatan', 'Silakan pilih Supplier terlebih dahulu!', 'warning');
+                }
                 
                 this.isSaving = true;
                 try {
@@ -19275,8 +19280,8 @@ let item = {
                     }
 
                     // Hitung Grand Total = Subtotal Items + Pajak
-                    let subtotal = this.formPurchase.items.reduce((s, i) => s + (i.qty * i.price), 0);
-                    this.formPurchase.total = subtotal + (this.formPurchase.taxAmount || 0);
+                    let subtotal = Math.round(this.formPurchase.items.reduce((s, i) => s + (i.qty * i.price), 0));
+                    this.formPurchase.total = Math.round(subtotal + (this.formPurchase.taxAmount || 0));
                     this.formPurchase.dateStr = new Date().toLocaleString('id-ID');
                     
                     let dataToSave = JSON.parse(JSON.stringify(this.formPurchase));
@@ -19610,6 +19615,16 @@ let item = {
             async payPurchaseDebt() {
                 if(this.purchasePaymentForm.amount <= 0) return;
                 let po = this.activePurchaseDetail;
+
+                let sisaHutang = po.total - (po.paidAmount || 0);
+                if (this.purchasePaymentForm.amount > sisaHutang) {
+                    Swal.fire({ 
+                        icon: 'warning', 
+                        title: 'Nominal Berlebih', 
+                        text: `Pembayaran tidak boleh melebihi sisa hutang (Sisa: Rp ${sisaHutang.toLocaleString('id-ID')}).` 
+                    });
+                    return;
+                }
                 
                 this.isProcessing = true;
                 try {
