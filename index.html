@@ -19027,12 +19027,19 @@ let item = {
         this.printMode = 'receipt';
         this.hideModal('paymentModal');
 
-        // MUNCULKAN DIALOG PRINT SEKETIKA
+        // 1. CEK PRINTER BLUETOOTH (TABLET / MOBILE)
+        // Jika Bluetooth terhubung, cetak struk dari mesin thermal
+        if (this.printerCharacteristic) {
+            this.printReceiptBluetooth(trxData); 
+        }
+
+        // 2. CEK PRINTER WEB STANDAR (PC / LAPTOP)
+        // Munculkan popup print bawaan browser HANYA JIKA Bluetooth tidak terhubung
         setTimeout(() => {
-            if (typeof this.triggerPrint === 'function') {
+            if (!this.printerCharacteristic && typeof this.triggerPrint === 'function') {
                 this.triggerPrint(trxData, 'receipt');
             }
-        }, 500); 
+        }, 500);
 
         // =================================================================
         // 9. 🌟 RESET SEMUA FORM KASIR KE KONDISI AWAL (TERMASUK ONGKIR)
