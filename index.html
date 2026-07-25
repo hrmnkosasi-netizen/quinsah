@@ -12356,7 +12356,7 @@ async fetchAllRatings() {
         // MODUL PRINTER BLUETOOTH (ESC/POS)
         // ==========================================
             
-            async connectBluetoothPrinter() {
+                    async connectBluetoothPrinter() {
             try {
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
@@ -12377,23 +12377,38 @@ async fetchAllRatings() {
                 const services = await server.getPrimaryServices();
                 let validCharacteristic = null;
 
-                // Loop untuk mencari jalur tulis yang tepat
+                // 🌟 DAFTAR RADAR UUID KHUSUS PRINTER PANDA / XPRINTER
+                const knownWriteUUIDs = [
+                    '00002af1-0000-1000-8000-00805f9b34fb',
+                    'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f',
+                    '49535343-8841-43f4-a8d4-ecbe34729bb3',
+                    '0000ff02-0000-1000-8000-00805f9b34fb'
+                ];
+
                 for (const service of services) {
                     const characteristics = await service.getCharacteristics();
                     for (const characteristic of characteristics) {
                         if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
-                            // Kita simpan, biarkan loop berlanjut untuk mengambil jalur yang TERAKHIR (biasanya SPP Data)
-                            validCharacteristic = characteristic; 
-                            console.log("Ditemukan Jalur Printer:", characteristic.uuid);
+                            // Jika UUID cocok dengan radar, ini PASTI jalur print-nya!
+                            if (knownWriteUUIDs.includes(characteristic.uuid)) {
+                                validCharacteristic = characteristic;
+                                break;
+                            }
+                            // Jika tidak ada di daftar, simpan sementara sbg cadangan
+                            if (!validCharacteristic) {
+                                validCharacteristic = characteristic;
+                            }
                         }
                     }
+                    // Berhenti mencari jika jalur prioritas sudah ketemu
+                    if (validCharacteristic && knownWriteUUIDs.includes(validCharacteristic.uuid)) break;
                 }
 
                 if (validCharacteristic) {
                     this.printerCharacteristic = validCharacteristic;
                     alert(`Berhasil terhubung ke Printer: ${device.name}\nJalur data siap!`);
                 } else {
-                    alert("Printer terhubung, tapi sistem tidak menemukan jalur penulisan data (Characteristic).");
+                    alert("Printer terhubung, tapi jalur penulisan data (Write) tidak ditemukan.");
                 }
             } catch (error) {
                 console.error("Koneksi Printer Gagal:", error);
@@ -12506,25 +12521,26 @@ async fetchAllRatings() {
             let uint8array = encoder.encode(text);
             
             try {
-                let CHUNK_SIZE = 100; // Ukuran diperbesar sedikit agar tidak mudah putus
+                // 🔥 KUNCI UTAMANYA DI SINI: Ubah jadi 20 Bytes! 🔥
+                // BLE bawaan Chrome hanya bisa menelan 20 bytes per paket agar tidak macet
+                let CHUNK_SIZE = 20; 
+                
                 for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
                     let chunk = uint8array.slice(i, i + CHUNK_SIZE);
                     
-                    // Gunakan WriteWithoutResponse jika printer mendukungnya (Sangat cocok untuk Panda PRJ-R80B)
                     if (this.printerCharacteristic.properties.writeWithoutResponse) {
                         await this.printerCharacteristic.writeValueWithoutResponse(chunk);
                     } else {
                         await this.printerCharacteristic.writeValue(chunk);
                     }
                     
-                    // Beri jeda 10 milidetik antar pengiriman agar buffer printer tidak kebanjiran data
-                    await new Promise(resolve => setTimeout(resolve, 10)); 
+                    // 🌟 Beri waktu jeda 20 milidetik per suapan agar printer Panda bisa mencerna
+                    await new Promise(resolve => setTimeout(resolve, 20)); 
                 }
-                console.log("Struk berhasil dikirim ke printer!");
             } catch (err) {
                 console.error("Gagal mengirim teks print:", err);
-                alert("Proses pencetakan terputus. Coba matikan dan nyalakan ulang printer Anda.");
-    }
+                alert("Gagal mencetak: " + err.message);
+            }
     }, 
 
         async testPrint() {
