@@ -2092,6 +2092,7 @@ body.sidebar-open {
         <li class="nav-item"><a class="nav-link" :class="{active: settingTab==='hak_akses', 'bg-primary-custom': settingTab==='hak_akses'}" href="#" @click.prevent="settingTab='hak_akses'">Hak Akses (Role)</a></li>
         <li class="nav-item"><a class="nav-link" :class="{active: settingTab==='users', 'bg-primary-custom': settingTab==='users'}" href="#" @click.prevent="settingTab='users'">Manajemen User</a></li>
         <li class="nav-item"><a class="nav-link" :class="{active: settingTab==='receipt', 'bg-primary-custom': settingTab==='receipt'}" href="#" @click.prevent="settingTab='receipt'"><i class="bi bi-printer me-1"></i>Struk & Cetak</a></li>
+        <li class="nav-item"><a class="nav-link text-nowrap" :class="{active: settingTab==='printer', 'bg-primary-custom': settingTab==='printer'}" href="#" @click.prevent="settingTab='printer'"><i class="bi bi-bluetooth me-1"></i>Hardware Printer</a></li>
     </ul>
 
     <div v-if="settingTab === 'payment_methods'">
@@ -2766,6 +2767,71 @@ body.sidebar-open {
             </div>
          </div>
        </div>
+
+    <!-- ========================================== -->
+    <!-- SUB-MENU BARU: HARDWARE PRINTER BLUETOOTH  -->
+    <!-- ========================================== -->
+    <div v-if="settingTab === 'printer'" class="dashboard-card fade-in">
+        <div class="mb-3">
+            <h6 class="fw-bold mb-1">Pengaturan Hardware Printer</h6>
+            <p class="text-muted small">Hubungkan aplikasi kasir secara langsung ke mesin printer Bluetooth tanpa aplikasi tambahan.</p>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-bottom p-3">
+                <h6 class="fw-bold mb-0 text-primary-custom"><i class="bi bi-bluetooth text-primary me-2"></i>Koneksi Printer Bluetooth (Thermal)</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-7 mb-3 mb-md-0">
+                        <div class="fw-bold text-dark mb-1">Status Perangkat: 
+                            <span v-if="printerDevice" class="badge bg-success ms-2 px-3 py-2 rounded-pill"><i class="bi bi-check-circle me-1"></i>Terhubung: {{ printerDevice.name }}</span>
+                            <span v-else class="badge bg-danger ms-2 px-3 py-2 rounded-pill"><i class="bi bi-x-circle me-1"></i>Belum Terhubung</span>
+                        </div>
+                        <div class="small text-muted mb-2 mt-2">Gunakan browser Chrome di Android/Tablet untuk menghubungkan printer secara langsung. Pastikan Bluetooth & GPS (Lokasi) sudah menyala.</div>
+                        
+                        <div class="d-flex align-items-center mt-4 p-3 bg-light rounded-3 border border-secondary border-opacity-25">
+                            <label class="small fw-bold me-3 text-dark"><i class="bi bi-aspect-ratio me-1"></i>Ukuran Kertas Default:</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" v-model="printerPaperSize" value="48" id="paper80">
+                                <label class="form-check-label small fw-semibold" for="paper80">80mm (Besar)</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" v-model="printerPaperSize" value="32" id="paper58">
+                                <label class="form-check-label small fw-semibold" for="paper58">58mm (Kecil)</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-5 text-md-end border-start px-md-4">
+                        <div v-if="!printerDevice" class="d-grid gap-2">
+                            <button class="btn btn-primary-custom fw-bold rounded-pill shadow py-3" @click="connectBluetoothPrinter">
+                                <i class="bi bi-bluetooth me-1 fs-5 align-middle"></i> Cari & Hubungkan Printer
+                            </button>
+                            <div class="small text-muted text-center mt-1" style="font-size: 0.75rem;"><i class="bi bi-info-circle me-1"></i>Mendukung Panda PRJ-R80B dan ESC/POS lainnya</div>
+                        </div>
+                        
+                        <div v-else class="d-grid gap-2">
+                            <button class="btn btn-success fw-bold rounded-pill shadow-sm py-2" @click="testPrint">
+                                <i class="bi bi-printer me-1"></i> Print Struk Uji Coba
+                            </button>
+                            <button class="btn btn-outline-danger fw-bold rounded-pill shadow-sm py-2 mt-2" @click="disconnectBluetoothPrinter">
+                                <i class="bi bi-power me-1"></i> Putuskan Printer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-warning bg-opacity-10 border-top p-3 d-flex align-items-center">
+                <i class="bi bi-lightbulb-fill text-warning fs-3 me-3"></i>
+                <div>
+                    <strong class="text-dark">Tips Auto-Print:</strong><br>
+                    <span class="small text-muted">Jika status printer <span class="text-success fw-bold">Terhubung</span>, saat kasir menekan tombol "Selesaikan Pembayaran", struk akan otomatis tercetak dari mesin tanpa memunculkan layar PDF.</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div v-if="settingTab==='hpp'" class="dashboard-card">
         <div class="mb-3">
@@ -9518,6 +9584,12 @@ body.sidebar-open {
             previewData: []     // Kosongkan
         },
 
+        // Variabel Printer Bluetooth
+        printerDevice: null,
+        printerServer: null,
+        printerCharacteristic: null,
+        printerPaperSize: 48, // 48 karakter untuk 80mm (Panda PRJ-R80B), 32 karakter untuk 58mm
+                
         // Konfigurasi Modal Import Terpusat
         importConfig: {
             showModal: false,
@@ -9692,7 +9764,7 @@ body.sidebar-open {
                     note: '',
                     items: []
                 },
-
+    
                 // STATE CETAK BARCODE LABEL
                 barcodeSettings: {
                     showBusinessName: true,
@@ -12253,6 +12325,180 @@ async fetchAllRatings() {
             this.isProcessing = false;
         }
     },
+
+        // ==========================================
+        // MODUL PRINTER BLUETOOTH (ESC/POS)
+        // ==========================================
+            
+    async connectBluetoothPrinter() {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: [
+                        '000018f0-0000-1000-8000-00805f9b34fb', // Service Printer Bluetooth Umum
+                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+                        '0000fee7-0000-1000-8000-00805f9b34fb', // Panda / Eppos Service
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+                    ]
+                });
+                
+                this.printerDevice = device;
+                this.printerDevice.addEventListener('gattserverdisconnected', this.onPrinterDisconnected);
+
+                const server = await device.gatt.connect();
+                this.printerServer = server;
+
+                const services = await server.getPrimaryServices();
+                for (const service of services) {
+                    const characteristics = await service.getCharacteristics();
+                    for (const characteristic of characteristics) {
+                        if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+                            this.printerCharacteristic = characteristic;
+                            alert(`Berhasil terhubung ke Printer: ${device.name}`);
+                            return; 
+                        }
+                    }
+                }
+                alert("Printer terhubung, tapi sistem tidak menemukan jalur penulisan (Write Characteristic).");
+            } catch (error) {
+                console.error("Koneksi Printer Gagal:", error);
+            }
+        },
+
+        disconnectBluetoothPrinter() {
+            if (this.printerDevice && this.printerDevice.gatt.connected) {
+                this.printerDevice.gatt.disconnect();
+            }
+        },
+
+        onPrinterDisconnected() {
+            this.printerDevice = null;
+            this.printerServer = null;
+            this.printerCharacteristic = null;
+            alert("Koneksi ke Printer terputus!");
+        },
+
+        formatPrintLine(leftText, rightText) {
+            let width = parseInt(this.printerPaperSize); 
+            let spaceLength = width - leftText.length - rightText.length;
+            if (spaceLength < 1) spaceLength = 1;
+            return leftText + ' '.repeat(spaceLength) + rightText + '\n';
+        },
+
+        async printReceiptBluetooth(trx) {
+            if (!this.printerCharacteristic) {
+                alert("Printer belum terhubung! Silakan hubungkan di menu Setelan.");
+                return;
+            }
+
+            const ESC = '\x1B';
+            const GS = '\x1D';
+            const INIT = ESC + '@';
+            const ALIGN_CENTER = ESC + 'a' + '\x01';
+            const ALIGN_LEFT = ESC + 'a' + '\x00';
+            const BOLD_ON = ESC + 'E' + '\x01';
+            const BOLD_OFF = ESC + 'E' + '\x00';
+            const CUT_PAPER = GS + 'V' + '\x41' + '\x10'; 
+            
+            let garis = '-'.repeat(this.printerPaperSize) + '\n';
+            let garisGanda = '='.repeat(this.printerPaperSize) + '\n';
+
+            let text = INIT;
+            
+            // Header Toko
+            text += ALIGN_CENTER + BOLD_ON;
+            text += (this.appSettings?.storeName || 'QUINSAH COLLECTION') + '\n';
+            text += BOLD_OFF;
+            text += (this.appSettings?.storeAddress || 'Cabang: ' + this.getOutletName(trx.outletId)) + '\n';
+            text += (this.appSettings?.storePhone ? 'Telp: ' + this.appSettings.storePhone + '\n' : '');
+            text += garis;
+
+            // Info Transaksi
+            text += ALIGN_LEFT;
+            text += `No   : ${trx.id}\n`;
+            text += `Tgl  : ${trx.dateStr}\n`;
+            text += `Kasir: ${trx.cashierName || 'Admin'}\n`;
+            text += `Plg  : ${trx.customer || 'Umum'}\n`;
+            text += garis;
+
+            // Rincian Barang
+            if (trx.items && trx.items.length > 0) {
+                trx.items.forEach(item => {
+                    let itemName = item.productId === 'EXCHANGE' ? '[TUKAR] ' + item.name : item.name;
+                    text += `${itemName}\n`;
+                    let qtyPrice = `${item.qty} x ${this.formatNumber(item.finalPrice || item.sellPrice)}`;
+                    let subTotal = this.formatNumber(item.qty * (item.finalPrice || item.sellPrice));
+                    
+                    if (item.productId === 'EXCHANGE') {
+                        subTotal = '-' + subTotal;
+                    }
+                    text += this.formatPrintLine(qtyPrice, subTotal);
+                });
+            }
+            text += garis;
+
+            // Total & Pembayaran
+            text += this.formatPrintLine('Subtotal', this.formatNumber(trx.total));
+            
+            if (trx.discountAmt > 0 || trx.globalDiscountAmt > 0) {
+                let totalDiskon = Number(trx.discountAmt || 0) + Number(trx.globalDiscountAmt || 0);
+                text += this.formatPrintLine('Diskon', '-' + this.formatNumber(totalDiskon));
+            }
+            if (trx.taxAmt > 0) {
+                text += this.formatPrintLine('Pajak (PPN)', this.formatNumber(trx.taxAmt));
+            }
+
+            text += BOLD_ON;
+            text += this.formatPrintLine('TOTAL AKHIR', 'Rp ' + this.formatNumber(trx.total));
+            text += BOLD_OFF;
+            
+            text += garisGanda;
+            text += this.formatPrintLine('Metode Bayar', trx.paymentMethod || 'TUNAI');
+            text += this.formatPrintLine('Total Dibayar', 'Rp ' + this.formatNumber(trx.amountReceived || trx.total));
+            
+            let kembalian = (trx.amountReceived || 0) - (trx.total || 0);
+            if (kembalian > 0) {
+                text += this.formatPrintLine('KEMBALIAN', 'Rp ' + this.formatNumber(kembalian));
+            }
+
+            text += '\n' + ALIGN_CENTER;
+            text += 'Terima kasih atas kunjungan Anda\n';
+            text += 'Barang yang sudah dibeli tidak dapat ditukar\n';
+            text += '\n\n\n\n'; 
+            text += CUT_PAPER; 
+
+            let encoder = new TextEncoder();
+            let uint8array = encoder.encode(text);
+            
+            try {
+                let CHUNK_SIZE = 50; 
+                for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
+                    let chunk = uint8array.slice(i, i + CHUNK_SIZE);
+                    await this.printerCharacteristic.writeValue(chunk);
+                }
+            } catch (err) {
+                console.error("Gagal mengirim teks print:", err);
+                alert("Proses pencetakan terputus. Pastikan printer menyala dan jaraknya dekat.");
+            }
+        },
+
+        async testPrint() {
+            let dummyTrx = {
+                id: 'INV-TEST-001',
+                dateStr: new Date().toLocaleString('id-ID'),
+                cashierName: 'System Test',
+                customer: 'Bos Herman',
+                outletId: this.reportOutletFilter || 'Pusat',
+                items: [
+                    { name: 'Kebaya Janggan (Test)', qty: 1, finalPrice: 150000 },
+                    { name: 'Kertas Struk 80mm', qty: 2, finalPrice: 15000 }
+                ],
+                total: 180000,
+                amountReceived: 200000,
+                paymentMethod: 'CASH'
+            };
+            await this.printReceiptBluetooth(dummyTrx);
+        },
             
         // =========================================================
     // 🌟 FITUR 1: POPUP INPUT RESI & KURIR SAAT KLIK SHIP
