@@ -12513,34 +12513,51 @@ async fetchAllRatings() {
             text += '\n\n\n\n'; 
             text += CUT_PAPER; 
 
-            // 2. MENGIRIM DATA KE PRINTER (MODE SANGAT AMAN & STABIL)
+                        // 2. MENGIRIM DATA KE PRINTER (MODE TANK / ANTI-MACET)
             let encoder = new TextEncoder();
             let uint8array = encoder.encode(text);
             
             try {
-                let CHUNK_SIZE = 20; // Wajib 20 bytes (Kapasitas maksimal BLE Android sekali telan)
+                let CHUNK_SIZE = 20; // Wajib 20 bytes
+                let i = 0;
                 
-                for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
+                // Gunakan WHILE LOOP (Bukan For Loop)
+                while (i < uint8array.length) {
                     let chunk = uint8array.slice(i, i + CHUNK_SIZE);
                     
-                    // 🌟 KUNCI UTAMA: Kita prioritaskan write() biasa.
-                    // Ini memaksa sistem HP menunggu konfirmasi printer sebelum menembak lagi.
-                    if (this.printerCharacteristic.properties.write) {
-                        await this.printerCharacteristic.writeValue(chunk);
-                    } else if (this.printerCharacteristic.properties.writeWithoutResponse) {
-                        await this.printerCharacteristic.writeValueWithoutResponse(chunk);
+                    try {
+                        // 1. Coba tembakkan data
+                        if (this.printerCharacteristic.properties.writeWithoutResponse) {
+                            await this.printerCharacteristic.writeValueWithoutResponse(chunk);
+                        } else {
+                            await this.printerCharacteristic.writeValue(chunk);
+                        }
+                        
+                        // 2. JIKA SUKSES: Baru boleh maju ke potongan berikutnya
+                        i += CHUNK_SIZE; 
+                        
+                        // Jeda sangat singkat untuk bernapas
+                        await new Promise(resolve => setTimeout(resolve, 20)); 
+                        
+                    } catch (e) {
+                        // 3. JIKA TABRAKAN (GATT in progress): 
+                        // Sistem TIDAK AKAN MAJU (i tidak ditambah). 
+                        // Sistem akan diam menunggu 250ms, lalu MENCOBA LAGI potongan data yang sama!
+                        if (e.message.toLowerCase().includes('progress') || e.message.toLowerCase().includes('gatt') || e.message.toLowerCase().includes('busy')) {
+                            console.warn("GATT Sibuk, menunggu 250ms...");
+                            await new Promise(resolve => setTimeout(resolve, 250)); 
+                        } else {
+                            // Jika error fatal (misal printer mati)
+                            throw e; 
+                        }
                     }
-                    
-                    // Jeda 100ms (0.1 detik) per potongan. 
-                    // Struk mungkin akan keluar sedikit lebih pelan, TAPI dijamin tidak akan macet/error GATT.
-                    await new Promise(resolve => setTimeout(resolve, 100)); 
                 }
                 
-                console.log("Struk berhasil dikirim dan dicetak!");
-                // Opsional: alert("Berhasil mencetak struk!");
+                console.log("Struk berhasil dicetak sempurna!");
+                
             } catch (err) {
                 console.error("Gagal mengirim teks print:", err);
-                alert("Gagal mencetak: " + err.message);
+                alert("Koneksi terputus: " + err.message);
     }
     }, 
 
