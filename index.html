@@ -12517,30 +12517,50 @@ async fetchAllRatings() {
             text += '\n\n\n\n'; 
             text += CUT_PAPER; 
 
+                        // 2. MENGIRIM DATA KE PRINTER (DENGAN SISTEM RETRY ANTI-MACET GATT)
             let encoder = new TextEncoder();
             let uint8array = encoder.encode(text);
             
             try {
-                // 🔥 KUNCI UTAMANYA DI SINI: Ubah jadi 20 Bytes! 🔥
-                // BLE bawaan Chrome hanya bisa menelan 20 bytes per paket agar tidak macet
-                let CHUNK_SIZE = 20; 
+                let CHUNK_SIZE = 20; // Batas aman paket data BLE
                 
                 for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
                     let chunk = uint8array.slice(i, i + CHUNK_SIZE);
-                    
-                    if (this.printerCharacteristic.properties.writeWithoutResponse) {
-                        await this.printerCharacteristic.writeValueWithoutResponse(chunk);
-                    } else {
-                        await this.printerCharacteristic.writeValue(chunk);
+                    let success = false;
+                    let retries = 0;
+
+                    // Sistem Retry: Akan mengulang kirim jika jalur GATT sedang sibuk
+                    while (!success && retries < 10) {
+                        try {
+                            if (this.printerCharacteristic.properties.writeWithoutResponse) {
+                                await this.printerCharacteristic.writeValueWithoutResponse(chunk);
+                            } else {
+                                await this.printerCharacteristic.writeValue(chunk);
+                            }
+                            success = true; // Berhasil terkirim!
+                            
+                            // Jeda 50ms agar printer MPT-III sempat bernapas menelan data
+                            await new Promise(resolve => setTimeout(resolve, 50)); 
+                        } catch (e) {
+                            // Jika muncul error GATT in progress, jangan panik. Tunggu 50ms lalu coba lagi.
+                            if (e.message.includes('GATT operation already in progress') || e.message.includes('in progress')) {
+                                await new Promise(resolve => setTimeout(resolve, 50));
+                                retries++;
+                            } else {
+                                throw e; // Lempar error jika masalahnya bukan karena GATT sibuk
+                            }
+                        }
                     }
                     
-                    // 🌟 Beri waktu jeda 20 milidetik per suapan agar printer Panda bisa mencerna
-                    await new Promise(resolve => setTimeout(resolve, 20)); 
+                    if (!success) {
+                        throw new Error("Printer terlalu sibuk, pengiriman data gagal setelah beberapa kali percobaan.");
+                    }
                 }
+                console.log("Struk berhasil dikirim dan dicetak!");
             } catch (err) {
                 console.error("Gagal mengirim teks print:", err);
                 alert("Gagal mencetak: " + err.message);
-            }
+    }
     }, 
 
         async testPrint() {
