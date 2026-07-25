@@ -12356,14 +12356,14 @@ async fetchAllRatings() {
         // MODUL PRINTER BLUETOOTH (ESC/POS)
         // ==========================================
             
-    async connectBluetoothPrinter() {
+            async connectBluetoothPrinter() {
             try {
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: [
-                        '000018f0-0000-1000-8000-00805f9b34fb', // Service Printer Bluetooth Umum
-                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-                        '0000fee7-0000-1000-8000-00805f9b34fb', // Panda / Eppos Service
+                        '000018f0-0000-1000-8000-00805f9b34fb', // Standard Printer
+                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Chinese Printer (Panda/Eppos)
+                        '0000fee7-0000-1000-8000-00805f9b34fb',
                         '49535343-fe7d-4ae5-8fa9-9fafd205e455'
                     ]
                 });
@@ -12375,17 +12375,26 @@ async fetchAllRatings() {
                 this.printerServer = server;
 
                 const services = await server.getPrimaryServices();
+                let validCharacteristic = null;
+
+                // Loop untuk mencari jalur tulis yang tepat
                 for (const service of services) {
                     const characteristics = await service.getCharacteristics();
                     for (const characteristic of characteristics) {
                         if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
-                            this.printerCharacteristic = characteristic;
-                            alert(`Berhasil terhubung ke Printer: ${device.name}`);
-                            return; 
+                            // Kita simpan, biarkan loop berlanjut untuk mengambil jalur yang TERAKHIR (biasanya SPP Data)
+                            validCharacteristic = characteristic; 
+                            console.log("Ditemukan Jalur Printer:", characteristic.uuid);
                         }
                     }
                 }
-                alert("Printer terhubung, tapi sistem tidak menemukan jalur penulisan (Write Characteristic).");
+
+                if (validCharacteristic) {
+                    this.printerCharacteristic = validCharacteristic;
+                    alert(`Berhasil terhubung ke Printer: ${device.name}\nJalur data siap!`);
+                } else {
+                    alert("Printer terhubung, tapi sistem tidak menemukan jalur penulisan data (Characteristic).");
+                }
             } catch (error) {
                 console.error("Koneksi Printer Gagal:", error);
             }
@@ -12497,16 +12506,25 @@ async fetchAllRatings() {
             let uint8array = encoder.encode(text);
             
             try {
-                let CHUNK_SIZE = 50; 
+                let CHUNK_SIZE = 100; // Ukuran diperbesar sedikit agar tidak mudah putus
                 for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
                     let chunk = uint8array.slice(i, i + CHUNK_SIZE);
-                    await this.printerCharacteristic.writeValue(chunk);
+                    
+                    // Gunakan WriteWithoutResponse jika printer mendukungnya (Sangat cocok untuk Panda PRJ-R80B)
+                    if (this.printerCharacteristic.properties.writeWithoutResponse) {
+                        await this.printerCharacteristic.writeValueWithoutResponse(chunk);
+                    } else {
+                        await this.printerCharacteristic.writeValue(chunk);
+                    }
+                    
+                    // Beri jeda 10 milidetik antar pengiriman agar buffer printer tidak kebanjiran data
+                    await new Promise(resolve => setTimeout(resolve, 10)); 
                 }
+                console.log("Struk berhasil dikirim ke printer!");
             } catch (err) {
                 console.error("Gagal mengirim teks print:", err);
-                alert("Proses pencetakan terputus. Pastikan printer menyala dan jaraknya dekat.");
-            }
-        },
+                alert("Proses pencetakan terputus. Coba matikan dan nyalakan ulang printer Anda.");
+            },
 
         async testPrint() {
             let dummyTrx = {
