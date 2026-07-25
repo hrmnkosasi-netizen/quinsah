@@ -12523,45 +12523,42 @@ async fetchAllRatings() {
 
             text += '\n' + ALIGN_CENTER;
             text += 'Terima kasih atas kunjungan Anda\n';
-            text += 'Barang yang sudah dibeli tidak dapat ditukar\n';
-            text += '\n\n\n\n'; 
-            text += CUT_PAPER; 
+            text += 'Barang yg sdh dibeli tdk dpt ditukar\n';
+            
+            // 🌟 PERBAIKAN 1: Tambahkan banyak "Enter" agar kertas terdorong keluar 
+            // melewati gigi printer, lalu HAPUS kode `text += CUT_PAPER;`
+            text += '\n\n\n\n\n\n'; 
 
-                        // 2. MENGIRIM DATA KE PRINTER (MODE TANK / ANTI-MACET)
+                                    // 2. MENGIRIM DATA KE PRINTER (MODE STABIL MPT-III)
             let encoder = new TextEncoder();
             let uint8array = encoder.encode(text);
             
             try {
-                let CHUNK_SIZE = 20; // Wajib 20 bytes
+                let CHUNK_SIZE = 20; 
                 let i = 0;
                 
-                // Gunakan WHILE LOOP (Bukan For Loop)
                 while (i < uint8array.length) {
                     let chunk = uint8array.slice(i, i + CHUNK_SIZE);
                     
                     try {
-                        // 1. Coba tembakkan data
-                        if (this.printerCharacteristic.properties.writeWithoutResponse) {
-                            await this.printerCharacteristic.writeValueWithoutResponse(chunk);
-                        } else {
+                        // 🌟 PERBAIKAN 2: Prioritaskan "writeValue" (dengan response) 
+                        // agar mesin MPT-III tidak tersedak.
+                        if (this.printerCharacteristic.properties.write) {
                             await this.printerCharacteristic.writeValue(chunk);
+                        } else if (this.printerCharacteristic.properties.writeWithoutResponse) {
+                            await this.printerCharacteristic.writeValueWithoutResponse(chunk);
                         }
                         
-                        // 2. JIKA SUKSES: Baru boleh maju ke potongan berikutnya
                         i += CHUNK_SIZE; 
                         
-                        // Jeda sangat singkat untuk bernapas
+                        // 🌟 PERBAIKAN 3: Perbesar jeda napas printer menjadi 50ms
                         await new Promise(resolve => setTimeout(resolve, 50)); 
                         
                     } catch (e) {
-                        // 3. JIKA TABRAKAN (GATT in progress): 
-                        // Sistem TIDAK AKAN MAJU (i tidak ditambah). 
-                        // Sistem akan diam menunggu 250ms, lalu MENCOBA LAGI potongan data yang sama!
                         if (e.message.toLowerCase().includes('progress') || e.message.toLowerCase().includes('gatt') || e.message.toLowerCase().includes('busy')) {
                             console.warn("GATT Sibuk, menunggu 250ms...");
                             await new Promise(resolve => setTimeout(resolve, 250)); 
                         } else {
-                            // Jika error fatal (misal printer mati)
                             throw e; 
                         }
                     }
@@ -12571,7 +12568,7 @@ async fetchAllRatings() {
                 
             } catch (err) {
                 console.error("Gagal mengirim teks print:", err);
-                alert("Koneksi terputus: " + err.message);
+                alert("Koneksi terputus saat mencetak: " + err.message);
     }
     }, 
 
