@@ -19193,6 +19193,29 @@ let item = {
             addPurchaseItem() {
                 let p = this.products.find(x => x.id === this.formPurchaseItem.productId);
                 if(!p) return;
+
+                // 🌟 1. VALIDASI: CEK APAKAH PRODUK PUNYA VARIAN TAPI USER BELUM PILIH
+                if (p.variants && p.variants.length > 0) {
+                    if (!this.formPurchaseItem.variantSku || this.formPurchaseItem.variantSku.trim() === '') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Pilih Varian',
+                            text: 'Produk ini memiliki varian. Silakan pilih varian dari dropdown terlebih dahulu sebelum klik Add Item.'
+                        });
+                        return; // ⛔ Hentikan eksekusi, item batal masuk tabel
+                    }
+                }
+
+                // 🌟 2. VALIDASI: CEK QTY TIDAK BOLEH KOSONG ATAU NOL
+                if (!this.formPurchaseItem.qty || this.formPurchaseItem.qty <= 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Qty Tidak Valid',
+                        text: 'Jumlah barang (Qty) harus lebih dari 0.'
+                    });
+                    return; // ⛔ Hentikan eksekusi
+                }
+
                 let vName = '';
                 if(this.formPurchaseItem.variantSku) {
                     let v = p.variants.find(vx => vx.variantSku === this.formPurchaseItem.variantSku);
@@ -19223,6 +19246,27 @@ let item = {
             // FUNGSI PEMBELIAN (UPDATE)
             // ---------------------------------------------------------
             async savePurchase() {
+                // 🌟 1. VALIDASI CEGAH VARIAN KOSONG SEBELUM PROSES MULAI
+                if (!this.formPurchase.items || this.formPurchase.items.length === 0) {
+                    return Swal.fire('Peringatan', 'Daftar item pembelian masih kosong!', 'warning');
+                }
+
+                for (let item of this.formPurchase.items) {
+                    let prod = this.products.find(p => p.id === item.productId);
+                    // Jika produk aslinya punya varian (array variants tidak kosong)
+                    if (prod && prod.variants && prod.variants.length > 0) {
+                        // Tapi user tidak memilih varian (variantSku kosong)
+                        if (!item.variantSku || item.variantSku.trim() === '') {
+                            Swal.fire({ 
+                                icon: 'error', 
+                                title: 'Varian Belum Dipilih!', 
+                                text: `Produk "${prod.name}" wajib menggunakan varian. Hapus item tersebut dari tabel di bawah, lalu tambahkan ulang dengan memilih variannya terlebih dahulu.` 
+                            });
+                            return; // ⛔ Hentikan eksekusi kode di sini, PO tidak akan tersimpan
+                        }
+                    }
+                }
+                
                 this.isSaving = true;
                 try {
                     // Jika Edit dan status sebelumnya sudah SELESAI, tarik stok dulu (Ini sudah aman karena revertPurchaseStock di bawah sudah pakai batch juga)
