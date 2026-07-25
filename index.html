@@ -12356,62 +12356,58 @@ async fetchAllRatings() {
         // MODUL PRINTER BLUETOOTH (ESC/POS)
         // ==========================================
             
-                    async connectBluetoothPrinter() {
+                            async connectBluetoothPrinter() {
             try {
+                // 1. Mencari perangkat
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: [
                         '000018f0-0000-1000-8000-00805f9b34fb', // Standard Printer
-                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Chinese Printer (Panda/Eppos)
+                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Chinese Printer (Panda/Eppos/MPT-III)
                         '0000fee7-0000-1000-8000-00805f9b34fb',
                         '49535343-fe7d-4ae5-8fa9-9fafd205e455'
                     ]
                 });
                 
-                this.printerDevice = device;
-                this.printerDevice.addEventListener('gattserverdisconnected', this.onPrinterDisconnected);
-
+                // 2. Menghubungkan ke GATT Server (Jangan ubah status UI dulu!)
                 const server = await device.gatt.connect();
-                this.printerServer = server;
-
                 const services = await server.getPrimaryServices();
                 let validCharacteristic = null;
 
-                // 🌟 DAFTAR RADAR UUID KHUSUS PRINTER PANDA / XPRINTER
-                const knownWriteUUIDs = [
-                    '00002af1-0000-1000-8000-00805f9b34fb',
-                    'bef8d6c9-9c21-4c9e-b632-bd58c1009f9f',
-                    '49535343-8841-43f4-a8d4-ecbe34729bb3',
-                    '0000ff02-0000-1000-8000-00805f9b34fb'
-                ];
-
+                // 3. Memastikan jalur data (Write) tersedia
                 for (const service of services) {
                     const characteristics = await service.getCharacteristics();
                     for (const characteristic of characteristics) {
                         if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
-                            // Jika UUID cocok dengan radar, ini PASTI jalur print-nya!
-                            if (knownWriteUUIDs.includes(characteristic.uuid)) {
-                                validCharacteristic = characteristic;
-                                break;
-                            }
-                            // Jika tidak ada di daftar, simpan sementara sbg cadangan
-                            if (!validCharacteristic) {
-                                validCharacteristic = characteristic;
-                            }
+                            validCharacteristic = characteristic;
+                            break;
                         }
                     }
-                    // Berhenti mencari jika jalur prioritas sudah ketemu
-                    if (validCharacteristic && knownWriteUUIDs.includes(validCharacteristic.uuid)) break;
+                    if (validCharacteristic) break;
                 }
 
+                // 4. HASIL AKHIR: Update Layar (UI)
                 if (validCharacteristic) {
+                    // 🌟 KUNCI: Variabel ini hanya diisi JIKA jalur data sudah 100% siap
                     this.printerCharacteristic = validCharacteristic;
-                    alert(`Berhasil terhubung ke Printer: ${device.name}\nJalur data siap!`);
+                    this.printerServer = server;
+                    this.printerDevice = device;
+
+                    this.printerDevice.addEventListener('gattserverdisconnected', this.onPrinterDisconnected);
+                    alert(`SEMPURNA!\nPrinter ${device.name} terhubung dan jalur data siap digunakan.`);
                 } else {
-                    alert("Printer terhubung, tapi jalur penulisan data (Write) tidak ditemukan.");
+                    alert("Koneksi gagal: Jalur cetak data tidak ditemukan pada mesin ini.");
+                    // Pastikan layar kembali menjadi "Belum Terhubung"
+                    this.printerCharacteristic = null;
+                    this.printerDevice = null; 
                 }
             } catch (error) {
                 console.error("Koneksi Printer Gagal:", error);
+                alert("Proses terhenti: " + error.message);
+                
+                // Jika error, pastikan layar di-reset menjadi "Belum Terhubung"
+                this.printerCharacteristic = null;
+                this.printerDevice = null;
             }
         },
 
