@@ -1548,9 +1548,9 @@ body.sidebar-open {
           <div v-if="currentView === 'payment'" class="dashboard-card">
             <h6 class="fw-bold mb-3 pb-2 border-bottom"><i class="bi bi-bank me-2"></i>Manajemen Keuangan & Arus Kas</h6>
             
-            <div class="row mb-3">
-                <div class="col-12">
-                    <ul class="nav nav-pills gap-2 flex-nowrap overflow-auto pb-1" style="font-size: 0.85rem; white-space: nowrap;">
+            <div class="row mb-3 align-items-end g-2">
+                <div class="col-12 col-md-5 mb-2">
+                    <ul class="nav nav-pills gap-2 flex-nowrap overflow-auto" style="font-size: 0.85rem; white-space: nowrap;">
                         <li class="nav-item">
                             <a class="nav-link border" :class="{'active fw-bold': paymentTab === 'sales_payment'}" href="#" @click.prevent="paymentTab = 'sales_payment'"><i class="bi bi-box-arrow-in-down-left me-1"></i>Pembayaran Masuk</a>
                         </li>
@@ -1565,20 +1565,7 @@ body.sidebar-open {
                         </li>
                     </ul>
                 </div>
-            </div>
-
-            <!-- Baris 2: Filter Data -->
-            <div class="row mb-3 align-items-end g-2">
                 
-                <!-- 🌟 1. TAMBAHAN FILTER OUTLET -->
-                <div class="col-12 col-md-3 mb-2">
-                    <label class="form-label small fw-bold text-muted mb-1">Filter Outlet</label>
-                    <select class="form-select form-select-sm border-primary" v-model="paymentOutletId">
-                        <option value="">Semua Outlet</option>
-                        <option v-for="outlet in outlets" :key="outlet.id" :value="outlet.id">{{ outlet.name }}</option>
-                    </select>
-                </div>
-
                 <div class="col-6 col-md-2 mb-2" v-if="paymentTab === 'sales_payment' || paymentTab === 'purchase_payment'">
                     <label class="form-label small fw-bold text-muted mb-1">Dari Tanggal</label>
                     <input type="date" class="form-control form-control-sm border-primary" v-model="paymentStartDate">
@@ -1588,25 +1575,17 @@ body.sidebar-open {
                     <input type="date" class="form-control form-control-sm border-primary" v-model="paymentEndDate">
                 </div>
 
-                <!-- 🌟 2. PENYESUAIAN GRID & TOMBOL RESET -->
-                <div class="col-12 mb-2" :class="(paymentTab === 'sales_payment' || paymentTab === 'purchase_payment') ? 'col-md-5' : 'col-md-9'">
+                <div class="col-12 mb-2" :class="(paymentTab === 'sales_payment' || paymentTab === 'purchase_payment') ? 'col-md-3' : 'col-md-7'">
                     <label class="form-label small fw-bold text-muted mb-1">Cari Data Transaksi</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
                         <input type="text" class="form-control" v-model="paymentSearchQuery" placeholder="No. Invoice / Nama...">
-                        
-                        <!-- Tambahkan paymentOutletId ke fungsi reset -->
-                        <button v-if="paymentStartDate || paymentEndDate || paymentSearchQuery || paymentOutletId" 
-                                class="btn btn-outline-danger" 
-                                @click="paymentStartDate=''; paymentEndDate=''; paymentSearchQuery=''; paymentOutletId=''" 
-                                title="Reset Filter">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
+                        <button v-if="paymentStartDate || paymentEndDate || paymentSearchQuery" class="btn btn-outline-danger" @click="paymentStartDate=''; paymentEndDate=''; paymentSearchQuery=''" title="Reset Filter"><i class="bi bi-x-lg"></i></button>
                     </div>
                 </div>
             </div>
 
-              </div>
+            <div>
                 
                     <div v-if="paymentTab === 'sales_payment'">
                     <div class="card bg-success bg-opacity-10 border border-success mb-3 shadow-sm">
@@ -9582,8 +9561,7 @@ body.sidebar-open {
 
                 isSplitPayment: false,
                 splitPayments: [],
-
-                paymentOutletId: '',
+                
                 paymentMethods: [],
                 paymentForm: {
                     id: null,
@@ -10740,9 +10718,6 @@ fulfillmentOrders() {
                 let endFilter = this.paymentEndDate || todayStr;
 
                 (this.transactions || []).forEach(trx => {
-                    // 🌟 TAMBAHAN FILTER OUTLET: Abaikan jika outlet tidak cocok
-                    if (this.paymentOutletId && trx.outletId !== this.paymentOutletId) return;
-
                     let custName = this.getCustomerName(trx.customerId) || 'Pelanggan Umum';
                     
                     let processPayment = (method, amount, date, type) => {
@@ -10833,9 +10808,6 @@ fulfillmentOrders() {
                 let endFilter = this.paymentEndDate || todayStr;
 
                 (this.purchases || []).forEach(po => {
-                    // 🌟 TAMBAHAN FILTER OUTLET: Abaikan jika outlet tidak cocok
-                    if (this.paymentOutletId && po.outletId !== this.paymentOutletId) return;
-
                     let supName = this.getSupplierName(po.supplierId) || 'Supplier Unknown';
                     let processPayment = (method, amount, date, type) => {
                         if (!amount || Number(amount) <= 0) return;
@@ -10878,8 +10850,6 @@ fulfillmentOrders() {
             financeARList() {
                 let q = (this.paymentSearchQuery || '').toLowerCase();
                 return (this.transactions || []).filter(t => 
-                    // 🌟 TAMBAHAN FILTER OUTLET
-                    (!this.paymentOutletId || t.outletId === this.paymentOutletId) &&
                     t.paymentStatus !== 'LUNAS' && this.getSisaTagihan(t) > 0 &&
                     (String(t.id || '').toLowerCase().includes(q) || String(this.getCustomerName(t.customerId) || '').toLowerCase().includes(q))
                 ).sort((a,b) => String(b.id || '').localeCompare(String(a.id || '')));
@@ -10888,8 +10858,6 @@ fulfillmentOrders() {
             financeAPList() {
                 let q = (this.paymentSearchQuery || '').toLowerCase();
                 return (this.purchases || []).filter(p => 
-                    // 🌟 TAMBAHAN FILTER OUTLET
-                    (!this.paymentOutletId || p.outletId === this.paymentOutletId) &&
                     p.paymentStatus !== 'LUNAS' && this.getSisaTagihan(p) > 0 &&
                     (String(p.id || '').toLowerCase().includes(q) || String(this.getSupplierName(p.supplierId) || '').toLowerCase().includes(q))
                 ).sort((a,b) => String(b.id || '').localeCompare(String(a.id || '')));
