@@ -5360,27 +5360,8 @@ body.sidebar-open {
 </div>
             <!-- SALES VIEW -->
             <div v-if="currentView === 'sales'" class="dashboard-card mb-4 fade-in">
+    <h6 class="fw-bold mb-3 pb-2 border-bottom">Riwayat Transaksi Penjualan (POS)</h6>
     
-    <!-- HEADER BARU: Judul di kiri, Tombol di kanan -->
-    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-        <h6 class="fw-bold mb-0">Riwayat Transaksi Penjualan (POS)</h6>
-        
-        <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-success" @click="downloadSalesTemplate()" title="Download Template Excel">
-                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Template
-            </button>
-            <button class="btn btn-outline-primary" @click="triggerSalesImport()" title="Import Data Penjualan">
-                <i class="bi bi-upload me-1"></i> Import
-            </button>
-            <button class="btn btn-outline-secondary" @click="exportSalesData()" title="Export sesuai filter tabel">
-                <i class="bi bi-download me-1"></i> Export
-            </button>
-        </div>
-    </div>
-    <!-- Hidden input dipindah ke sini agar tidak mengganggu layout tabel/filter -->
-    <input type="file" id="importSalesFile" accept=".xlsx, .xls, .csv" class="d-none" @change="processSalesImport">
-    
-    <!-- FILTER ROW -->
     <div class="row g-2 mb-3 align-items-end">
         <div class="col-12 col-md-3">
             <label class="form-label small fw-bold text-muted mb-1">Cari Inv / Nama</label>
@@ -5408,6 +5389,7 @@ body.sidebar-open {
             </select>
         </div>
 
+        <!-- 🌟 KODE BARU: Kotak Filter Tipe Pesanan -->
         <div class="col-6 col-md-2">
             <label class="form-label small fw-bold text-muted mb-1">Tipe Pesanan</label>
             <select class="form-select form-select-sm shadow-none border-info" v-model="salesOrderTypeFilter">
@@ -5422,7 +5404,6 @@ body.sidebar-open {
             <label class="form-label small fw-bold text-muted mb-1">Dari Tgl</label>
             <input type="date" class="form-control form-control-sm shadow-none" v-model="transactionStartDate">
         </div>
-        
         <div class="col-6 col-md-2">
             <label class="form-label small fw-bold text-muted mb-1">Sampai Tgl</label>
             <input type="date" class="form-control form-control-sm shadow-none" v-model="transactionEndDate">
@@ -12021,139 +12002,6 @@ async fetchAllRatings() {
         return phone || 'Nomor tidak tersedia';
     },   
 
-    // -----------------------------------------
-        // 📊 FITUR EXPORT / IMPORT DATA PENJUALAN
-        // -----------------------------------------
-
-        // 1. Export Data (Sesuai Filter Tabel Saat Ini)
-        exportSalesData() {
-            if (!this.filteredTransactions || this.filteredTransactions.length === 0) {
-                alert("Tidak ada data transaksi untuk diekspor!");
-                return;
-            }
-
-            const exportData = this.filteredTransactions.map(trx => ({
-                "No Invoice": trx.id || "",
-                "Tanggal": trx.dateStr || "",
-                "ID Cabang": trx.outletId || "Pusat",
-                "Kasir": trx.cashierName || trx.cashier || "Admin",
-                "Pelanggan": trx.customer || "Umum",
-                "Tipe Pesanan": trx.orderType || "direct",
-                "Status Fulfillment": trx.fulfillmentStatus || "",
-                "Status Pembayaran": trx.paymentStatus || "LUNAS",
-                "Metode Bayar": trx.paymentMethod || "TUNAI",
-                "Subtotal": trx.total || 0,
-                "Total Dibayar": trx.amountReceived || trx.total || 0,
-                "Sisa Tagihan": (trx.total - (trx.amountReceived || 0)) > 0 ? (trx.total - (trx.amountReceived || 0)) : 0
-            }));
-
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Data_Penjualan");
-            
-            const fileName = `Export_POS_${this.companyId}_${new Date().getTime()}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-        },
-
-        // 2. Download Template Import
-        downloadSalesTemplate() {
-            const templateData = [{
-                "No Invoice": "INV-1700000001",
-                "Tanggal": "2026-07-26 14:00:00",
-                "ID Cabang": "KOSONGKAN UNTUK PUSAT",
-                "Kasir": "Nama Kasir",
-                "Pelanggan": "Budi",
-                "Tipe Pesanan": "direct / delivery / pre_order",
-                "Status Fulfillment": "NEW / COMPLETED",
-                "Status Pembayaran": "LUNAS / BELUM LUNAS",
-                "Metode Bayar": "TUNAI / TRANSFER / SPLIT",
-                "Subtotal": 150000,
-                "Total Dibayar": 150000
-            }];
-            const ws = XLSX.utils.json_to_sheet(templateData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template_Penjualan");
-            XLSX.writeFile(wb, "Template_Import_Penjualan.xlsx");
-        },
-
-        // 3. Trigger & Proses Import (Smart Overwrite & Batch)
-        triggerSalesImport() {
-            document.getElementById('importSalesFile').click();
-        },
-
-        async processSalesImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            this.isProcessing = true;
-            const reader = new FileReader();
-
-            reader.onload = async (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-                    if (jsonData.length === 0) throw new Error("File Excel kosong!");
-
-                    // Validasi Header Sederhana
-                    if (!jsonData[0].hasOwnProperty("No Invoice") || !jsonData[0].hasOwnProperty("Subtotal")) {
-                        throw new Error("Format tidak valid! Gunakan template dari tombol 'Template'.");
-                    }
-
-                    // Setup Firebase Batch (maksimal 500 operasi per batch)
-                    // Pastikan 'db' di-import dari config firebase Anda
-                    const batch = writeBatch(db); 
-                    let count = 0;
-
-                    jsonData.forEach((row) => {
-                        if (!row["No Invoice"]) return; // Skip baris kosong
-
-                        const invoiceId = String(row["No Invoice"]).trim();
-                        // Asumsi koleksi transaksi Anda bernama 'transactions'
-                        const docRef = doc(db, 'transactions', invoiceId); 
-                        
-                        const transactionData = {
-                            id: invoiceId,
-                            companyId: this.companyId, // 🔐 Proteksi Multi-tenant
-                            dateStr: row["Tanggal"] || new Date().toLocaleString(),
-                            outletId: row["ID Cabang"] && row["ID Cabang"] !== "KOSONGKAN UNTUK PUSAT" ? String(row["ID Cabang"]) : "",
-                            cashierName: row["Kasir"] || "Admin",
-                            customer: row["Pelanggan"] || "Umum",
-                            orderType: row["Tipe Pesanan"] || "direct",
-                            fulfillmentStatus: row["Status Fulfillment"] || "COMPLETED",
-                            paymentStatus: row["Status Pembayaran"] || "LUNAS",
-                            paymentMethod: row["Metode Bayar"] || "TUNAI",
-                            total: Number(row["Subtotal"]) || 0,
-                            amountReceived: Number(row["Total Dibayar"]) || Number(row["Subtotal"]) || 0,
-                            updatedAt: serverTimestamp() // Import dari firebase/firestore
-                        };
-
-                        // Gunakan { merge: true } untuk Upsert (Update jika ada, Insert jika baru)
-                        batch.set(docRef, transactionData, { merge: true });
-                        count++;
-                    });
-
-                    await batch.commit();
-                    alert(`✅ Berhasil mengimpor dan menyinkronkan ${count} data penjualan!`);
-                    
-                    // Panggil fungsi pemuatan ulang data transaksi Anda (sesuaikan namanya)
-                    // this.fetchTransactions(); 
-
-                } catch (error) {
-                    console.error("Error import penjualan:", error);
-                    alert("❌ Gagal mengimpor data: " + error.message);
-                } finally {
-                    this.isProcessing = false;
-                    event.target.value = null; // Reset input agar bisa upload file yang sama lagi
-                }
-            };
-
-            reader.readAsArrayBuffer(file);
-        },
-            
     // ==============================================
     // FUNGSI EXPORT & TEMPLATE
     // ==============================================
