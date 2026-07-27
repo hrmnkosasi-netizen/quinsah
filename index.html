@@ -12041,20 +12041,29 @@ previewExportData() {
             col1: r.date, col2: r.customerName || '-', col3: r.invoiceId, col4: r.rating + ' Bintang', col5: r.review || '-'
         }));
     } else if (this.exportConfig.target === 'sales') {
-        // 🌟 KODE BARU: 9 Kolom lengkap sesuai Tabel di UI
+        // 🌟 KODE DIPERBAIKI: Menyesuaikan dengan properti data asli dari HTML tabel
         this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
         dataSumber = this.filteredTransactions || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(t => ({
-            col1: t.invoiceId || '-',
-            col2: t.date || '-',
-            col3: t.outletName || '-',
-            col4: t.cashierName || '-',
-            col5: t.customerName || '-',
-            col6: t.orderType || '-',
-            col7: t.paymentStatus || '-',
-            col8: t.paymentMethod || '-',
-            col9: t.grandTotal || 0
-        }));
+        
+        this.exportConfig.previewData = dataSumber.slice(0, 5).map(t => {
+            // Ambil nama cabang menggunakan fungsi yang ada di tabel, atau fallback ke 'Global/Pusat'
+            let namaCabang = 'Global/Pusat';
+            if (typeof this.getOutletName === 'function' && t.outletId) {
+                namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
+            }
+
+            return {
+                col1: t.id || '-', 
+                col2: t.dateStr || '-', 
+                col3: namaCabang, 
+                col4: t.cashierName || t.cashier || '-',
+                col5: t.customer || '-', 
+                col6: t.orderType || '-',
+                col7: t.paymentStatus || 'LUNAS',
+                col8: t.paymentMethod || '-',
+                col9: t.total || 0 
+            };
+        });
     }
 },
         
@@ -12085,21 +12094,28 @@ processExport() {
             "Bintang": r.rating || 0, "Ulasan": (r.review || '-').replace(/\n/g, ' ')
         }));
     } else if (this.exportConfig.target === 'sales') {
-        // 🌟 KODE BARU: Export dengan Data Super Lengkap
+        // 🌟 KODE DIPERBAIKI: Data untuk file Excel yang di-download
         dataToExport = this.filteredTransactions;
         if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data penjualan untuk diexport!');
         
-        formattedData = dataToExport.map(t => ({
-            "No. Invoice": t.invoiceId || '-',
-            "Waktu": t.date || '-',
-            "Cabang": t.outletName || '-',
-            "Kasir / PIC": t.cashierName || '-',
-            "Pelanggan": t.customerName || '-',
-            "Tipe Pesanan": t.orderType || '-',
-            "Status": t.paymentStatus || '-',
-            "Pembayaran": t.paymentMethod || '-',
-            "Total": t.grandTotal || 0
-        }));
+        formattedData = dataToExport.map(t => {
+            let namaCabang = 'Global/Pusat';
+            if (typeof this.getOutletName === 'function' && t.outletId) {
+                namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
+            }
+
+            return {
+                "No. Invoice": t.id || '-',
+                "Waktu": t.dateStr || '-',
+                "Cabang": namaCabang,
+                "Kasir / PIC": t.cashierName || t.cashier || '-',
+                "Pelanggan": t.customer || '-',
+                "Tipe Pesanan": t.orderType || '-',
+                "Status": t.paymentStatus || 'LUNAS',
+                "Pembayaran": t.paymentMethod || '-',
+                "Total": t.total || 0
+            };
+        });
     } else {
         return alert("Error: Target export tidak dikenali.");
     }
