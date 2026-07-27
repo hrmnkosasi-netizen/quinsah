@@ -3958,6 +3958,25 @@ body.sidebar-open {
             </ul>
 
             <div v-if="invTab==='alerts'">
+                
+                <!-- 🌟 TAMBAHAN: FILTER & SEARCH KHUSUS STOCK ALERT -->
+                <div class="row g-2 mb-3 bg-light p-3 rounded border border-danger border-opacity-25 shadow-sm">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-danger">Cari Produk Alert</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control border-start-0" v-model="alertSearchQuery" placeholder="Ketik nama produk atau SKU...">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-danger">Filter Cabang (Outlet)</label>
+                        <select class="form-select form-select-sm border-danger fw-semibold" v-model="alertOutletFilter">
+                            <option value="">-- Semua Cabang (Tampilkan Global) --</option>
+                            <option v-for="o in outlets" :key="o.id" :value="o.id">{{ o.name }}</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="dashboard-card mb-3 border-danger border border-2 shadow-sm">
                     <div class="d-flex justify-content-between align-items-center mb-3 bg-danger bg-opacity-10 p-2 rounded">
                         <h6 class="fw-bold mb-0 text-danger"><i class="bi bi-bell-fill me-2"></i>Daftar Produk yang Membutuhkan Restock</h6>
@@ -3968,7 +3987,9 @@ body.sidebar-open {
                                 <tr>
                                     <th>Produk / Varian</th>
                                     <th>SKU</th>
-                                    <th class="text-center">Sisa Stok</th>
+                                    <th class="text-center">Sisa Stok Global</th>
+                                    <!-- 🌟 KOLOM BARU: RINCIAN CABANG -->
+                                    <th class="text-center bg-danger bg-opacity-10 text-danger">Rincian per Cabang</th>
                                     <th class="text-center">Batas Minimum</th>
                                     <th class="text-center">Status</th>
                                 </tr>
@@ -3976,17 +3997,32 @@ body.sidebar-open {
                             <tbody>
                                 <tr v-for="alert in lowStockItems" :key="alert.sku">
                                     <td class="fw-bold small text-dark">{{ alert.name }}</td>
-                                    <td><code class="text-secondary">{{ alert.sku }}</code></td>
+                                    <td><code class="text-secondary bg-light px-2 py-1 rounded">{{ alert.sku }}</code></td>
                                     <td class="text-center fw-bold text-danger fs-5">{{ alert.currentStock }}</td>
+                                    
+                                    <!-- 🌟 ISI KOLOM RINCIAN CABANG -->
+                                    <td style="min-width: 200px;" class="bg-light">
+                                        <!-- Looping cabang untuk menampilkan stok spesifik -->
+                                        <div v-for="out in outlets" :key="out.id" class="d-flex justify-content-between border-bottom border-secondary border-opacity-25 pb-1 mb-1" style="font-size: 0.75rem;">
+                                            <span class="text-muted"><i class="bi bi-shop me-1"></i>{{ out.name }}</span>
+                                            <!-- Gunakan alert.outletStocks jika Anda memetakan stok per cabang di JS, atau panggil method -->
+                                            <span class="fw-bold" :class="(alert.outletStocks && alert.outletStocks[out.id] <= 0) ? 'text-danger' : 'text-success'">
+                                                {{ (alert.outletStocks && alert.outletStocks[out.id]) ? alert.outletStocks[out.id] : 0 }}
+                                            </span>
+                                        </div>
+                                    </td>
+
                                     <td class="text-center text-muted fw-bold">{{ alert.minStock }}</td>
                                     <td class="text-center">
-                                        <span v-if="alert.currentStock <= 0" class="badge bg-dark px-3 py-2">HABIS TOTAL</span>
-                                        <span v-else class="badge bg-danger px-3 py-2">SEGERA RESTOCK</span>
+                                        <!-- Perbaikan kondisi: Memastikan stok minus (-1) juga terdeteksi HABIS TOTAL -->
+                                        <span v-if="alert.currentStock <= 0" class="badge bg-dark px-3 py-2 shadow-sm">HABIS TOTAL</span>
+                                        <span v-else class="badge bg-danger px-3 py-2 shadow-sm">SEGERA RESTOCK</span>
                                     </td>
                                 </tr>
                                 <tr v-if="!lowStockItems || lowStockItems.length === 0">
-                                    <td colspan="5" class="text-center py-5 text-success fw-bold">
-                                        <i class="bi bi-shield-check d-block mb-2" style="font-size: 3rem;"></i>
+                                    <!-- 🌟 UBAH COLSPAN MENJADI 6 KARENA ADA KOLOM BARU -->
+                                    <td colspan="6" class="text-center py-5 text-success fw-bold">
+                                        <i class="bi bi-shield-check d-block mb-2" style="font-size: 3.5rem;"></i>
                                         Semua stok produk Anda dalam kondisi aman!<br>
                                         <span class="text-muted fw-normal small">Tidak ada produk yang menyentuh batas minimum stok.</span>
                                     </td>
@@ -9755,6 +9791,9 @@ body.sidebar-open {
                 salesOrderTypeFilter: '', // 🌟 KODE BARU: Untuk filter tipe pesanan
                 fulfillmentOutletFilter: '', // Filter cabang khusus di halaman Fulfillment
 
+                alertSearchQuery: '',
+                alertOutletFilter: '',
+
                 currentTimeTick: new Date(), // Variabel reaktif untuk pemicu waktu
                 timerInterval: null,          // Untuk menyimpan ID interval agar bisa dibersihkan
 
@@ -10401,30 +10440,89 @@ fulfillmentOrders() {
     },    
           
             lowStockItems() {
-        let alerts = [];
-        this.products.forEach(p => {
-            if (!p.variants || p.variants.length === 0) {
-                // Hitung total stok dari semua outlet untuk base product
-                let totalStock = 0;
-                if (p.baseOutletStocks) Object.values(p.baseOutletStocks).forEach(qty => totalStock += (qty || 0));
-                
-                // Masukkan ke daftar jika stok <= minStock (dan minStock sudah diatur > 0)
-                if (p.minStock > 0 && totalStock <= p.minStock) {
-                    alerts.push({ name: p.name, sku: p.sku || '-', currentStock: totalStock, minStock: p.minStock });
-                }
-            } else {
-                p.variants.forEach(v => {
-                    let totalStock = 0;
-                    if (v.outletStocks) Object.values(v.outletStocks).forEach(qty => totalStock += (qty || 0));
-                    
-                    if (v.minStock > 0 && totalStock <= v.minStock) {
-                        alerts.push({ name: `${p.name} - ${v.name || v.attributes}`, sku: v.variantSku || '-', currentStock: totalStock, minStock: v.minStock });
-                    }
+    let alerts = [];
+    
+    // 1. Pengaman jika data produk belum dimuat
+    if (!this.products || !Array.isArray(this.products)) return alerts;
+
+    this.products.forEach(p => {
+        if (!p.variants || p.variants.length === 0) {
+            // ==========================================
+            // A. PRODUK TUNGGAL (TANPA VARIAN)
+            // ==========================================
+            let totalStock = 0;
+            if (p.baseOutletStocks) {
+                Object.values(p.baseOutletStocks).forEach(qty => totalStock += (Number(qty) || 0));
+            }
+            
+            // Batas minimum: Jika diatur > 0 gunakan p.minStock, jika tidak diatur (0/null) beri fallback default (5)
+            const minThreshold = (p.minStock !== undefined && p.minStock !== null && p.minStock > 0) ? p.minStock : 5;
+
+            if (totalStock <= minThreshold) {
+                alerts.push({
+                    id: p.id,
+                    name: p.name,
+                    sku: p.sku || '-',
+                    currentStock: totalStock,
+                    minStock: minThreshold,
+                    // 🌟 PENTING: Wajib dikirim agar UI Rincian per Cabang di HTML bisa dibaca
+                    outletStocks: p.baseOutletStocks || {}
                 });
             }
+        } else {
+            // ==========================================
+            // B. PRODUK DENGAN VARIAN
+            // ==========================================
+            p.variants.forEach((v, idx) => {
+                let totalStock = 0;
+                if (v.outletStocks) {
+                    Object.values(v.outletStocks).forEach(qty => totalStock += (Number(qty) || 0));
+                }
+
+                // Tentukan minStock varian atau fallback ke minStock induk / default 5
+                const minThreshold = (v.minStock !== undefined && v.minStock !== null && v.minStock > 0) 
+                    ? v.minStock 
+                    : ((p.minStock !== undefined && p.minStock !== null && p.minStock > 0) ? p.minStock : 5);
+
+                if (totalStock <= minThreshold) {
+                    alerts.push({
+                        id: p.id,
+                        name: `${p.name} - ${v.name || v.attributes || ('Varian ' + (idx + 1))}`,
+                        sku: v.variantSku || v.sku || p.sku || '-',
+                        currentStock: totalStock,
+                        minStock: minThreshold,
+                        // 🌟 PENTING: Wajib dikirim agar UI Rincian per Cabang di HTML bisa dibaca
+                        outletStocks: v.outletStocks || {}
+                    });
+                }
+            });
+        }
+    });
+
+    // ==========================================
+    // 🌟 INTEGRASI FILTER PENCARIAN & CABANG
+    // ==========================================
+
+    // Filter 1: Berdasarkan Pencarian Kata Kunci
+    if (this.alertSearchQuery) {
+        const query = this.alertSearchQuery.toLowerCase();
+        alerts = alerts.filter(a => 
+            a.name.toLowerCase().includes(query) || 
+            a.sku.toLowerCase().includes(query)
+        );
+    }
+
+    // Filter 2: Berdasarkan Cabang / Outlet Terpilih
+    if (this.alertOutletFilter) {
+        alerts = alerts.filter(a => {
+            let stockAtOutlet = a.outletStocks[this.alertOutletFilter] ? Number(a.outletStocks[this.alertOutletFilter]) : 0;
+            return stockAtOutlet <= a.minStock;
         });
-        return alerts.sort((a, b) => a.currentStock - b.currentStock); // Urutkan dari yang paling habis
-    },
+    }
+
+    // Urutkan dari stok yang paling kritis (paling minus / sedikit)
+    return alerts.sort((a, b) => a.currentStock - b.currentStock);
+},
 
             // MASTER PRODUCT & SKU VARIANT FILTERING
             filteredCatalogProducts() {
