@@ -12221,7 +12221,7 @@ downloadTemplate() {
     let fileName = `Template_${this.importConfig.target}.xlsx`;
 
     if (this.importConfig.target === 'customers') {
-        headers = ['Nama', 'No. Telepon', 'Alamat'];
+        headers = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
     } else if (this.importConfig.target === 'suppliers') {
         headers = ['Nama Supplier', 'No. Telepon', 'Alamat'];
     } else if (this.importConfig.target === 'sales') {
@@ -12262,7 +12262,7 @@ handleFileUpload(event) {
                 
                 let expectedHeaders = [];
                 if (this.importConfig.target === 'customers') {
-                    expectedHeaders = ['Nama', 'No. Telepon', 'Alamat'];
+                    expectedHeaders = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
                 } else if (this.importConfig.target === 'suppliers') {
                     expectedHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
                 } else if (this.importConfig.target === 'sales') {
@@ -12486,20 +12486,40 @@ async processImport() {
                         }
 
                     } else {
-                        const name = row[0].toString().trim();
+                        const name = row[0] ? row[0].toString().trim() : '';
                         const phone = row[1] ? row[1].toString().trim() : '';
                         const address = row[2] ? row[2].toString().trim() : '';
+                        
+                        // PERBAIKAN: Ambil data dari kolom ke-4 (Index 3)
+                        const membershipStr = row[3] ? row[3].toString().trim() : ''; 
 
                         if (phone && existingPhones.has(phone)) existingDocId = existingPhones.get(phone);
                         else if (existingNames.has(name.toLowerCase())) existingDocId = existingNames.get(name.toLowerCase());
+
+                        // PERBAIKAN: Mencari ID Membership berdasarkan nama Tier
+                        let matchedMembershipId = '';
+                        if (this.importConfig.target === 'customers' && membershipStr && this.memberships && this.memberships.length > 0) {
+                            let found = this.memberships.find(m => m.tierName.toLowerCase() === membershipStr.toLowerCase() || m.id === membershipStr);
+                            if (found) matchedMembershipId = found.id;
+                        }
 
                         if (existingDocId) {
                             if (name) updatePayload.name = name;
                             if (phone) updatePayload.phone = phone;
                             if (address) updatePayload.address = address;
+                            
+                            // PERBAIKAN: Update membershipId
+                            if (this.importConfig.target === 'customers') {
+                                updatePayload.membershipId = matchedMembershipId;
+                            }
                         } else {
                             insertPayload = { ...insertPayload, name, phone, address };
-                            if (this.importConfig.target === 'customers') insertPayload.membershipId = '';
+                            
+                            // PERBAIKAN: Masukkan membershipId saat tambah baru
+                            if (this.importConfig.target === 'customers') {
+                                insertPayload.membershipId = matchedMembershipId;
+                            }
+                            
                             existingNames.set(name.toLowerCase(), "pending_insert");
                             if (phone) existingPhones.set(phone, "pending_insert");
                         }
