@@ -12236,9 +12236,9 @@ previewExportData() {
     let dataSumber = [];
 
     if (this.exportConfig.target === 'customers') {
-        this.exportConfig.previewHeaders = ['Nama', 'No. Telepon', 'Alamat', 'Diskon Member'];
+        this.exportConfig.previewHeaders = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
         dataSumber = this.filteredCustomers || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(c => ({ col1: c.name, col2: c.phone, col3: c.address || '-', col4: this.getMembershipDiscount(c.membershipId) + '%' }));
+        this.exportConfig.previewData = dataSumber.slice(0, 5).map(c => ({ col1: c.name, col2: c.phone, col3: c.address || '-', col4: (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
     } else if (this.exportConfig.target === 'suppliers') {
         this.exportConfig.previewHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
         dataSumber = this.filteredSuppliers || [];
@@ -12248,7 +12248,6 @@ previewExportData() {
         dataSumber = this.filteredAllRatings || [];
         this.exportConfig.previewData = dataSumber.slice(0, 5).map(r => ({ col1: r.date, col2: r.customerName || '-', col3: r.invoiceId, col4: r.rating + ' Bintang', col5: r.review || '-' }));
     } else if (this.exportConfig.target === 'sales') {
-        // 🌟 PREVIEW SALES (Dibuat ringkas untuk preview agar muat di layar)
         this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Nama Produk', 'Qty', 'TOTAL AKHIR', 'Sudah Dibayar', 'Status Bayar'];
         dataSumber = this.filteredTransactions || [];
         let flatData = [];
@@ -12261,18 +12260,17 @@ previewExportData() {
         });
         this.exportConfig.previewData = flatData.slice(0, 5);
     } else if (this.exportConfig.target === 'po') {
-        this.exportConfig.previewHeaders = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'Nama Produk', 'Qty', 'Harga Beli'];
+        // 🌟 PREVIEW PO DIPERBARUI (Lebih Rapi)
+        this.exportConfig.previewHeaders = ['No. PO', 'Tanggal', 'Supplier', 'Nama Produk', 'Qty', 'TOTAL AKHIR', 'Status Bayar'];
         dataSumber = this.filteredPurchases || [];
         let flatData = [];
         dataSumber.forEach(po => {
-            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : 'Pusat';
             let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
-            if (po.items && po.items.length > 0) po.items.forEach(item => flatData.push({ col1: po.id, col2: po.dateStr, col3: namaCabang, col4: namaSupplier, col5: item.productName, col6: item.qty, col7: item.price }));
-            else flatData.push({ col1: po.id, col2: po.dateStr, col3: namaCabang, col4: namaSupplier, col5: '-', col6: 0, col7: 0 });
+            if (po.items && po.items.length > 0) po.items.forEach(item => flatData.push({ col1: po.id, col2: po.dateStr, col3: namaSupplier, col4: item.productName, col5: item.qty, col6: po.total, col7: po.paymentStatus }));
+            else flatData.push({ col1: po.id, col2: po.dateStr, col3: namaSupplier, col4: '-', col5: 0, col6: po.total, col7: po.paymentStatus });
         });
         this.exportConfig.previewData = flatData.slice(0, 5);
         
-    // 🌟 PREVIEW KHUSUS KEUANGAN
     } else if (this.exportConfig.target === 'sales_payment') {
         this.exportConfig.previewHeaders = ['Waktu', 'Metode', 'No. Invoice', 'Outlet', 'Pelanggan', 'Nominal Masuk'];
         let flatData = [];
@@ -12305,28 +12303,21 @@ processExport() {
 
     if (this.exportConfig.target === 'customers') {
         if (!this.filteredCustomers || this.filteredCustomers.length === 0) return alert('Tidak ada data pelanggan!');
-        formattedData = this.filteredCustomers.map(c => ({ "Nama Pelanggan": c.name || '-', "No Telepon": c.phone || '-', "Alamat": c.address || '-', "Diskon Member": this.getMembershipDiscount(c.membershipId) + '%' }));
+        // 🌟 PERBAIKAN: Header EXPORT harus SAMA PERSIS dengan HEADER TEMPLATE IMPORT
+        formattedData = this.filteredCustomers.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
     } else if (this.exportConfig.target === 'suppliers') {
         if (!this.filteredSuppliers || this.filteredSuppliers.length === 0) return alert('Tidak ada data supplier!');
-        formattedData = this.filteredSuppliers.map(s => ({ "Nama Supplier": s.name || '-', "No Telepon": s.phone || '-', "Alamat": s.address || '-' }));
+        formattedData = this.filteredSuppliers.map(s => ({ "Nama Supplier": s.name || '-', "No. Telepon": s.phone || '-', "Alamat": s.address || '-' }));
     } else if (this.exportConfig.target === 'ratings') {
         if (!this.filteredAllRatings || this.filteredAllRatings.length === 0) return alert('Tidak ada data ulasan!');
         formattedData = this.filteredAllRatings.map(r => ({ "Tanggal": r.date || '-', "Invoice": r.invoiceId || '-', "Nama Pelanggan": r.customerName || 'Pelanggan', "No Telepon": this.getCustomerPhone ? this.getCustomerPhone(r) : '-', "Outlet": this.getOutletNameForReview ? this.getOutletNameForReview(r) : '-', "Bintang": r.rating || 0, "Ulasan": (r.review || '-').replace(/\n/g, ' ') }));
     } else if (this.exportConfig.target === 'sales') {
-        // 🌟 EXPORT SALES - SUSUNAN KOLOM BARU (Sangat Rapi & Lengkap)
         if (!this.filteredTransactions || this.filteredTransactions.length === 0) return alert('Tidak ada data penjualan!');
         this.filteredTransactions.forEach(t => {
             let namaCabang = typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global/Pusat';
-            
-            // Variabel Keuangan
-            let subtotal = t.subtotal || 0;
-            let diskon = t.discountAmt || 0;
-            let ppn = t.taxAmt || 0;
-            let biayaLayanan = (t.serviceAmt || 0) + (t.surchargeFee || 0);
-            let ongkir = t.shippingCost || 0;
-            let totalAkhir = t.total || 0;
-            let dibayar = t.amountReceived || totalAkhir;
-            let kembalian = t.changeAmount || 0;
+            let subtotal = t.subtotal || 0; let diskon = t.discountAmt || 0; let ppn = t.taxAmt || 0;
+            let biayaLayanan = (t.serviceAmt || 0) + (t.surchargeFee || 0); let ongkir = t.shippingCost || 0;
+            let totalAkhir = t.total || 0; let dibayar = t.amountReceived || totalAkhir; let kembalian = t.changeAmount || 0;
 
             if (t.items && t.items.length > 0) {
                 t.items.forEach(item => formattedData.push({
@@ -12345,6 +12336,7 @@ processExport() {
             }
         });
     } else if (this.exportConfig.target === 'po') {
+        // 🌟 EXPORT PO DIPERBARUI (Urutan Rapi seperti Sales)
         if (!this.filteredPurchases || this.filteredPurchases.length === 0) return alert('Tidak ada data PO!');
         this.filteredPurchases.forEach(po => {
             let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-';
@@ -12354,12 +12346,33 @@ processExport() {
             let statusBayar = po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang';
             let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
 
+            let rowBase = {
+                "No. PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-', "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem'
+            };
+            
+            let rowFinance = {
+                "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0, "TOTAL AKHIR": po.total || 0,
+                "DP / Dibayar": dp, "Sisa Hutang": Math.max(0, (po.total || 0) - dp), "Metode Bayar": po.paymentMethod || 'CASH', 
+                "Jatuh Tempo": po.dueDate || '', "Status Bayar": statusBayar, "Status Barang": statusBarang
+            };
+
             if (po.items && po.items.length > 0) {
-                po.items.forEach(item => formattedData.push({ "No. Invoice / PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-', "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem', "Status Barang": statusBarang, "Status Bayar": statusBayar, "Metode Bayar": po.paymentMethod || 'CASH', "Jatuh Tempo": po.dueDate || '', "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0, "DP / Dibayar": dp, "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '', "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0 }));
+                po.items.forEach(item => formattedData.push({
+                    ...rowBase,
+                    "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '-', "No. Batch": item.batchNo || 'AUTO', 
+                    "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0,
+                    "Subtotal Barang": (item.qty || 0) * (item.price || 0),
+                    ...rowFinance
+                }));
+            } else {
+                formattedData.push({
+                    ...rowBase,
+                    "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0, "Subtotal Barang": 0,
+                    ...rowFinance
+                });
             }
         });
         
-    // 🌟 PROSES EXPORT DOWNLOAD KHUSUS KEUANGAN
     } else if (this.exportConfig.target === 'sales_payment') {
         if (!this.financeSalesPayments || this.financeSalesPayments.length === 0) return alert('Tidak ada data pembayaran masuk!');
         (this.financeSalesPayments || []).forEach(group => {
@@ -12427,10 +12440,10 @@ downloadTemplate() {
     } else if (this.importConfig.target === 'suppliers') {
         headers = ['Nama Supplier', 'No. Telepon', 'Alamat'];
     } else if (this.importConfig.target === 'sales') {
-        // 🌟 HEADER TEMPLATE SALES YANG BARU (Rapi)
         headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan', 'Subtotal Barang', 'Total Diskon', 'Pajak (PPN)', 'Biaya Layanan', 'Ongkir', 'TOTAL AKHIR', 'Sudah Dibayar', 'Kembalian', 'Metode Pembayaran', 'Status Bayar'];
     } else if (this.importConfig.target === 'po') {
-        headers = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Status Barang', 'Status Bayar', 'Metode Bayar', 'Jatuh Tempo', 'Pajak (%)', 'Pajak (Rp)', 'DP / Dibayar', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan'];
+        // 🌟 HEADER TEMPLATE PO YANG BARU (Disamakan dengan Export yang rapi)
+        headers = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan', 'Subtotal Barang', 'Pajak (%)', 'Pajak (Rp)', 'TOTAL AKHIR', 'DP / Dibayar', 'Sisa Hutang', 'Metode Bayar', 'Jatuh Tempo', 'Status Bayar', 'Status Barang'];
     } else {
         return alert('Template tidak tersedia untuk data ini.');
     }
@@ -12469,10 +12482,10 @@ handleFileUpload(event) {
                 } else if (this.importConfig.target === 'suppliers') {
                     expectedHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
                 } else if (this.importConfig.target === 'sales') {
-                    // 🌟 EXPECTED HEADER UNTUK VALIDASI EXCEL IMPORT SALES
                     expectedHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan', 'Subtotal Barang', 'Total Diskon', 'Pajak (PPN)', 'Biaya Layanan', 'Ongkir', 'TOTAL AKHIR', 'Sudah Dibayar', 'Kembalian', 'Metode Pembayaran', 'Status Bayar'];
                 } else if (this.importConfig.target === 'po') {
-                    expectedHeaders = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Status Barang', 'Status Bayar', 'Metode Bayar', 'Jatuh Tempo', 'Pajak (%)', 'Pajak (Rp)', 'DP / Dibayar', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan'];
+                    // 🌟 EXPECTED HEADER PO SESUAI TEMPLATE BARU
+                    expectedHeaders = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan', 'Subtotal Barang', 'Pajak (%)', 'Pajak (Rp)', 'TOTAL AKHIR', 'DP / Dibayar', 'Sisa Hutang', 'Metode Bayar', 'Jatuh Tempo', 'Status Bayar', 'Status Barang'];
                 }
 
                 let isFormatValid = true;
@@ -12555,7 +12568,7 @@ async processImport() {
         let updateCount = 0;
 
         if (this.importConfig.target === 'po') {
-            // LOGIKA GROUPING KHUSUS PO TETAP SAMA
+            // 🌟 LOGIKA GROUPING KHUSUS PO (DISESUAIKAN INDEXNYA DENGAN TEMPLATE BARU)
             let poGroups = {};
             for (let row of dataRows) {
                 let poId = row[0] ? row[0].toString().trim() : null;
@@ -12579,6 +12592,17 @@ async processImport() {
                     let supplierName = header[3] ? header[3].toString().trim() : '';
                     let pic = header[4] ? header[4].toString().trim() : '';
                     
+                    // Baca Rincian Keuangan dari Header PO (Mengikuti Index Template Baru)
+                    let taxPercent = header[12] ? parseFloat(String(header[12]).replace(/[^0-9.]/g, '')) : 0;
+                    let taxAmount = header[13] ? parseInt(String(header[13]).replace(/[^0-9]/g, '')) : 0;
+                    let totalAkhir = header[14] ? parseInt(String(header[14]).replace(/[^0-9]/g, '')) : 0;
+                    let paidAmount = header[15] ? parseInt(String(header[15]).replace(/[^0-9]/g, '')) : 0;
+                    
+                    let paymentMethod = header[17] ? header[17].toString().trim() : 'CASH';
+                    let dueDate = header[18] ? header[18].toString().trim() : '';
+                    let paymentStatus = (header[19] || '').toString().toUpperCase().includes('LUNAS') ? 'LUNAS' : 'HUTANG';
+                    let poStatus = (header[20] || '').toString().toUpperCase().includes('SELESAI') || (header[20] || '').toString().toUpperCase().includes('TERIMA') ? 'SELESAI' : 'PENDING';
+
                     let matchedOutletId = '';
                     if (this.outlets && this.outlets.length > 0) {
                         let found = this.outlets.find(o => o.name.toLowerCase() === outletName.toLowerCase());
@@ -12590,21 +12614,17 @@ async processImport() {
                         if (found) matchedSupplierId = found.id;
                     }
 
-                    let poStatus = (header[5] || '').toString().toUpperCase().includes('TERIMA') ? 'SELESAI' : 'PENDING';
-                    let paymentStatus = (header[6] || '').toString().toUpperCase().includes('LUNAS') ? 'LUNAS' : 'HUTANG';
-                    let paymentMethod = header[7] ? header[7].toString().trim() : 'CASH';
-                    let dueDate = header[8] ? header[8].toString().trim() : '';
-                    let taxPercent = header[9] ? parseFloat(String(header[9]).replace(/[^0-9.]/g, '')) : 0;
-                    let taxAmount = header[10] ? parseInt(String(header[10]).replace(/[^0-9]/g, '')) : 0;
-                    let paidAmount = header[11] ? parseInt(String(header[11]).replace(/[^0-9]/g, '')) : 0;
-
                     let items = [];
-                    let subtotalItems = 0;
+                    let calcSubtotalItems = 0;
+                    
                     for (let r of rows) {
-                        let prodName = r[12] ? r[12].toString().trim() : '';
-                        let variant = r[13] ? r[13].toString().trim() : '';
-                        let qty = r[16] ? parseInt(String(r[16]).replace(/[^0-9]/g, '')) : 0;
-                        let price = r[17] ? parseInt(String(r[17]).replace(/[^0-9]/g, '')) : 0;
+                        // Baca Item sesuai Index PO Baru
+                        let prodName = r[5] ? r[5].toString().trim() : '';
+                        let variant = r[6] ? r[6].toString().trim() : '';
+                        let batchNo = r[7] ? r[7].toString().trim() : 'AUTO';
+                        let expiredDate = r[8] ? r[8].toString().trim() : '';
+                        let qty = r[9] ? parseInt(String(r[9]).replace(/[^0-9]/g, '')) : 0;
+                        let price = r[10] ? parseInt(String(r[10]).replace(/[^0-9]/g, '')) : 0;
                         
                         if (prodName && prodName !== '-' && qty > 0) {
                             let matchedProductId = '';
@@ -12614,19 +12634,18 @@ async processImport() {
                             }
                             items.push({
                                 productId: matchedProductId, productName: prodName, variantName: variant, variantSku: variant,
-                                sku: variant, batchNo: r[14] ? r[14].toString().trim() : 'AUTO', expiredDate: r[15] ? r[15].toString().trim() : '',
-                                qty: qty, price: price
+                                sku: variant, batchNo: batchNo, expiredDate: expiredDate, qty: qty, price: price
                             });
-                            subtotalItems += (qty * price);
+                            calcSubtotalItems += (qty * price);
                         }
                     }
 
-                    let grandTotal = subtotalItems + taxAmount;
-                    if (paymentStatus === 'LUNAS') paidAmount = grandTotal;
+                    let finalTotal = totalAkhir || (calcSubtotalItems + taxAmount);
+                    if (paymentStatus === 'LUNAS') paidAmount = finalTotal;
 
                     let docPayload = {
                         invoiceNo: poId, id: poId, dateStr, outletId: matchedOutletId, supplierId: matchedSupplierId, pic,
-                        poStatus, paymentStatus, paymentMethod, dueDate, taxPercent, taxAmount, paidAmount, total: grandTotal,
+                        poStatus, paymentStatus, paymentMethod, dueDate, taxPercent, taxAmount, paidAmount, total: finalTotal,
                         items, paymentHistory: [{ method: paymentMethod, amount: paidAmount, date: dateStr }]
                     };
 
@@ -12644,7 +12663,6 @@ async processImport() {
             }
             
         } else if (this.importConfig.target === 'sales') {
-            // 🌟 LOGIKA GROUPING KHUSUS SALES YANG BARU (SESUAI DENGAN TEMPLATE)
             let salesGroups = {};
             for (let row of dataRows) {
                 let invId = row[0] ? row[0].toString().trim() : null;
@@ -12659,7 +12677,6 @@ async processImport() {
             for (let i = 0; i < salesArray.length; i += BATCH_LIMIT) {
                 const batch = writeBatch(db);
                 let chunkSales = salesArray.slice(i, i + BATCH_LIMIT);
-                
                 let chunkProductUpdates = {}; 
 
                 for (let rows of chunkSales) {
@@ -12671,7 +12688,6 @@ async processImport() {
                     let customerName = header[4] ? header[4].toString().trim() : 'Umum';
                     let orderType = header[5] ? header[5].toString().trim() : 'direct';
                     
-                    // PARSE RINCIAN BIAYA DARI KOLOM KE 11 S/D 20 (Index 10 s/d 19)
                     let subtotal = header[10] ? parseFloat(String(header[10]).replace(/[^0-9.-]/g, '')) : 0;
                     let discountAmt = header[11] ? parseFloat(String(header[11]).replace(/[^0-9.-]/g, '')) : 0;
                     let taxAmt = header[12] ? parseFloat(String(header[12]).replace(/[^0-9.-]/g, '')) : 0;
@@ -12695,10 +12711,10 @@ async processImport() {
                     let calcSubtotal = 0;
 
                     for (let r of rows) {
-                        let prodName = r[6] ? r[6].toString().trim() : ''; // Index 6 adalah Nama Produk
-                        let variant = r[7] ? r[7].toString().trim() : '';  // Index 7 adalah SKU
-                        let qty = r[8] ? parseInt(String(r[8]).replace(/[^0-9]/g, '')) : 0; // Index 8 adalah Qty
-                        let price = r[9] ? parseInt(String(r[9]).replace(/[^0-9]/g, '')) : 0; // Index 9 adalah Harga Satuan
+                        let prodName = r[6] ? r[6].toString().trim() : ''; 
+                        let variant = r[7] ? r[7].toString().trim() : '';  
+                        let qty = r[8] ? parseInt(String(r[8]).replace(/[^0-9]/g, '')) : 0; 
+                        let price = r[9] ? parseInt(String(r[9]).replace(/[^0-9]/g, '')) : 0; 
 
                         if (prodName && prodName !== '-' && qty > 0) {
                             let matchedProductId = '';
@@ -12739,38 +12755,22 @@ async processImport() {
                                     prodToUpdate.baseOutletStocks[outId] = (prodToUpdate.baseOutletStocks[outId] || 0) - qty;
                                 }
 
-                                // CATAT LOG MUTASI KELUAR
                                 let logRef = doc(collection(db, "stockLogs"));
                                 batch.set(logRef, {
-                                    companyId: compId,
-                                    createdAt: new Date(),
-                                    dateStr: dateStr || new Date().toLocaleString('id-ID'),
-                                    type: 'OUT',
-                                    productId: prodRef.id,
-                                    sku: prodRef.sku || '-',
-                                    productName: prodRef.name || '-',
-                                    variantSku: variant || null,
-                                    variantName: variant || '-',
-                                    qtyChange: -qty,
-                                    outletId: outId,
-                                    outletName: outletName || 'Outlet',
-                                    refId: invId,
-                                    userName: cashierName || 'Sistem (Import)',
-                                    note: 'Penjualan (Import Excel)'
+                                    companyId: compId, createdAt: new Date(), dateStr: dateStr || new Date().toLocaleString('id-ID'),
+                                    type: 'OUT', productId: prodRef.id, sku: prodRef.sku || '-', productName: prodRef.name || '-',
+                                    variantSku: variant || null, variantName: variant || '-', qtyChange: -qty, outletId: outId,
+                                    outletName: outletName || 'Outlet', refId: invId, userName: cashierName || 'Sistem (Import)', note: 'Penjualan (Import Excel)'
                                 });
                             }
                         }
                     }
 
-                    // PAYLOAD INSERT / UPDATE INVOICE
                     let docPayload = {
                         id: invId, dateStr, outletId: matchedOutletId, outletName, cashierName, 
                         customer: customerName, orderType, paymentStatus, paymentMethod, 
-                        total: grandTotal || calcSubtotal,
-                        subtotal: subtotal || calcSubtotal,
-                        discountAmt, taxAmt, serviceAmt, shippingCost,
-                        amountReceived: amountReceived || (grandTotal || calcSubtotal), 
-                        changeAmount,
+                        total: grandTotal || calcSubtotal, subtotal: subtotal || calcSubtotal,
+                        discountAmt, taxAmt, serviceAmt, shippingCost, amountReceived: amountReceived || (grandTotal || calcSubtotal), changeAmount,
                         items: items, fulfillmentStatus: 'COMPLETED'
                     };
 
@@ -12791,12 +12791,10 @@ async processImport() {
                         baseOutletStocks: chunkProductUpdates[prodId].baseOutletStocks || {}
                     });
                 }
-
                 await batch.commit();
             }
             
         } else {
-            // 🌟 LOGIKA IMPORT CUSTOMER / SUPPLIER (Biasa, Baris Tunggal)
             const BATCH_LIMIT = 400; 
             const chunks = [];
             for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) {
