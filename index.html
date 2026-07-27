@@ -9268,7 +9268,6 @@ body.sidebar-open {
                     <label class="form-label fw-bold small">Pilih Format File:</label>
                     <div class="d-flex gap-3">
                         <div class="form-check">
-                            <!-- PERBAIKAN: value diubah menjadi "xlsx" -->
                             <input class="form-check-input" type="radio" v-model="exportConfig.format" value="xlsx" id="exportExcel">
                             <label class="form-check-label" for="exportExcel"><i class="bi bi-file-earmark-excel text-success"></i> Excel (.xlsx)</label>
                         </div>
@@ -9284,14 +9283,13 @@ body.sidebar-open {
                 <!-- Tombol Load Preview & Info Jumlah Data -->
                 <div class="text-center" v-if="!exportConfig.showPreview">
                     
-                    <!-- ALERT INFO EXPORT (Sesuai Screenshot 2026-07-27 092822.png) -->
+                    <!-- ALERT INFO EXPORT -->
                     <div class="alert py-2 d-flex align-items-center text-start mx-auto mb-3" 
                          style="background-color: #b8dbe5; color: #4a5568; max-width: 100%; border: none; border-radius: 4px;">
                         <i class="bi bi-exclamation-circle-fill text-dark me-2 opacity-75"></i>
                         <span class="small fw-medium">Exporting data from 1 - {{ getExportDataCount().toLocaleString('id-ID') }}</span>
                     </div>
 
-                    <!-- PERBAIKAN: Memanggil method previewExportData -->
                     <button class="btn btn-sm btn-outline-primary" @click="previewExportData">
                         <i class="bi bi-eye"></i> Lihat Preview Data Sebelum Didownload
                     </button>
@@ -9312,7 +9310,6 @@ body.sidebar-open {
                             </thead>
                             <tbody>
                                 <tr v-for="(row, index) in exportConfig.previewData" :key="index">
-                                    <!-- PERBAIKAN: Looping dinamis agar semua kolom tampil -->
                                     <td v-for="(value, key) in row" :key="key">{{ value }}</td>
                                 </tr>
                             </tbody>
@@ -9323,7 +9320,6 @@ body.sidebar-open {
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-sm btn-secondary" @click="exportConfig.showModal = false">Batal</button>
-                <!-- PERBAIKAN: Ditambahkan @click="processExport" -->
                 <button type="button" class="btn btn-sm btn-primary" @click="processExport">
                     <i class="bi bi-download me-1"></i> Download File
                 </button>
@@ -9347,26 +9343,37 @@ body.sidebar-open {
             </div>
             <div class="modal-body py-4">
                 
-                <!-- Indikator Stepper -->
+                <!-- Indikator Stepper (DIPERBAIKI) -->
                 <div class="d-flex justify-content-between position-relative px-5 mb-5">
-                    <div class="position-absolute top-50 translate-middle-y" style="height: 2px; background-color: #dee2e6; left: 15%; right: 15%; z-index: 0;"></div>
                     
-                    <div class="position-relative text-center" style="z-index: 1;">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-1 text-white shadow-sm" 
-                             :class="importConfig.step >= 1 ? 'bg-primary' : 'bg-secondary'" style="width: 35px; height: 35px;">1</div>
-                        <small class="fw-bold text-muted" :class="{'text-primary': importConfig.step >= 1}">Upload File</small>
+                    <!-- GARIS 1: Dari Step 1 ke 2 -->
+                    <div class="position-absolute" 
+                         :class="importConfig.step >= 2 ? 'bg-primary' : ''"
+                         style="height: 2px; background-color: #dee2e6; left: 15%; right: 55%; top: 17px; z-index: 0; transition: all 0.3s ease;">
                     </div>
                     
-                    <div class="position-relative text-center" style="z-index: 1;">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-1 text-white shadow-sm" 
-                             :class="importConfig.step >= 2 ? 'bg-primary' : 'bg-secondary'" style="width: 35px; height: 35px;">2</div>
-                        <small class="fw-bold text-muted" :class="{'text-primary': importConfig.step >= 2}">Preview Data</small>
+                    <!-- GARIS 2: Dari Step 2 ke 3 -->
+                    <div class="position-absolute" 
+                         :class="importConfig.step >= 3 ? 'bg-success' : ''"
+                         style="height: 2px; background-color: #dee2e6; left: 55%; right: 15%; top: 17px; z-index: 0; transition: all 0.3s ease;">
                     </div>
                     
-                    <div class="position-relative text-center" style="z-index: 1;">
+                    <div class="position-relative text-center" style="z-index: 1; min-width: 80px;">
                         <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-1 text-white shadow-sm" 
-                             :class="importConfig.step >= 3 ? 'bg-success' : 'bg-secondary'" style="width: 35px; height: 35px;"><i class="bi bi-check"></i></div>
-                        <small class="fw-bold text-muted" :class="{'text-success': importConfig.step >= 3}">Selesai</small>
+                             :class="importConfig.step >= 1 ? 'bg-primary' : 'bg-secondary'" style="width: 35px; height: 35px; transition: all 0.3s ease;">1</div>
+                        <small class="fw-bold text-muted d-block" :class="{'text-primary': importConfig.step >= 1}">Upload File</small>
+                    </div>
+                    
+                    <div class="position-relative text-center" style="z-index: 1; min-width: 80px;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-1 text-white shadow-sm" 
+                             :class="importConfig.step >= 2 ? 'bg-primary' : 'bg-secondary'" style="width: 35px; height: 35px; transition: all 0.3s ease;">2</div>
+                        <small class="fw-bold text-muted d-block" :class="{'text-primary': importConfig.step >= 2}">Preview Data</small>
+                    </div>
+                    
+                    <div class="position-relative text-center" style="z-index: 1; min-width: 80px;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-1 text-white shadow-sm" 
+                             :class="importConfig.step >= 3 ? 'bg-success' : 'bg-secondary'" style="width: 35px; height: 35px; transition: all 0.3s ease;"><i class="bi bi-check"></i></div>
+                        <small class="fw-bold text-muted d-block" :class="{'text-success': importConfig.step >= 3}">Selesai</small>
                     </div>
                 </div>
 
@@ -9391,7 +9398,6 @@ body.sidebar-open {
                     </div>
                     
                     <div class="mt-3 text-center">
-                        <!-- PERBAIKAN: Menambahkan @click.prevent="downloadTemplate" -->
                         <a href="#" @click.prevent="downloadTemplate" class="text-decoration-none small">
                             <i class="bi bi-file-earmark-arrow-down"></i> Download Template Format <span class="text-capitalize">{{ importConfig.target }}</span>
                         </a>
@@ -9401,7 +9407,6 @@ body.sidebar-open {
                 <!-- STEP 2: PREVIEW DATA -->
                 <div v-if="importConfig.step === 2" class="px-2">
                     <div class="alert alert-info py-2 small mb-3">
-                        <!-- PERBAIKAN: Jumlah baris dinamis -->
                         <i class="bi bi-info-circle me-1"></i> Ditemukan <b>{{ importConfig.fullImportData ? importConfig.fullImportData.length : 0 }} Baris</b> data dari file yang diupload. Silakan periksa kembali sebelum menyimpan.
                     </div>
                     <div class="table-responsive border rounded" style="max-height: 300px;">
@@ -9413,7 +9418,6 @@ body.sidebar-open {
                             </thead>
                             <tbody>
                                 <tr v-for="(row, index) in importConfig.previewData" :key="index">
-                                    <!-- PERBAIKAN: Looping dinamis agar semua kolom tampil -->
                                     <td v-for="(value, key) in row" :key="key">{{ value }}</td>
                                 </tr>
                             </tbody>
