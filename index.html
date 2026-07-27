@@ -1386,7 +1386,18 @@ body.sidebar-open {
 
             <div v-if="currentView === 'purchase'" class="dashboard-card">
     
-    <h6 class="fw-bold mb-3 pb-2 border-bottom">Riwayat Pembelian & PO</h6>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 pb-2 border-bottom gap-3">
+        <h6 class="fw-bold mb-0">Riwayat Pembelian & PO</h6>
+        
+        <div class="btn-group shadow-sm" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="importConfig.showModal = true; importConfig.target = 'po'; importConfig.step = 1">
+                <i class="bi bi-download text-primary me-1"></i> Import PO
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="exportConfig.showModal = true; exportConfig.target = 'po'; exportConfig.showPreview = false">
+                <i class="bi bi-upload text-primary me-1"></i> Export PO
+            </button>
+        </div>
+    </div>
     
     <div class="row mb-3 align-items-end">
         <div class="col-12 col-md-3 mb-2">
@@ -12024,23 +12035,25 @@ async fetchAllRatings() {
         return phone || 'Nomor tidak tersedia';
     },   
 
+// ==============================================
+// 🌟 FUNGSI EXPORT & IMPORT (TERMASUK PO/PEMBELIAN) 🌟
+// ==============================================
+
 getExportDataCount() {
-        let count = 0;
-        if (this.exportConfig.target === 'customers') {
-            count = this.filteredCustomers ? this.filteredCustomers.length : 0;
-        } else if (this.exportConfig.target === 'suppliers') {
-            count = this.filteredSuppliers ? this.filteredSuppliers.length : 0;
-        } else if (this.exportConfig.target === 'ratings') {
-            count = this.filteredAllRatings ? this.filteredAllRatings.length : 0;
-        } else if (this.exportConfig.target === 'sales') {
-            count = this.filteredTransactions ? this.filteredTransactions.length : 0;
-        }
-        return count;
-    },
-            
-// ==============================================
-// FUNGSI EXPORT & TEMPLATE
-// ==============================================
+    let count = 0;
+    if (this.exportConfig.target === 'customers') {
+        count = this.filteredCustomers ? this.filteredCustomers.length : 0;
+    } else if (this.exportConfig.target === 'suppliers') {
+        count = this.filteredSuppliers ? this.filteredSuppliers.length : 0;
+    } else if (this.exportConfig.target === 'ratings') {
+        count = this.filteredAllRatings ? this.filteredAllRatings.length : 0;
+    } else if (this.exportConfig.target === 'sales') {
+        count = this.filteredTransactions ? this.filteredTransactions.length : 0;
+    } else if (this.exportConfig.target === 'po') {
+        count = this.filteredPurchases ? this.filteredPurchases.length : 0;
+    }
+    return count;
+},
 
 previewExportData() {
     this.exportConfig.showPreview = true;
@@ -12067,32 +12080,52 @@ previewExportData() {
             col1: r.date, col2: r.customerName || '-', col3: r.invoiceId, col4: r.rating + ' Bintang', col5: r.review || '-'
         }));
     } else if (this.exportConfig.target === 'sales') {
-        // 🌟 KODE DIPERBAIKI: Menyesuaikan dengan properti data asli dari HTML tabel
         this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
         dataSumber = this.filteredTransactions || [];
         
         this.exportConfig.previewData = dataSumber.slice(0, 5).map(t => {
-            // Ambil nama cabang menggunakan fungsi yang ada di tabel, atau fallback ke 'Global/Pusat'
             let namaCabang = 'Global/Pusat';
             if (typeof this.getOutletName === 'function' && t.outletId) {
                 namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
             }
+            return {
+                col1: t.id || '-', col2: t.dateStr || '-', col3: namaCabang, col4: t.cashierName || t.cashier || '-',
+                col5: t.customer || '-', col6: t.orderType || '-', col7: t.paymentStatus || 'LUNAS',
+                col8: t.paymentMethod || '-', col9: t.total || 0 
+            };
+        });
+    } else if (this.exportConfig.target === 'po') {
+        // 🌟 PREVIEW KHUSUS PO
+        this.exportConfig.previewHeaders = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'PIC', 'Supplier', 'Status Barang', 'Status Bayar', 'Pembayaran', 'Total Pembelian'];
+        dataSumber = this.filteredPurchases || [];
+        
+        this.exportConfig.previewData = dataSumber.slice(0, 5).map(po => {
+            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : 'Gudang Pusat';
+            let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
+            
+            let statusBarang = po.poStatus || 'PENDING';
+            if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
+            
+            let metodeBayar = po.paymentMethod || 'CASH';
+            if (po.paymentHistory && po.paymentHistory.length > 0) {
+                metodeBayar = po.paymentHistory.map(h => h.method || 'CASH').join(', ');
+            }
 
             return {
-                col1: t.id || '-', 
-                col2: t.dateStr || '-', 
+                col1: po.id || po.invoiceNo || '-', 
+                col2: po.dateStr || '-', 
                 col3: namaCabang, 
-                col4: t.cashierName || t.cashier || '-',
-                col5: t.customer || '-', 
-                col6: t.orderType || '-',
-                col7: t.paymentStatus || 'LUNAS',
-                col8: t.paymentMethod || '-',
-                col9: t.total || 0 
+                col4: po.pic || po.userName || 'Sistem',
+                col5: namaSupplier, 
+                col6: statusBarang, 
+                col7: po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang / Belum Lunas', 
+                col8: metodeBayar, 
+                col9: po.total || 0
             };
         });
     }
 },
-        
+
 processExport() {
     let dataToExport = [];
     let formattedData = [];
@@ -12120,26 +12153,50 @@ processExport() {
             "Bintang": r.rating || 0, "Ulasan": (r.review || '-').replace(/\n/g, ' ')
         }));
     } else if (this.exportConfig.target === 'sales') {
-        // 🌟 KODE DIPERBAIKI: Data untuk file Excel yang di-download
         dataToExport = this.filteredTransactions;
         if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data penjualan untuk diexport!');
-        
         formattedData = dataToExport.map(t => {
             let namaCabang = 'Global/Pusat';
             if (typeof this.getOutletName === 'function' && t.outletId) {
                 namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
             }
+            return {
+                "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang,
+                "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-',
+                "Tipe Pesanan": t.orderType || '-', "Status": t.paymentStatus || 'LUNAS',
+                "Pembayaran": t.paymentMethod || '-', "Total": t.total || 0
+            };
+        });
+    } else if (this.exportConfig.target === 'po') {
+        // 🌟 EXPORT DOWNLOAD KHUSUS PO
+        dataToExport = this.filteredPurchases;
+        if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data PO untuk diexport!');
+        
+        formattedData = dataToExport.map(po => {
+            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : 'Gudang Pusat';
+            let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
+            
+            let statusBarang = po.poStatus || 'PENDING';
+            if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
+
+            let detailPembayaran = '';
+            if (po.paymentHistory && po.paymentHistory.length > 0) {
+                detailPembayaran = po.paymentHistory.map(h => `${h.method || 'CASH'}: Rp ${h.amount || 0}`).join(' | ');
+            } else {
+                let paid = po.paymentStatus === 'LUNAS' ? po.total : (po.paidAmount || 0);
+                detailPembayaran = `${po.paymentMethod || 'CASH'}: Rp ${paid}`;
+            }
 
             return {
-                "No. Invoice": t.id || '-',
-                "Waktu": t.dateStr || '-',
+                "No. Invoice / PO": po.id || po.invoiceNo || '-',
+                "Tanggal": po.dateStr || '-',
                 "Cabang": namaCabang,
-                "Kasir / PIC": t.cashierName || t.cashier || '-',
-                "Pelanggan": t.customer || '-',
-                "Tipe Pesanan": t.orderType || '-',
-                "Status": t.paymentStatus || 'LUNAS',
-                "Pembayaran": t.paymentMethod || '-',
-                "Total": t.total || 0
+                "PIC": po.pic || po.userName || 'Sistem',
+                "Supplier": namaSupplier,
+                "Status Barang": statusBarang,
+                "Status Bayar": po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang / Belum Lunas',
+                "Pembayaran": detailPembayaran,
+                "Total Pembelian": po.total || 0
             };
         });
     } else {
@@ -12183,8 +12240,10 @@ downloadTemplate() {
     } else if (this.importConfig.target === 'suppliers') {
         headers = ['Nama Supplier', 'No. Telepon', 'Alamat'];
     } else if (this.importConfig.target === 'sales') {
-        // 🌟 KODE BARU: Template Header Lengkap Sesuai UI
         headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
+    } else if (this.importConfig.target === 'po') {
+        // 🌟 TEMPLATE EXCEL KHUSUS PO
+        headers = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'PIC', 'Supplier', 'Status Barang', 'Status Bayar', 'Pembayaran', 'Total Pembelian'];
     } else {
         return alert('Template tidak tersedia untuk data ini.');
     }
@@ -12198,10 +12257,6 @@ downloadTemplate() {
         alert("Library Excel belum dimuat!");
     }
 },
-        
-// ==============================================
-// FUNGSI IMPORT (VALIDASI & SMART OVERWRITE)
-// ==============================================
 
 handleFileUpload(event) {
     const file = event.target.files[0];
@@ -12228,8 +12283,10 @@ handleFileUpload(event) {
                 } else if (this.importConfig.target === 'suppliers') {
                     expectedHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
                 } else if (this.importConfig.target === 'sales') {
-                    // 🌟 WAJIB MATCH DENGAN EXPORT
                     expectedHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
+                } else if (this.importConfig.target === 'po') {
+                    // 🌟 VALIDASI HEADER PO
+                    expectedHeaders = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'PIC', 'Supplier', 'Status Barang', 'Status Bayar', 'Pembayaran', 'Total Pembelian'];
                 }
 
                 let isFormatValid = true;
@@ -12286,6 +12343,7 @@ async processImport() {
         let collectionName = "customers";
         if (this.importConfig.target === 'suppliers') collectionName = "suppliers";
         if (this.importConfig.target === 'sales') collectionName = "transactions"; 
+        if (this.importConfig.target === 'po') collectionName = "purchases"; // 🌟 KOLEKSI PO
         
         const q = query(collection(db, collectionName), where("companyId", "==", compId));
         const existingDocs = await getDocs(q);
@@ -12293,6 +12351,7 @@ async processImport() {
         const existingPhones = new Map();
         const existingNames = new Map();
         const existingInvoices = new Map(); 
+        const existingPOs = new Map(); // Map khusus PO
 
         existingDocs.forEach((docSnap) => {
             const data = docSnap.data();
@@ -12300,6 +12359,10 @@ async processImport() {
             if (data.phone) existingPhones.set(data.phone.toString().trim(), docId);
             if (data.name) existingNames.set(data.name.toString().toLowerCase().trim(), docId);
             if (data.invoiceId) existingInvoices.set(data.invoiceId.toString().trim(), docId);
+            if (collectionName === "purchases") {
+                const poRef = data.invoiceNo || docId;
+                existingPOs.set(poRef.toString().trim(), docId);
+            }
         });
 
         let insertCount = 0;
@@ -12328,7 +12391,6 @@ async processImport() {
                 };
 
                 if (this.importConfig.target === 'sales') {
-                    // 🌟 MAP DATA SALES SUPER LENGKAP
                     const invoiceId = row[0].toString().trim();
                     const date = row[1] ? row[1].toString().trim() : '';
                     const outletName = row[2] ? row[2].toString().trim() : '';
@@ -12338,13 +12400,10 @@ async processImport() {
                     const paymentStatus = row[6] ? row[6].toString().trim() : '';
                     const paymentMethod = row[7] ? row[7].toString().trim() : '';
                     
-                    // Bersihkan nominal dari teks spt "Rp", titik, atau spasi jika format excel salah
                     let rawTotal = row[8] ? String(row[8]).replace(/[^0-9]/g, '') : '0';
                     const grandTotal = parseInt(rawTotal) || 0;
 
-                    if (invoiceId && existingInvoices.has(invoiceId)) {
-                        existingDocId = existingInvoices.get(invoiceId);
-                    }
+                    if (invoiceId && existingInvoices.has(invoiceId)) existingDocId = existingInvoices.get(invoiceId);
 
                     if (existingDocId) {
                         updatePayload = { ...updatePayload, date, outletName, cashierName, customerName, orderType, paymentStatus, paymentMethod, grandTotal };
@@ -12353,16 +12412,78 @@ async processImport() {
                         existingInvoices.set(invoiceId, "pending_insert"); 
                     }
 
+                } else if (this.importConfig.target === 'po') {
+                    // 🌟 MAP DATA PO (PEMBELIAN) - COCOK DENGAN MODAL
+                    const poId = row[0].toString().trim();
+                    const dateStr = row[1] ? row[1].toString().trim() : '';
+                    const outletNameText = row[2] ? row[2].toString().trim() : '';
+                    const pic = row[3] ? row[3].toString().trim() : '';
+                    const supplierNameText = row[4] ? row[4].toString().trim() : '';
+                    
+                    // Pencocokan ID
+                    let matchedOutletId = '';
+                    if (this.outlets && this.outlets.length > 0) {
+                        const foundOutlet = this.outlets.find(o => o.name.toLowerCase() === outletNameText.toLowerCase());
+                        if (foundOutlet) matchedOutletId = foundOutlet.id;
+                    }
+
+                    let matchedSupplierId = '';
+                    if (this.suppliers && this.suppliers.length > 0) {
+                        const foundSupplier = this.suppliers.find(s => s.name.toLowerCase() === supplierNameText.toLowerCase());
+                        if (foundSupplier) matchedSupplierId = foundSupplier.id;
+                    }
+
+                    // Normalisasi Status & Pembayaran
+                    let rawStatusBarang = row[5] ? row[5].toString().toUpperCase().trim() : 'PENDING';
+                    let poStatus = 'PENDING';
+                    if (rawStatusBarang.includes('TERIMA') || rawStatusBarang === 'SELESAI') poStatus = 'SELESAI';
+                    else if (rawStatusBarang.includes('RETUR SEBAGIAN')) poStatus = 'RETUR SEBAGIAN';
+                    else if (rawStatusBarang.includes('RETUR FULL')) poStatus = 'RETUR FULL';
+                    else if (rawStatusBarang.includes('TUKAR')) poStatus = 'RETUR TUKAR';
+
+                    let rawStatusBayar = row[6] ? row[6].toString().toUpperCase().trim() : '';
+                    let paymentStatus = rawStatusBayar.includes('LUNAS') && !rawStatusBayar.includes('BELUM') ? 'LUNAS' : 'HUTANG';
+
+                    let rawPayment = row[7] ? row[7].toString().trim() : 'CASH';
+                    let paymentMethod = rawPayment.split(':')[0].trim(); 
+
+                    let rawTotal = row[8] ? String(row[8]).replace(/[^0-9]/g, '') : '0';
+                    const total = parseInt(rawTotal) || 0;
+                    const paidAmount = paymentStatus === 'LUNAS' ? total : 0;
+
+                    // Item Penyelamat untuk Modal Edit
+                    const dummyItem = [{
+                        productId: 'import-dummy', productName: 'Data Import (Rekap Pembelian)',
+                        variantName: '', variantSku: '', sku: 'IMPORT', batchNo: 'AUTO',
+                        expiredDate: '', qty: 1, price: total
+                    }];
+
+                    let docPayload = {
+                        invoiceNo: poId, id: poId, dateStr: dateStr, outletId: matchedOutletId, supplierId: matchedSupplierId, pic: pic,
+                        poStatus: poStatus, paymentStatus: paymentStatus, paymentMethod: paymentMethod, dueDate: '',
+                        taxPercent: 0, taxAmount: 0, paidAmount: paidAmount, total: total, items: dummyItem,
+                        paymentHistory: [{ method: paymentMethod, amount: paidAmount, date: dateStr }]
+                    };
+
+                    if (poId && existingPOs.has(poId)) existingDocId = existingPOs.get(poId);
+
+                    if (existingDocId) {
+                        updatePayload = { 
+                            ...updatePayload, dateStr, outletId: matchedOutletId, supplierId: matchedSupplierId, pic,
+                            poStatus, paymentStatus, paymentMethod, total, paidAmount 
+                        };
+                    } else {
+                        insertPayload = { ...insertPayload, ...docPayload };
+                        existingPOs.set(poId, "pending_insert"); 
+                    }
+
                 } else {
                     const name = row[0].toString().trim();
                     const phone = row[1] ? row[1].toString().trim() : '';
                     const address = row[2] ? row[2].toString().trim() : '';
 
-                    if (phone && existingPhones.has(phone)) {
-                        existingDocId = existingPhones.get(phone);
-                    } else if (existingNames.has(name.toLowerCase())) {
-                        existingDocId = existingNames.get(name.toLowerCase());
-                    }
+                    if (phone && existingPhones.has(phone)) existingDocId = existingPhones.get(phone);
+                    else if (existingNames.has(name.toLowerCase())) existingDocId = existingNames.get(name.toLowerCase());
 
                     if (existingDocId) {
                         if (name) updatePayload.name = name;
@@ -12382,7 +12503,12 @@ async processImport() {
                     updateCount++;
                 } else {
                     const newDocRef = doc(collection(db, collectionName)); 
-                    batch.set(newDocRef, insertPayload);
+                    // Pastikan ID PO diset sebagai Document ID jika ini transaksi PO baru
+                    if (this.importConfig.target === 'po' && insertPayload.id) {
+                        batch.set(doc(db, collectionName, insertPayload.id), insertPayload);
+                    } else {
+                        batch.set(newDocRef, insertPayload);
+                    }
                     insertCount++;
                 }
             });
@@ -12395,6 +12521,7 @@ async processImport() {
         if (this.importConfig.target === 'customers' && typeof this.fetchCustomers === 'function') await this.fetchCustomers();
         else if (this.importConfig.target === 'suppliers' && typeof this.fetchSuppliers === 'function') await this.fetchSuppliers();
         else if (this.importConfig.target === 'sales' && typeof this.fetchTransactions === 'function') await this.fetchTransactions();
+        else if (this.importConfig.target === 'po' && typeof this.fetchPurchases === 'function') await this.fetchPurchases(); // 🌟 REFRESH TABEL PO
 
         Swal.fire('Berhasil', `Proses Selesai!\n- ${insertCount} Data Baru ditambahkan.\n- ${updateCount} Data Lama diperbarui.`, 'success');
 
