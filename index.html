@@ -12248,16 +12248,15 @@ previewExportData() {
         dataSumber = this.filteredAllRatings || [];
         this.exportConfig.previewData = dataSumber.slice(0, 5).map(r => ({ col1: r.date, col2: r.customerName || '-', col3: r.invoiceId, col4: r.rating + ' Bintang', col5: r.review || '-' }));
     } else if (this.exportConfig.target === 'sales') {
-        // 🌟 PREVIEW SALES DIPERBARUI (Ditambah Produk & Qty)
-        this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Nama Produk', 'Qty', 'Status', 'Total'];
+        // 🌟 PREVIEW SALES (Dibuat ringkas untuk preview agar muat di layar)
+        this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Nama Produk', 'Qty', 'TOTAL AKHIR', 'Sudah Dibayar', 'Status Bayar'];
         dataSumber = this.filteredTransactions || [];
         let flatData = [];
         dataSumber.forEach(t => {
-            let namaCabang = typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global';
             if (t.items && t.items.length > 0) {
-                t.items.forEach(item => flatData.push({ col1: t.id, col2: t.dateStr, col3: namaCabang, col4: item.productName || item.name, col5: item.qty, col6: t.paymentStatus, col7: t.total }));
+                t.items.forEach(item => flatData.push({ col1: t.id, col2: t.dateStr, col3: item.productName || item.name, col4: item.qty, col5: t.total, col6: t.amountReceived || t.total, col7: t.paymentStatus }));
             } else {
-                flatData.push({ col1: t.id, col2: t.dateStr, col3: namaCabang, col4: '-', col5: 0, col6: t.paymentStatus, col7: t.total });
+                flatData.push({ col1: t.id, col2: t.dateStr, col3: '-', col4: 0, col5: t.total, col6: t.amountReceived || t.total, col7: t.paymentStatus });
             }
         });
         this.exportConfig.previewData = flatData.slice(0, 5);
@@ -12314,21 +12313,34 @@ processExport() {
         if (!this.filteredAllRatings || this.filteredAllRatings.length === 0) return alert('Tidak ada data ulasan!');
         formattedData = this.filteredAllRatings.map(r => ({ "Tanggal": r.date || '-', "Invoice": r.invoiceId || '-', "Nama Pelanggan": r.customerName || 'Pelanggan', "No Telepon": this.getCustomerPhone ? this.getCustomerPhone(r) : '-', "Outlet": this.getOutletNameForReview ? this.getOutletNameForReview(r) : '-', "Bintang": r.rating || 0, "Ulasan": (r.review || '-').replace(/\n/g, ' ') }));
     } else if (this.exportConfig.target === 'sales') {
-        // 🌟 EXPORT SALES DIPERBARUI (Baris dipecah per Produk seperti PO)
+        // 🌟 EXPORT SALES - SUSUNAN KOLOM BARU (Sangat Rapi & Lengkap)
         if (!this.filteredTransactions || this.filteredTransactions.length === 0) return alert('Tidak ada data penjualan!');
         this.filteredTransactions.forEach(t => {
             let namaCabang = typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global/Pusat';
+            
+            // Variabel Keuangan
+            let subtotal = t.subtotal || 0;
+            let diskon = t.discountAmt || 0;
+            let ppn = t.taxAmt || 0;
+            let biayaLayanan = (t.serviceAmt || 0) + (t.surchargeFee || 0);
+            let ongkir = t.shippingCost || 0;
+            let totalAkhir = t.total || 0;
+            let dibayar = t.amountReceived || totalAkhir;
+            let kembalian = t.changeAmount || 0;
+
             if (t.items && t.items.length > 0) {
                 t.items.forEach(item => formattedData.push({
-                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-',
-                    "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Status": t.paymentStatus || 'LUNAS', "Pembayaran": t.paymentMethod || '-', "Total": t.total || 0,
-                    "Nama Produk": item.productName || item.name || '-', "SKU / Varian": item.variantSku || item.sku || '-', "Qty": item.qty || 0, "Harga Satuan": item.price || item.finalPrice || item.sellPrice || 0
+                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', 
+                    "Nama Produk": item.productName || item.name || '-', "SKU / Varian": item.variantSku || item.sku || '-', "Qty": item.qty || 0, "Harga Satuan": item.price || item.finalPrice || item.sellPrice || 0,
+                    "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, 
+                    "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS'
                 }));
             } else {
                 formattedData.push({
-                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-',
-                    "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Status": t.paymentStatus || 'LUNAS', "Pembayaran": t.paymentMethod || '-', "Total": t.total || 0,
-                    "Nama Produk": '-', "SKU / Varian": '-', "Qty": 0, "Harga Satuan": 0
+                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', 
+                    "Nama Produk": '-', "SKU / Varian": '-', "Qty": 0, "Harga Satuan": 0,
+                    "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, 
+                    "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS'
                 });
             }
         });
@@ -12415,8 +12427,8 @@ downloadTemplate() {
     } else if (this.importConfig.target === 'suppliers') {
         headers = ['Nama Supplier', 'No. Telepon', 'Alamat'];
     } else if (this.importConfig.target === 'sales') {
-        // 🌟 HEADER TEMPLATE SALES DITAMBAH ITEM
-        headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan'];
+        // 🌟 HEADER TEMPLATE SALES YANG BARU (Rapi)
+        headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan', 'Subtotal Barang', 'Total Diskon', 'Pajak (PPN)', 'Biaya Layanan', 'Ongkir', 'TOTAL AKHIR', 'Sudah Dibayar', 'Kembalian', 'Metode Pembayaran', 'Status Bayar'];
     } else if (this.importConfig.target === 'po') {
         headers = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Status Barang', 'Status Bayar', 'Metode Bayar', 'Jatuh Tempo', 'Pajak (%)', 'Pajak (Rp)', 'DP / Dibayar', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan'];
     } else {
@@ -12457,8 +12469,8 @@ handleFileUpload(event) {
                 } else if (this.importConfig.target === 'suppliers') {
                     expectedHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
                 } else if (this.importConfig.target === 'sales') {
-                    // 🌟 VALIDASI HEADER SALES DIPERBARUI
-                    expectedHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan'];
+                    // 🌟 EXPECTED HEADER UNTUK VALIDASI EXCEL IMPORT SALES
+                    expectedHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan', 'Subtotal Barang', 'Total Diskon', 'Pajak (PPN)', 'Biaya Layanan', 'Ongkir', 'TOTAL AKHIR', 'Sudah Dibayar', 'Kembalian', 'Metode Pembayaran', 'Status Bayar'];
                 } else if (this.importConfig.target === 'po') {
                     expectedHeaders = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Status Barang', 'Status Bayar', 'Metode Bayar', 'Jatuh Tempo', 'Pajak (%)', 'Pajak (Rp)', 'DP / Dibayar', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan'];
                 }
@@ -12475,7 +12487,7 @@ handleFileUpload(event) {
                 }
 
                 if (!isFormatValid) {
-                    this.importConfig.errorMessage = `Format kolom file salah! Untuk import ${this.importConfig.target}, urutan kolom wajib: "${expectedHeaders.join('", "')}". Silakan download template.`;
+                    this.importConfig.errorMessage = `Format kolom file salah! Untuk import ${this.importConfig.target}, urutan kolom wajib: "${expectedHeaders.join('", "')}". Silakan download template yang terbaru.`;
                     event.target.value = ''; 
                     return; 
                 }
@@ -12543,7 +12555,7 @@ async processImport() {
         let updateCount = 0;
 
         if (this.importConfig.target === 'po') {
-            // 🌟 LOGIKA GROUPING KHUSUS PO 
+            // LOGIKA GROUPING KHUSUS PO TETAP SAMA
             let poGroups = {};
             for (let row of dataRows) {
                 let poId = row[0] ? row[0].toString().trim() : null;
@@ -12632,7 +12644,7 @@ async processImport() {
             }
             
         } else if (this.importConfig.target === 'sales') {
-            // 🌟 LOGIKA GROUPING KHUSUS SALES (MULTIPLE ITEMS & POTONG STOK)
+            // 🌟 LOGIKA GROUPING KHUSUS SALES YANG BARU (SESUAI DENGAN TEMPLATE)
             let salesGroups = {};
             for (let row of dataRows) {
                 let invId = row[0] ? row[0].toString().trim() : null;
@@ -12642,14 +12654,13 @@ async processImport() {
             }
 
             let salesArray = Object.values(salesGroups);
-            // Limit diperkecil jadi 40 krn 1 Transaksi bisa hit 1 Doc Trx + Multi Doc Mutasi + Multi Doc Product (Hindari Firestore Batch limit 500)
             const BATCH_LIMIT = 40; 
 
             for (let i = 0; i < salesArray.length; i += BATCH_LIMIT) {
                 const batch = writeBatch(db);
                 let chunkSales = salesArray.slice(i, i + BATCH_LIMIT);
                 
-                let chunkProductUpdates = {}; // Menyimpan keranjang update produk 1 chunk
+                let chunkProductUpdates = {}; 
 
                 for (let rows of chunkSales) {
                     let header = rows[0];
@@ -12659,10 +12670,19 @@ async processImport() {
                     let cashierName = header[3] ? header[3].toString().trim() : '';
                     let customerName = header[4] ? header[4].toString().trim() : 'Umum';
                     let orderType = header[5] ? header[5].toString().trim() : 'direct';
-                    let paymentStatus = header[6] ? header[6].toString().trim() : 'LUNAS';
-                    let paymentMethod = header[7] ? header[7].toString().trim() : 'CASH';
-                    let rawTotal = header[8] ? String(header[8]).replace(/[^0-9]/g, '') : '0';
-                    let grandTotal = parseInt(rawTotal) || 0;
+                    
+                    // PARSE RINCIAN BIAYA DARI KOLOM KE 11 S/D 20 (Index 10 s/d 19)
+                    let subtotal = header[10] ? parseFloat(String(header[10]).replace(/[^0-9.-]/g, '')) : 0;
+                    let discountAmt = header[11] ? parseFloat(String(header[11]).replace(/[^0-9.-]/g, '')) : 0;
+                    let taxAmt = header[12] ? parseFloat(String(header[12]).replace(/[^0-9.-]/g, '')) : 0;
+                    let serviceAmt = header[13] ? parseFloat(String(header[13]).replace(/[^0-9.-]/g, '')) : 0;
+                    let shippingCost = header[14] ? parseFloat(String(header[14]).replace(/[^0-9.-]/g, '')) : 0;
+                    let grandTotal = header[15] ? parseFloat(String(header[15]).replace(/[^0-9.-]/g, '')) : 0;
+                    let amountReceived = header[16] ? parseFloat(String(header[16]).replace(/[^0-9.-]/g, '')) : 0;
+                    let changeAmount = header[17] ? parseFloat(String(header[17]).replace(/[^0-9.-]/g, '')) : 0;
+                    
+                    let paymentMethod = header[18] ? header[18].toString().trim() : 'CASH';
+                    let paymentStatus = header[19] ? header[19].toString().trim() : 'LUNAS';
 
                     let matchedOutletId = '';
                     if (this.outlets && this.outlets.length > 0) {
@@ -12672,12 +12692,13 @@ async processImport() {
 
                     let items = [];
                     let isNewInvoice = !existingInvoices.has(invId);
+                    let calcSubtotal = 0;
 
                     for (let r of rows) {
-                        let prodName = r[9] ? r[9].toString().trim() : '';
-                        let variant = r[10] ? r[10].toString().trim() : '';
-                        let qty = r[11] ? parseInt(String(r[11]).replace(/[^0-9]/g, '')) : 0;
-                        let price = r[12] ? parseInt(String(r[12]).replace(/[^0-9]/g, '')) : 0;
+                        let prodName = r[6] ? r[6].toString().trim() : ''; // Index 6 adalah Nama Produk
+                        let variant = r[7] ? r[7].toString().trim() : '';  // Index 7 adalah SKU
+                        let qty = r[8] ? parseInt(String(r[8]).replace(/[^0-9]/g, '')) : 0; // Index 8 adalah Qty
+                        let price = r[9] ? parseInt(String(r[9]).replace(/[^0-9]/g, '')) : 0; // Index 9 adalah Harga Satuan
 
                         if (prodName && prodName !== '-' && qty > 0) {
                             let matchedProductId = '';
@@ -12695,8 +12716,9 @@ async processImport() {
                                 variantName: variant, variantSku: variant, sku: variant, 
                                 qty: qty, price: price, finalPrice: price
                             });
+                            calcSubtotal += (qty * price);
 
-                            // 🌟 POTONG STOK & CATAT MUTASI HANYA JIKA INVOICE BELUM PERNAH ADA DI DATABASE
+                            // POTONG STOK LOGIC
                             if (isNewInvoice && prodRef) {
                                 let outId = matchedOutletId || this.posActiveOutletId || '';
                                 
@@ -12705,7 +12727,6 @@ async processImport() {
                                 }
                                 let prodToUpdate = chunkProductUpdates[prodRef.id];
 
-                                // Kurangi stok
                                 if (variant && variant !== '-') {
                                     let vList = prodToUpdate.variants || [];
                                     let vIdx = vList.findIndex(v => v.variantSku === variant || v.name === variant);
@@ -12741,10 +12762,16 @@ async processImport() {
                         }
                     }
 
+                    // PAYLOAD INSERT / UPDATE INVOICE
                     let docPayload = {
                         id: invId, dateStr, outletId: matchedOutletId, outletName, cashierName, 
                         customer: customerName, orderType, paymentStatus, paymentMethod, 
-                        total: grandTotal, items: items, fulfillmentStatus: 'COMPLETED'
+                        total: grandTotal || calcSubtotal,
+                        subtotal: subtotal || calcSubtotal,
+                        discountAmt, taxAmt, serviceAmt, shippingCost,
+                        amountReceived: amountReceived || (grandTotal || calcSubtotal), 
+                        changeAmount,
+                        items: items, fulfillmentStatus: 'COMPLETED'
                     };
 
                     let existingDocId = existingInvoices.get(invId);
@@ -12758,7 +12785,6 @@ async processImport() {
                     }
                 }
                 
-                // Masukkan gabungan update stok seluruh produk yang terpangkas di chunk ini ke batch
                 for (let prodId in chunkProductUpdates) {
                     batch.update(doc(db, "products", prodId), {
                         variants: chunkProductUpdates[prodId].variants || [],
