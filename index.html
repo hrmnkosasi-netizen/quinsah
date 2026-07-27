@@ -10812,171 +10812,174 @@ fulfillmentOrders() {
             // ==========================================
             // MODUL FINANCE (AR / AP / PAYMENTS) - ANTI CRASH
             // ==========================================
-            financeSalesPayments() {
-                let groups = {};
-                let q = (this.paymentSearchQuery || '').toLowerCase();
-                
-                // Setel default ke Hari Ini jika filter tanggal kosong
-                let t = new Date();
-                let todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
-                let startFilter = this.paymentStartDate || todayStr;
-                let endFilter = this.paymentEndDate || todayStr;
+financeSalesPayments() {
+    let groups = {};
+    let q = (this.paymentSearchQuery || '').toLowerCase();
+    
+    // Setel default ke Hari Ini jika filter tanggal kosong
+    let t = new Date();
+    let todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+    let startFilter = this.paymentStartDate || todayStr;
+    let endFilter = this.paymentEndDate || todayStr;
 
-                (this.transactions || []).forEach(trx => {
-                    // 🌟 TAMBAHAN FILTER OUTLET: Abaikan jika outlet tidak cocok
-                    if (this.paymentOutletId && trx.outletId !== this.paymentOutletId) return;
+    (this.transactions || []).forEach(trx => {
+        // 🌟 FILTER OUTLET: Abaikan jika outlet tidak cocok
+        if (this.paymentOutletId && trx.outletId !== this.paymentOutletId) return;
 
-                    let custName = this.getCustomerName(trx.customerId) || 'Pelanggan Umum';
-                    
-                    let processPayment = (method, amount, date, type) => {
-                        if (!amount || Number(amount) <= 0) return;
-                        
-                        // Cek apakah tanggal pembayaran masuk dalam filter
-                        let pDate = this.parseDateToStandard(date);
-                        if (pDate >= startFilter && pDate <= endFilter) {
-                            let m = String(method || 'CASH').toUpperCase();
-                            
-                            // Mencegah nama grup SPLIT atau BELUM RINCI muncul di laporan
-                            if (m === 'SPLIT' || m.includes('BELUM RINCI')) return; 
-
-                            if (!groups[m]) groups[m] = { method: m, total: 0, items: [] };
-                            if (String(trx.id || '').toLowerCase().includes(q) || custName.toLowerCase().includes(q)) {
-                                groups[m].items.push({ 
-                                    id: String(trx.id || ''), 
-                                    name: custName, 
-                                    amount: Number(amount), 
-                                    date: String(date || '').replace(',', ''), 
-                                    type: type 
-                                });
-                                groups[m].total += Number(amount);
-                            }
-                        }
-                    };
-
-                    let actualPaidAmount = Number(this.getActualPaid(trx)) || 0;
-                    let historyTotal = 0;
-
-                    // 1. Proses dari History Cicilan jika ada
-                    if (trx.paymentHistory && trx.paymentHistory.length > 0) {
-                        trx.paymentHistory.forEach(ph => {
-                            let amt = Number(ph.amount || 0);
-                            
-                            // 🌟 KUNCI PERBAIKAN: Abaikan nilai minus (Refund/Retur) agar tidak dihitung ganda
-                            if (amt > 0) {
-                                processPayment(ph.method, amt, ph.date, 'Cicilan');
-                                historyTotal += amt;
-                            }
-                        });
-                    }
-
-                    // 2. Proses sisa pembayaran
-                    let unaccounted = actualPaidAmount - historyTotal;
-                    if (unaccounted > 0) {
-                        let rawMethod = String(trx.paymentMethod || (trx.paymentData ? trx.paymentData.method : '') || 'CASH').toUpperCase();
-                        
-                        let details = trx.splitPayments || (trx.paymentData ? trx.paymentData.splitPayments : null) || trx.splitDetails || trx.splits || trx.paymentDetails;
-
-                        if (typeof details === 'string' && (details.startsWith('{') || details.startsWith('['))) {
-                            try { details = JSON.parse(details); } catch(e) {}
-                        }
-
-                        if (Array.isArray(details) && details.length > 0) {
-                            let totalSplitAmt = details.reduce((sum, d) => sum + Number(d.amount || d.nominal || 0), 0);
-                            
-                            details.forEach(d => {
-                                let m = d.method || d.paymentMethod || 'CASH';
-                                let amt = Number(d.amount || d.nominal || 0);
-                                
-                                if (totalSplitAmt > 0 && unaccounted !== totalSplitAmt) {
-                                    amt = (amt / totalSplitAmt) * unaccounted;
-                                }
-                                
-                                if (amt > 0) {
-                                    processPayment(m, amt, trx.dateStr || trx.date, 'Split Payment');
-                                }
-                            });
-                        } 
-                        else {
-                            processPayment(rawMethod, unaccounted, trx.dateStr || trx.date, 'Diterima');
-                        }
-                    }
-                });
-                
-                return Object.values(groups).filter(g => g.items.length > 0).sort((a,b) => b.total - a.total);
-            },
+        let custName = this.getCustomerName(trx.customerId) || 'Pelanggan Umum';
+        
+        let processPayment = (method, amount, date, type) => {
+            if (!amount || Number(amount) <= 0) return;
             
-            financePurchasePayments() {
-                let groups = {};
-                let q = (this.paymentSearchQuery || '').toLowerCase();
+            // Cek apakah tanggal pembayaran masuk dalam filter
+            let pDate = this.parseDateToStandard(date);
+            if (pDate >= startFilter && pDate <= endFilter) {
+                let m = String(method || 'CASH').toUpperCase();
                 
-                // Setel default ke Hari Ini jika filter tanggal kosong
-                let t = new Date();
-                let todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
-                let startFilter = this.paymentStartDate || todayStr;
-                let endFilter = this.paymentEndDate || todayStr;
+                // Mencegah nama grup SPLIT atau BELUM RINCI muncul di laporan
+                if (m === 'SPLIT' || m.includes('BELUM RINCI')) return; 
 
-                (this.purchases || []).forEach(po => {
-                    // 🌟 TAMBAHAN FILTER OUTLET: Abaikan jika outlet tidak cocok
-                    if (this.paymentOutletId && po.outletId !== this.paymentOutletId) return;
+                if (!groups[m]) groups[m] = { method: m, total: 0, items: [] };
+                if (String(trx.id || '').toLowerCase().includes(q) || custName.toLowerCase().includes(q)) {
+                    groups[m].items.push({ 
+                        id: String(trx.id || ''), 
+                        name: custName, 
+                        amount: Number(amount), 
+                        date: String(date || '').replace(',', ''), 
+                        type: type,
+                        outletId: trx.outletId // 🌟 TAMBAHAN: Sertakan outletId
+                    });
+                    groups[m].total += Number(amount);
+                }
+            }
+        };
 
-                    let supName = this.getSupplierName(po.supplierId) || 'Supplier Unknown';
-                    let processPayment = (method, amount, date, type) => {
-                        if (!amount || Number(amount) <= 0) return;
-                        
-                        // Cek apakah tanggal pembayaran masuk dalam filter
-                        let pDate = this.parseDateToStandard(date);
-                        if (pDate >= startFilter && pDate <= endFilter) {
-                            let m = (method || 'CASH').toUpperCase();
-                            if (!groups[m]) groups[m] = { method: m, total: 0, items: [] };
-                            if (String(po.id || '').toLowerCase().includes(q) || supName.toLowerCase().includes(q)) {
-                                groups[m].items.push({ id: String(po.id || ''), name: supName, amount: Number(amount), date: String(date || '').replace(',', ''), type: type });
-                                groups[m].total += Number(amount);
-                            }
-                        }
-                    };
+        let actualPaidAmount = Number(this.getActualPaid(trx)) || 0;
+        let historyTotal = 0;
 
-                    let actualPaidAmount = Number(this.getActualPaid(po)) || 0;
-                    let historyTotal = 0;
+        // 1. Proses dari History Cicilan jika ada
+        if (trx.paymentHistory && trx.paymentHistory.length > 0) {
+            trx.paymentHistory.forEach(ph => {
+                let amt = Number(ph.amount || 0);
+                if (amt > 0) {
+                    processPayment(ph.method, amt, ph.date, 'Cicilan');
+                    historyTotal += amt;
+                }
+            });
+        }
 
-                    if (po.paymentHistory && po.paymentHistory.length > 0) {
-                        po.paymentHistory.forEach(ph => {
-                            let amt = Number(ph.amount || 0);
-                            
-                            // 🌟 KUNCI PERBAIKAN: Sama seperti di atas, abaikan jika ada minus
-                            if (amt > 0) {
-                                processPayment(ph.method, amt, ph.date, 'Cicilan');
-                                historyTotal += amt;
-                            }
-                        });
+        // 2. Proses sisa pembayaran
+        let unaccounted = actualPaidAmount - historyTotal;
+        if (unaccounted > 0) {
+            let rawMethod = String(trx.paymentMethod || (trx.paymentData ? trx.paymentData.method : '') || 'CASH').toUpperCase();
+            
+            let details = trx.splitPayments || (trx.paymentData ? trx.paymentData.splitPayments : null) || trx.splitDetails || trx.splits || trx.paymentDetails;
+
+            if (typeof details === 'string' && (details.startsWith('{') || details.startsWith('['))) {
+                try { details = JSON.parse(details); } catch(e) {}
+            }
+
+            if (Array.isArray(details) && details.length > 0) {
+                let totalSplitAmt = details.reduce((sum, d) => sum + Number(d.amount || d.nominal || 0), 0);
+                
+                details.forEach(d => {
+                    let m = d.method || d.paymentMethod || 'CASH';
+                    let amt = Number(d.amount || d.nominal || 0);
+                    
+                    if (totalSplitAmt > 0 && unaccounted !== totalSplitAmt) {
+                        amt = (amt / totalSplitAmt) * unaccounted;
                     }
-
-                    let unaccounted = actualPaidAmount - historyTotal;
-                    if (unaccounted > 0) {
-                        processPayment(po.paymentMethod, unaccounted, po.dateStr, 'DP / Awal');
+                    
+                    if (amt > 0) {
+                        processPayment(m, amt, trx.dateStr || trx.date, 'Split Payment');
                     }
                 });
-                return Object.values(groups).filter(g => g.items.length > 0).sort((a,b) => b.total - a.total);
-            },
+            } 
+            else {
+                processPayment(rawMethod, unaccounted, trx.dateStr || trx.date, 'Diterima');
+            }
+        }
+    });
+    
+    return Object.values(groups).filter(g => g.items.length > 0).sort((a,b) => b.total - a.total);
+},
 
-            financeARList() {
-                let q = (this.paymentSearchQuery || '').toLowerCase();
-                return (this.transactions || []).filter(t => 
-                    // 🌟 TAMBAHAN FILTER OUTLET
-                    (!this.paymentOutletId || t.outletId === this.paymentOutletId) &&
-                    t.paymentStatus !== 'LUNAS' && this.getSisaTagihan(t) > 0 &&
-                    (String(t.id || '').toLowerCase().includes(q) || String(this.getCustomerName(t.customerId) || '').toLowerCase().includes(q))
-                ).sort((a,b) => String(b.id || '').localeCompare(String(a.id || '')));
-            },
+financePurchasePayments() {
+    let groups = {};
+    let q = (this.paymentSearchQuery || '').toLowerCase();
+    
+    // Setel default ke Hari Ini jika filter tanggal kosong
+    let t = new Date();
+    let todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+    let startFilter = this.paymentStartDate || todayStr;
+    let endFilter = this.paymentEndDate || todayStr;
 
-            financeAPList() {
-                let q = (this.paymentSearchQuery || '').toLowerCase();
-                return (this.purchases || []).filter(p => 
-                    // 🌟 TAMBAHAN FILTER OUTLET
-                    (!this.paymentOutletId || p.outletId === this.paymentOutletId) &&
-                    p.paymentStatus !== 'LUNAS' && this.getSisaTagihan(p) > 0 &&
-                    (String(p.id || '').toLowerCase().includes(q) || String(this.getSupplierName(p.supplierId) || '').toLowerCase().includes(q))
-                ).sort((a,b) => String(b.id || '').localeCompare(String(a.id || '')));
-            },
+    (this.purchases || []).forEach(po => {
+        // 🌟 FILTER OUTLET: Abaikan jika outlet tidak cocok
+        if (this.paymentOutletId && po.outletId !== this.paymentOutletId) return;
+
+        let supName = this.getSupplierName(po.supplierId) || 'Supplier Unknown';
+        let processPayment = (method, amount, date, type) => {
+            if (!amount || Number(amount) <= 0) return;
+            
+            // Cek apakah tanggal pembayaran masuk dalam filter
+            let pDate = this.parseDateToStandard(date);
+            if (pDate >= startFilter && pDate <= endFilter) {
+                let m = (method || 'CASH').toUpperCase();
+                if (!groups[m]) groups[m] = { method: m, total: 0, items: [] };
+                if (String(po.id || '').toLowerCase().includes(q) || supName.toLowerCase().includes(q)) {
+                    groups[m].items.push({ 
+                        id: String(po.id || ''), 
+                        name: supName, 
+                        amount: Number(amount), 
+                        date: String(date || '').replace(',', ''), 
+                        type: type,
+                        outletId: po.outletId // 🌟 TAMBAHAN: Sertakan outletId
+                    });
+                    groups[m].total += Number(amount);
+                }
+            }
+        };
+
+        let actualPaidAmount = Number(this.getActualPaid(po)) || 0;
+        let historyTotal = 0;
+
+        if (po.paymentHistory && po.paymentHistory.length > 0) {
+            po.paymentHistory.forEach(ph => {
+                let amt = Number(ph.amount || 0);
+                if (amt > 0) {
+                    processPayment(ph.method, amt, ph.date, 'Cicilan');
+                    historyTotal += amt;
+                }
+            });
+        }
+
+        let unaccounted = actualPaidAmount - historyTotal;
+        if (unaccounted > 0) {
+            // 🌟 TWEAK MINOR: Ditambahkan fallback po.date jika po.dateStr kosong
+            processPayment(po.paymentMethod, unaccounted, po.dateStr || po.date, 'DP / Awal');
+        }
+    });
+    return Object.values(groups).filter(g => g.items.length > 0).sort((a,b) => b.total - a.total);
+},
+
+financeARList() {
+    let q = (this.paymentSearchQuery || '').toLowerCase();
+    return (this.transactions || []).filter(t => 
+        (!this.paymentOutletId || t.outletId === this.paymentOutletId) &&
+        t.paymentStatus !== 'LUNAS' && this.getSisaTagihan(t) > 0 &&
+        (String(t.id || '').toLowerCase().includes(q) || String(this.getCustomerName(t.customerId) || '').toLowerCase().includes(q))
+    ).sort((a,b) => String(b.id || '').localeCompare(String(a.id || '')));
+},
+
+financeAPList() {
+    let q = (this.paymentSearchQuery || '').toLowerCase();
+    return (this.purchases || []).filter(p => 
+        (!this.paymentOutletId || p.outletId === this.paymentOutletId) &&
+        p.paymentStatus !== 'LUNAS' && this.getSisaTagihan(p) > 0 &&
+        (String(p.id || '').toLowerCase().includes(q) || String(this.getSupplierName(p.supplierId) || '').toLowerCase().includes(q))
+    ).sort((a,b) => String(b.id || '').localeCompare(String(a.id || '')));
+},
 
             // 1. MEMBEDAH SETIAP NOTA TRANSAKSI SECARA RINCI
             processedReportData() {
