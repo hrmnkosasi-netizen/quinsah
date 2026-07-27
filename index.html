@@ -12233,66 +12233,113 @@ getExportDataCount() {
 previewExportData() {
     this.exportConfig.showPreview = true;
     this.exportConfig.previewData = [];
-    let dataSumber = [];
+    this.exportConfig.previewHeaders = [];
 
+    let formattedData = [];
+
+    // 🌟 LOGIKA PREVIEW DISAMAKAN 100% DENGAN LOGIKA EXPORT
     if (this.exportConfig.target === 'customers') {
-        this.exportConfig.previewHeaders = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
-        dataSumber = this.filteredCustomers || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(c => ({ col1: c.name, col2: c.phone, col3: c.address || '-', col4: (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
+        let dataSumber = (this.filteredCustomers || []).slice(0, 5);
+        formattedData = dataSumber.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
     } else if (this.exportConfig.target === 'suppliers') {
-        this.exportConfig.previewHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
-        dataSumber = this.filteredSuppliers || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(s => ({ col1: s.name, col2: s.phone, col3: s.address || '-' }));
+        let dataSumber = (this.filteredSuppliers || []).slice(0, 5);
+        formattedData = dataSumber.map(s => ({ "Nama Supplier": s.name || '-', "No. Telepon": s.phone || '-', "Alamat": s.address || '-' }));
     } else if (this.exportConfig.target === 'ratings') {
-        this.exportConfig.previewHeaders = ['Tanggal', 'Pelanggan', 'Invoice', 'Rating', 'Ulasan'];
-        dataSumber = this.filteredAllRatings || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(r => ({ col1: r.date, col2: r.customerName || '-', col3: r.invoiceId, col4: r.rating + ' Bintang', col5: r.review || '-' }));
+        let dataSumber = (this.filteredAllRatings || []).slice(0, 5);
+        formattedData = dataSumber.map(r => ({ "Tanggal": r.date || '-', "Invoice": r.invoiceId || '-', "Nama Pelanggan": r.customerName || 'Pelanggan', "No Telepon": this.getCustomerPhone ? this.getCustomerPhone(r) : '-', "Outlet": this.getOutletNameForReview ? this.getOutletNameForReview(r) : '-', "Bintang": r.rating || 0, "Ulasan": (r.review || '-').replace(/\n/g, ' ') }));
     } else if (this.exportConfig.target === 'sales') {
-        this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Nama Produk', 'Qty', 'TOTAL AKHIR', 'Sudah Dibayar', 'Status Bayar'];
-        dataSumber = this.filteredTransactions || [];
-        let flatData = [];
+        let dataSumber = (this.filteredTransactions || []).slice(0, 5);
         dataSumber.forEach(t => {
+            let namaCabang = typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global/Pusat';
+            let subtotal = t.subtotal || 0; let diskon = t.discountAmt || 0; let ppn = t.taxAmt || 0;
+            let biayaLayanan = (t.serviceAmt || 0) + (t.surchargeFee || 0); let ongkir = t.shippingCost || 0;
+            let totalAkhir = t.total || 0; let dibayar = t.amountReceived || totalAkhir; let kembalian = t.changeAmount || 0;
+
             if (t.items && t.items.length > 0) {
-                t.items.forEach(item => flatData.push({ col1: t.id, col2: t.dateStr, col3: item.productName || item.name, col4: item.qty, col5: t.total, col6: t.amountReceived || t.total, col7: t.paymentStatus }));
+                t.items.forEach(item => formattedData.push({
+                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', 
+                    "Nama Produk": item.productName || item.name || '-', "SKU / Varian": item.variantSku || item.sku || '-', "Qty": item.qty || 0, "Harga Satuan": item.price || item.finalPrice || item.sellPrice || 0,
+                    "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, 
+                    "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS'
+                }));
             } else {
-                flatData.push({ col1: t.id, col2: t.dateStr, col3: '-', col4: 0, col5: t.total, col6: t.amountReceived || t.total, col7: t.paymentStatus });
+                formattedData.push({
+                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', 
+                    "Nama Produk": '-', "SKU / Varian": '-', "Qty": 0, "Harga Satuan": 0,
+                    "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, 
+                    "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS'
+                });
             }
         });
-        this.exportConfig.previewData = flatData.slice(0, 5);
     } else if (this.exportConfig.target === 'po') {
-        // 🌟 PREVIEW PO DIPERBARUI (Lebih Rapi)
-        this.exportConfig.previewHeaders = ['No. PO', 'Tanggal', 'Supplier', 'Nama Produk', 'Qty', 'TOTAL AKHIR', 'Status Bayar'];
-        dataSumber = this.filteredPurchases || [];
-        let flatData = [];
+        let dataSumber = (this.filteredPurchases || []).slice(0, 5);
         dataSumber.forEach(po => {
+            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-';
             let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
-            if (po.items && po.items.length > 0) po.items.forEach(item => flatData.push({ col1: po.id, col2: po.dateStr, col3: namaSupplier, col4: item.productName, col5: item.qty, col6: po.total, col7: po.paymentStatus }));
-            else flatData.push({ col1: po.id, col2: po.dateStr, col3: namaSupplier, col4: '-', col5: 0, col6: po.total, col7: po.paymentStatus });
+            let statusBarang = po.poStatus || 'PENDING';
+            if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
+            let statusBayar = po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang';
+            let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
+
+            let rowBase = { "No. PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-', "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem' };
+            let rowFinance = { "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0, "TOTAL AKHIR": po.total || 0, "DP / Dibayar": dp, "Sisa Hutang": Math.max(0, (po.total || 0) - dp), "Metode Bayar": po.paymentMethod || 'CASH', "Jatuh Tempo": po.dueDate || '', "Status Bayar": statusBayar, "Status Barang": statusBarang };
+
+            if (po.items && po.items.length > 0) {
+                po.items.forEach(item => formattedData.push({
+                    ...rowBase,
+                    "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '-', "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0,
+                    "Subtotal Barang": (item.qty || 0) * (item.price || 0),
+                    ...rowFinance
+                }));
+            } else {
+                formattedData.push({
+                    ...rowBase,
+                    "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0, "Subtotal Barang": 0,
+                    ...rowFinance
+                });
+            }
         });
-        this.exportConfig.previewData = flatData.slice(0, 5);
-        
     } else if (this.exportConfig.target === 'sales_payment') {
-        this.exportConfig.previewHeaders = ['Waktu', 'Metode', 'No. Invoice', 'Outlet', 'Pelanggan', 'Nominal Masuk'];
-        let flatData = [];
-        (this.financeSalesPayments || []).forEach(group => {
-            (group.items || []).forEach(item => flatData.push({ col1: `${item.date} (${item.type})`, col2: group.method, col3: item.id, col4: this.getOutletName(item.outletId) || '-', col5: item.name, col6: item.amount }));
+        (this.financeSalesPayments || []).slice(0, 5).forEach(group => {
+            (group.items || []).forEach(item => {
+                formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. Invoice": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Pelanggan": item.name, "Nominal Masuk": item.amount });
+            });
         });
-        this.exportConfig.previewData = flatData.slice(0, 5);
     } else if (this.exportConfig.target === 'purchase_payment') {
-        this.exportConfig.previewHeaders = ['Waktu', 'Metode', 'No. PO', 'Outlet', 'Supplier', 'Nominal Keluar'];
-        let flatData = [];
-        (this.financePurchasePayments || []).forEach(group => {
-            (group.items || []).forEach(item => flatData.push({ col1: `${item.date} (${item.type})`, col2: group.method, col3: item.id, col4: this.getOutletName(item.outletId) || '-', col5: item.name, col6: item.amount }));
+        (this.financePurchasePayments || []).slice(0, 5).forEach(group => {
+            (group.items || []).forEach(item => {
+                formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. PO": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Supplier": item.name, "Nominal Keluar": item.amount });
+            });
         });
-        this.exportConfig.previewData = flatData.slice(0, 5);
     } else if (this.exportConfig.target === 'ar_data') {
-        this.exportConfig.previewHeaders = ['No. Invoice', 'Tgl Invoice', 'Outlet', 'Pelanggan', 'Total Tagihan', 'Sisa Piutang'];
-        let flatData = (this.financeARList || []).map(ar => ({ col1: ar.id, col2: ar.dateStr || '-', col3: this.getOutletName(ar.outletId) || '-', col4: this.getCustomerName(ar.customerId) || 'Umum', col5: ar.total, col6: this.getSisaTagihan(ar) }));
-        this.exportConfig.previewData = flatData.slice(0, 5);
+        let dataSumber = (this.financeARList || []).slice(0, 5);
+        formattedData = dataSumber.map(ar => {
+            let rincian = (this.getPaymentBreakdown(ar) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
+            return { "No. Invoice": ar.id, "Tgl Invoice": ar.dateStr || '-', "Outlet": this.getOutletName(ar.outletId) || '-', "Pelanggan": this.getCustomerName(ar.customerId) || 'Umum', "Total Tagihan": ar.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ar) || 0, "Sisa Piutang": this.getSisaTagihan(ar) || 0 };
+        });
     } else if (this.exportConfig.target === 'ap_data') {
-        this.exportConfig.previewHeaders = ['No. PO', 'Tgl PO', 'Outlet', 'Supplier', 'Jatuh Tempo', 'Sisa Hutang'];
-        let flatData = (this.financeAPList || []).map(ap => ({ col1: ap.id, col2: (ap.dateStr || '').split(',')[0], col3: this.getOutletName(ap.outletId) || '-', col4: this.getSupplierName(ap.supplierId) || '-', col5: ap.dueDate || '-', col6: this.getSisaTagihan(ap) }));
-        this.exportConfig.previewData = flatData.slice(0, 5);
+        let dataSumber = (this.financeAPList || []).slice(0, 5);
+        formattedData = dataSumber.map(ap => {
+            let rincian = (this.getPaymentBreakdown(ap) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
+            return { "No. PO": ap.id, "Tgl PO": (ap.dateStr || '').split(',')[0], "Outlet": this.getOutletName(ap.outletId) || '-', "Supplier": this.getSupplierName(ap.supplierId) || '-', "Jatuh Tempo": ap.dueDate || 'Belum Diatur', "Total Tagihan": ap.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ap) || 0, "Sisa Hutang": this.getSisaTagihan(ap) || 0 };
+        });
+    }
+
+    // 🌟 MAPPING DATA KE FORMAT COL1, COL2, DST (Otomatis)
+    let finalPreview = formattedData.slice(0, 5);
+
+    if (finalPreview.length > 0) {
+        this.exportConfig.previewHeaders = Object.keys(finalPreview[0]);
+        this.exportConfig.previewData = finalPreview.map(row => {
+            let obj = {};
+            this.exportConfig.previewHeaders.forEach((head, idx) => {
+                obj['col' + (idx + 1)] = row[head] !== undefined && row[head] !== null ? row[head] : '-';
+            });
+            return obj;
+        });
+    } else {
+        this.exportConfig.previewHeaders = ['Data Kosong'];
+        this.exportConfig.previewData = [{ col1: 'Tidak ada data untuk ditampilkan' }];
     }
 },
 
@@ -12433,23 +12480,48 @@ processExport() {
 
 downloadTemplate() {
     let headers = [];
+    let sampleData = [];
     let fileName = `Template_${this.importConfig.target}.xlsx`;
 
+    // 🌟 PENAMBAHAN CONTOH (SAMPLE DATA) PADA TEMPLATE
     if (this.importConfig.target === 'customers') {
         headers = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
+        sampleData = [
+            ['Budi Santoso', '081234567890', 'Jl. Sudirman No 1, Jakarta', 'Gold'],
+            ['Siti Aminah', '085678901234', 'Jl. Melati No 2, Bandung', 'Silver']
+        ];
     } else if (this.importConfig.target === 'suppliers') {
         headers = ['Nama Supplier', 'No. Telepon', 'Alamat'];
+        sampleData = [
+            ['PT Sumber Makmur', '02198765432', 'Kawasan Industri Pulo Gadung Blok A'],
+            ['CV Maju Bersama', '081122334455', 'Jl. Raya Bogor KM 20']
+        ];
     } else if (this.importConfig.target === 'sales') {
         headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan', 'Subtotal Barang', 'Total Diskon', 'Pajak (PPN)', 'Biaya Layanan', 'Ongkir', 'TOTAL AKHIR', 'Sudah Dibayar', 'Kembalian', 'Metode Pembayaran', 'Status Bayar'];
+        sampleData = [
+            // Contoh Invoice 1 (Terdapat 2 Baris Produk)
+            ['INV-2026-001', '28/07/2026 10:00', 'Pusat', 'Admin', 'Umum', 'direct', 'Kopi Susu', 'KPS-01', 2, 20000, 40000, 0, 4400, 0, 0, 44400, 50000, 5600, 'CASH', 'LUNAS'],
+            ['INV-2026-001', '28/07/2026 10:00', 'Pusat', 'Admin', 'Umum', 'direct', 'Roti Bakar', 'RBK-02', 1, 15000, 15000, 0, 1650, 0, 0, 16650, 0, 0, 'CASH', 'LUNAS'],
+            // Contoh Invoice 2
+            ['INV-2026-002', '28/07/2026 11:30', 'Cabang 1', 'Kasir 1', 'Budi', 'online', 'Es Teh Manis', 'EST-01', 3, 5000, 15000, 2000, 1430, 1000, 0, 15430, 15430, 0, 'TRANSFER', 'LUNAS']
+        ];
     } else if (this.importConfig.target === 'po') {
-        // 🌟 HEADER TEMPLATE PO YANG BARU (Disamakan dengan Export yang rapi)
         headers = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan', 'Subtotal Barang', 'Pajak (%)', 'Pajak (Rp)', 'TOTAL AKHIR', 'DP / Dibayar', 'Sisa Hutang', 'Metode Bayar', 'Jatuh Tempo', 'Status Bayar', 'Status Barang'];
+        sampleData = [
+            // Contoh PO 1 (Terdapat 2 Baris Produk)
+            ['PO-2026-001', '28/07/2026', 'Pusat', 'PT Sumber Makmur', 'Admin', 'Biji Kopi Arabica', 'BKA-1KG', 'B-001', '31/12/2026', 10, 150000, 1500000, 11, 165000, 1665000, 1665000, 0, 'TRANSFER', '28/07/2026', 'LUNAS', 'SELESAI'],
+            ['PO-2026-001', '28/07/2026', 'Pusat', 'PT Sumber Makmur', 'Admin', 'Susu UHT 1L', 'S-UHT-1L', 'B-001', '01/06/2027', 24, 18000, 432000, 11, 47520, 479520, 479520, 0, 'TRANSFER', '28/07/2026', 'LUNAS', 'SELESAI'],
+            // Contoh PO 2 (Hutang)
+            ['PO-2026-002', '28/07/2026', 'Cabang 1', 'CV Maju Bersama', 'Manajer', 'Sirup Karamel', 'SRP-KRM', 'AUTO', '', 5, 85000, 425000, 0, 0, 425000, 200000, 225000, 'CASH', '05/08/2026', 'HUTANG', 'PENDING']
+        ];
     } else {
         return alert('Template tidak tersedia untuk data ini.');
     }
 
     if (typeof XLSX !== 'undefined') {
-        const worksheet = XLSX.utils.aoa_to_sheet([headers]);
+        // Gabungkan Header dengan Sample Data ke dalam Sheet Excel
+        const dataToSheet = [headers, ...sampleData];
+        const worksheet = XLSX.utils.aoa_to_sheet(dataToSheet);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
         XLSX.writeFile(workbook, fileName);
