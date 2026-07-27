@@ -12036,7 +12036,7 @@ async fetchAllRatings() {
     },   
 
 // ==============================================
-// 🌟 FUNGSI EXPORT & IMPORT (TERMASUK PO/PEMBELIAN) 🌟
+// 🌟 FUNGSI EXPORT & IMPORT FULL (SEMUA MODUL) 🌟
 // ==============================================
 
 getExportDataCount() {
@@ -12082,12 +12082,9 @@ previewExportData() {
     } else if (this.exportConfig.target === 'sales') {
         this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
         dataSumber = this.filteredTransactions || [];
-        
         this.exportConfig.previewData = dataSumber.slice(0, 5).map(t => {
             let namaCabang = 'Global/Pusat';
-            if (typeof this.getOutletName === 'function' && t.outletId) {
-                namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
-            }
+            if (typeof this.getOutletName === 'function' && t.outletId) namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
             return {
                 col1: t.id || '-', col2: t.dateStr || '-', col3: namaCabang, col4: t.cashierName || t.cashier || '-',
                 col5: t.customer || '-', col6: t.orderType || '-', col7: t.paymentStatus || 'LUNAS',
@@ -12095,34 +12092,21 @@ previewExportData() {
             };
         });
     } else if (this.exportConfig.target === 'po') {
-        // 🌟 PREVIEW KHUSUS PO
-        this.exportConfig.previewHeaders = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'PIC', 'Supplier', 'Status Barang', 'Status Bayar', 'Pembayaran', 'Total Pembelian'];
+        this.exportConfig.previewHeaders = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'Nama Produk', 'Qty', 'Harga Beli'];
         dataSumber = this.filteredPurchases || [];
-        
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(po => {
-            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : 'Gudang Pusat';
+        let flatData = [];
+        dataSumber.forEach(po => {
+            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : 'Pusat';
             let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
-            
-            let statusBarang = po.poStatus || 'PENDING';
-            if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
-            
-            let metodeBayar = po.paymentMethod || 'CASH';
-            if (po.paymentHistory && po.paymentHistory.length > 0) {
-                metodeBayar = po.paymentHistory.map(h => h.method || 'CASH').join(', ');
+            if (po.items && po.items.length > 0) {
+                po.items.forEach(item => {
+                    flatData.push({ col1: po.id || '-', col2: po.dateStr || '-', col3: namaCabang, col4: namaSupplier, col5: item.productName || '-', col6: item.qty || 0, col7: item.price || 0 });
+                });
+            } else {
+                flatData.push({ col1: po.id || '-', col2: po.dateStr || '-', col3: namaCabang, col4: namaSupplier, col5: '-', col6: 0, col7: 0 });
             }
-
-            return {
-                col1: po.id || po.invoiceNo || '-', 
-                col2: po.dateStr || '-', 
-                col3: namaCabang, 
-                col4: po.pic || po.userName || 'Sistem',
-                col5: namaSupplier, 
-                col6: statusBarang, 
-                col7: po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang / Belum Lunas', 
-                col8: metodeBayar, 
-                col9: po.total || 0
-            };
         });
+        this.exportConfig.previewData = flatData.slice(0, 5);
     }
 },
 
@@ -12157,9 +12141,7 @@ processExport() {
         if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data penjualan untuk diexport!');
         formattedData = dataToExport.map(t => {
             let namaCabang = 'Global/Pusat';
-            if (typeof this.getOutletName === 'function' && t.outletId) {
-                namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
-            }
+            if (typeof this.getOutletName === 'function' && t.outletId) namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
             return {
                 "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang,
                 "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-',
@@ -12168,36 +12150,36 @@ processExport() {
             };
         });
     } else if (this.exportConfig.target === 'po') {
-        // 🌟 EXPORT DOWNLOAD KHUSUS PO
         dataToExport = this.filteredPurchases;
         if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data PO untuk diexport!');
-        
-        formattedData = dataToExport.map(po => {
-            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : 'Gudang Pusat';
+        dataToExport.forEach(po => {
+            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-';
             let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
-            
             let statusBarang = po.poStatus || 'PENDING';
             if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
+            let statusBayar = po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang';
+            let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
 
-            let detailPembayaran = '';
-            if (po.paymentHistory && po.paymentHistory.length > 0) {
-                detailPembayaran = po.paymentHistory.map(h => `${h.method || 'CASH'}: Rp ${h.amount || 0}`).join(' | ');
+            if (po.items && po.items.length > 0) {
+                po.items.forEach(item => {
+                    formattedData.push({
+                        "No. Invoice / PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-',
+                        "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem',
+                        "Status Barang": statusBarang, "Status Bayar": statusBayar, "Metode Bayar": po.paymentMethod || 'CASH',
+                        "Jatuh Tempo": po.dueDate || '', "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0,
+                        "DP / Dibayar": dp, "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '',
+                        "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0
+                    });
+                });
             } else {
-                let paid = po.paymentStatus === 'LUNAS' ? po.total : (po.paidAmount || 0);
-                detailPembayaran = `${po.paymentMethod || 'CASH'}: Rp ${paid}`;
+                formattedData.push({
+                    "No. Invoice / PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-',
+                    "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem',
+                    "Status Barang": statusBarang, "Status Bayar": statusBayar, "Metode Bayar": po.paymentMethod || 'CASH',
+                    "Jatuh Tempo": po.dueDate || '', "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0,
+                    "DP / Dibayar": dp, "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0
+                });
             }
-
-            return {
-                "No. Invoice / PO": po.id || po.invoiceNo || '-',
-                "Tanggal": po.dateStr || '-',
-                "Cabang": namaCabang,
-                "PIC": po.pic || po.userName || 'Sistem',
-                "Supplier": namaSupplier,
-                "Status Barang": statusBarang,
-                "Status Bayar": po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang / Belum Lunas',
-                "Pembayaran": detailPembayaran,
-                "Total Pembelian": po.total || 0
-            };
         });
     } else {
         return alert("Error: Target export tidak dikenali.");
@@ -12242,8 +12224,7 @@ downloadTemplate() {
     } else if (this.importConfig.target === 'sales') {
         headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
     } else if (this.importConfig.target === 'po') {
-        // 🌟 TEMPLATE EXCEL KHUSUS PO
-        headers = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'PIC', 'Supplier', 'Status Barang', 'Status Bayar', 'Pembayaran', 'Total Pembelian'];
+        headers = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Status Barang', 'Status Bayar', 'Metode Bayar', 'Jatuh Tempo', 'Pajak (%)', 'Pajak (Rp)', 'DP / Dibayar', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan'];
     } else {
         return alert('Template tidak tersedia untuk data ini.');
     }
@@ -12270,8 +12251,7 @@ handleFileUpload(event) {
         try {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); 
 
             if (jsonData.length > 0) {
@@ -12285,8 +12265,7 @@ handleFileUpload(event) {
                 } else if (this.importConfig.target === 'sales') {
                     expectedHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
                 } else if (this.importConfig.target === 'po') {
-                    // 🌟 VALIDASI HEADER PO
-                    expectedHeaders = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'PIC', 'Supplier', 'Status Barang', 'Status Bayar', 'Pembayaran', 'Total Pembelian'];
+                    expectedHeaders = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Status Barang', 'Status Bayar', 'Metode Bayar', 'Jatuh Tempo', 'Pajak (%)', 'Pajak (Rp)', 'DP / Dibayar', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan'];
                 }
 
                 let isFormatValid = true;
@@ -12332,7 +12311,7 @@ handleFileUpload(event) {
 
 async processImport() {
     const compId = this.getMyCompanyId();
-    if (!compId) return Swal.fire('Error', 'Sistem belum memuat data Perusahaan Anda.', 'error');
+    if (!compId) return Swal.fire('Error', 'Sistem belum memuat data Perusahaan.', 'error');
 
     const dataRows = this.importConfig.fullImportData;
     if (!dataRows || dataRows.length === 0) return Swal.fire('Peringatan', 'Tidak ada data valid yang ditemukan untuk diimport.', 'warning');
@@ -12343,7 +12322,7 @@ async processImport() {
         let collectionName = "customers";
         if (this.importConfig.target === 'suppliers') collectionName = "suppliers";
         if (this.importConfig.target === 'sales') collectionName = "transactions"; 
-        if (this.importConfig.target === 'po') collectionName = "purchases"; // 🌟 KOLEKSI PO
+        if (this.importConfig.target === 'po') collectionName = "purchases";
         
         const q = query(collection(db, collectionName), where("companyId", "==", compId));
         const existingDocs = await getDocs(q);
@@ -12351,7 +12330,7 @@ async processImport() {
         const existingPhones = new Map();
         const existingNames = new Map();
         const existingInvoices = new Map(); 
-        const existingPOs = new Map(); // Map khusus PO
+        const existingPOs = new Map();
 
         existingDocs.forEach((docSnap) => {
             const data = docSnap.data();
@@ -12367,153 +12346,177 @@ async processImport() {
 
         let insertCount = 0;
         let updateCount = 0;
-        const BATCH_LIMIT = 450; 
-        const chunks = [];
-        for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) {
-            chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
-        }
 
-        for (const chunk of chunks) {
-            const batch = writeBatch(db); 
+        if (this.importConfig.target === 'po') {
+            // 🌟 LOGIKA GROUPING KHUSUS PO (Multi-Item Excel ke 1 Dokumen)
+            let poGroups = {};
+            for (let row of dataRows) {
+                let poId = row[0] ? row[0].toString().trim() : null;
+                if (!poId) continue;
+                if (!poGroups[poId]) poGroups[poId] = [];
+                poGroups[poId].push(row); 
+            }
+
+            let poArray = Object.values(poGroups);
+            const BATCH_LIMIT = 400; 
             
-            chunk.forEach((row) => {
-                if (!row[0]) return; 
-
-                let existingDocId = null;
-                let insertPayload = {
-                    companyId: compId, createdAt: new Date(),
-                    createdBy: this.userProfile?.name || this.currentUser?.name || "Admin",
-                    updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin"
-                };
-                let updatePayload = {
-                    updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin",
-                    updatedAt: new Date()
-                };
-
-                if (this.importConfig.target === 'sales') {
-                    const invoiceId = row[0].toString().trim();
-                    const date = row[1] ? row[1].toString().trim() : '';
-                    const outletName = row[2] ? row[2].toString().trim() : '';
-                    const cashierName = row[3] ? row[3].toString().trim() : '';
-                    const customerName = row[4] ? row[4].toString().trim() : '';
-                    const orderType = row[5] ? row[5].toString().trim() : '';
-                    const paymentStatus = row[6] ? row[6].toString().trim() : '';
-                    const paymentMethod = row[7] ? row[7].toString().trim() : '';
+            for (let i = 0; i < poArray.length; i += BATCH_LIMIT) {
+                const batch = writeBatch(db);
+                let chunkPO = poArray.slice(i, i + BATCH_LIMIT);
+                
+                for (let rows of chunkPO) {
+                    let header = rows[0];
+                    let poId = header[0].toString().trim();
+                    let dateStr = header[1] ? header[1].toString().trim() : '';
+                    let outletName = header[2] ? header[2].toString().trim() : '';
+                    let supplierName = header[3] ? header[3].toString().trim() : '';
+                    let pic = header[4] ? header[4].toString().trim() : '';
                     
-                    let rawTotal = row[8] ? String(row[8]).replace(/[^0-9]/g, '') : '0';
-                    const grandTotal = parseInt(rawTotal) || 0;
-
-                    if (invoiceId && existingInvoices.has(invoiceId)) existingDocId = existingInvoices.get(invoiceId);
-
-                    if (existingDocId) {
-                        updatePayload = { ...updatePayload, date, outletName, cashierName, customerName, orderType, paymentStatus, paymentMethod, grandTotal };
-                    } else {
-                        insertPayload = { ...insertPayload, invoiceId, date, outletName, cashierName, customerName, orderType, paymentStatus, paymentMethod, grandTotal };
-                        existingInvoices.set(invoiceId, "pending_insert"); 
-                    }
-
-                } else if (this.importConfig.target === 'po') {
-                    // 🌟 MAP DATA PO (PEMBELIAN) - COCOK DENGAN MODAL
-                    const poId = row[0].toString().trim();
-                    const dateStr = row[1] ? row[1].toString().trim() : '';
-                    const outletNameText = row[2] ? row[2].toString().trim() : '';
-                    const pic = row[3] ? row[3].toString().trim() : '';
-                    const supplierNameText = row[4] ? row[4].toString().trim() : '';
-                    
-                    // Pencocokan ID
                     let matchedOutletId = '';
                     if (this.outlets && this.outlets.length > 0) {
-                        const foundOutlet = this.outlets.find(o => o.name.toLowerCase() === outletNameText.toLowerCase());
-                        if (foundOutlet) matchedOutletId = foundOutlet.id;
+                        let found = this.outlets.find(o => o.name.toLowerCase() === outletName.toLowerCase());
+                        if (found) matchedOutletId = found.id;
                     }
-
                     let matchedSupplierId = '';
                     if (this.suppliers && this.suppliers.length > 0) {
-                        const foundSupplier = this.suppliers.find(s => s.name.toLowerCase() === supplierNameText.toLowerCase());
-                        if (foundSupplier) matchedSupplierId = foundSupplier.id;
+                        let found = this.suppliers.find(s => s.name.toLowerCase() === supplierName.toLowerCase());
+                        if (found) matchedSupplierId = found.id;
                     }
 
-                    // Normalisasi Status & Pembayaran
-                    let rawStatusBarang = row[5] ? row[5].toString().toUpperCase().trim() : 'PENDING';
-                    let poStatus = 'PENDING';
-                    if (rawStatusBarang.includes('TERIMA') || rawStatusBarang === 'SELESAI') poStatus = 'SELESAI';
-                    else if (rawStatusBarang.includes('RETUR SEBAGIAN')) poStatus = 'RETUR SEBAGIAN';
-                    else if (rawStatusBarang.includes('RETUR FULL')) poStatus = 'RETUR FULL';
-                    else if (rawStatusBarang.includes('TUKAR')) poStatus = 'RETUR TUKAR';
+                    let poStatus = (header[5] || '').toString().toUpperCase().includes('TERIMA') ? 'SELESAI' : 'PENDING';
+                    let paymentStatus = (header[6] || '').toString().toUpperCase().includes('LUNAS') ? 'LUNAS' : 'HUTANG';
+                    let paymentMethod = header[7] ? header[7].toString().trim() : 'CASH';
+                    let dueDate = header[8] ? header[8].toString().trim() : '';
+                    let taxPercent = header[9] ? parseFloat(String(header[9]).replace(/[^0-9.]/g, '')) : 0;
+                    let taxAmount = header[10] ? parseInt(String(header[10]).replace(/[^0-9]/g, '')) : 0;
+                    let paidAmount = header[11] ? parseInt(String(header[11]).replace(/[^0-9]/g, '')) : 0;
 
-                    let rawStatusBayar = row[6] ? row[6].toString().toUpperCase().trim() : '';
-                    let paymentStatus = rawStatusBayar.includes('LUNAS') && !rawStatusBayar.includes('BELUM') ? 'LUNAS' : 'HUTANG';
+                    let items = [];
+                    let subtotalItems = 0;
+                    for (let r of rows) {
+                        let prodName = r[12] ? r[12].toString().trim() : '';
+                        let variant = r[13] ? r[13].toString().trim() : '';
+                        let qty = r[16] ? parseInt(String(r[16]).replace(/[^0-9]/g, '')) : 0;
+                        let price = r[17] ? parseInt(String(r[17]).replace(/[^0-9]/g, '')) : 0;
+                        
+                        if (prodName && prodName !== '-' && qty > 0) {
+                            let matchedProductId = '';
+                            if (this.products && this.products.length > 0) {
+                                let fProd = this.products.find(p => p.name.toLowerCase() === prodName.toLowerCase() || (p.sku && p.sku.toLowerCase() === prodName.toLowerCase()));
+                                if (fProd) matchedProductId = fProd.id;
+                            }
+                            items.push({
+                                productId: matchedProductId, productName: prodName, variantName: variant, variantSku: variant,
+                                sku: variant, batchNo: r[14] ? r[14].toString().trim() : 'AUTO', expiredDate: r[15] ? r[15].toString().trim() : '',
+                                qty: qty, price: price
+                            });
+                            subtotalItems += (qty * price);
+                        }
+                    }
 
-                    let rawPayment = row[7] ? row[7].toString().trim() : 'CASH';
-                    let paymentMethod = rawPayment.split(':')[0].trim(); 
-
-                    let rawTotal = row[8] ? String(row[8]).replace(/[^0-9]/g, '') : '0';
-                    const total = parseInt(rawTotal) || 0;
-                    const paidAmount = paymentStatus === 'LUNAS' ? total : 0;
-
-                    // Item Penyelamat untuk Modal Edit
-                    const dummyItem = [{
-                        productId: 'import-dummy', productName: 'Data Import (Rekap Pembelian)',
-                        variantName: '', variantSku: '', sku: 'IMPORT', batchNo: 'AUTO',
-                        expiredDate: '', qty: 1, price: total
-                    }];
+                    let grandTotal = subtotalItems + taxAmount;
+                    if (paymentStatus === 'LUNAS') paidAmount = grandTotal;
 
                     let docPayload = {
-                        invoiceNo: poId, id: poId, dateStr: dateStr, outletId: matchedOutletId, supplierId: matchedSupplierId, pic: pic,
-                        poStatus: poStatus, paymentStatus: paymentStatus, paymentMethod: paymentMethod, dueDate: '',
-                        taxPercent: 0, taxAmount: 0, paidAmount: paidAmount, total: total, items: dummyItem,
-                        paymentHistory: [{ method: paymentMethod, amount: paidAmount, date: dateStr }]
+                        invoiceNo: poId, id: poId, dateStr, outletId: matchedOutletId, supplierId: matchedSupplierId, pic,
+                        poStatus, paymentStatus, paymentMethod, dueDate, taxPercent, taxAmount, paidAmount, total: grandTotal,
+                        items, paymentHistory: [{ method: paymentMethod, amount: paidAmount, date: dateStr }]
                     };
 
-                    if (poId && existingPOs.has(poId)) existingDocId = existingPOs.get(poId);
-
+                    let existingDocId = existingPOs.get(poId);
                     if (existingDocId) {
-                        updatePayload = { 
-                            ...updatePayload, dateStr, outletId: matchedOutletId, supplierId: matchedSupplierId, pic,
-                            poStatus, paymentStatus, paymentMethod, total, paidAmount 
-                        };
+                        batch.update(doc(db, collectionName, existingDocId), { updatedAt: new Date(), ...docPayload });
+                        updateCount++;
                     } else {
-                        insertPayload = { ...insertPayload, ...docPayload };
-                        existingPOs.set(poId, "pending_insert"); 
-                    }
-
-                } else {
-                    const name = row[0].toString().trim();
-                    const phone = row[1] ? row[1].toString().trim() : '';
-                    const address = row[2] ? row[2].toString().trim() : '';
-
-                    if (phone && existingPhones.has(phone)) existingDocId = existingPhones.get(phone);
-                    else if (existingNames.has(name.toLowerCase())) existingDocId = existingNames.get(name.toLowerCase());
-
-                    if (existingDocId) {
-                        if (name) updatePayload.name = name;
-                        if (phone) updatePayload.phone = phone;
-                        if (address) updatePayload.address = address;
-                    } else {
-                        insertPayload = { ...insertPayload, name, phone, address };
-                        if (this.importConfig.target === 'customers') insertPayload.membershipId = '';
-                        existingNames.set(name.toLowerCase(), "pending_insert");
-                        if (phone) existingPhones.set(phone, "pending_insert");
+                        batch.set(doc(db, collectionName, poId), { companyId: compId, createdAt: new Date(), ...docPayload });
+                        existingPOs.set(poId, poId);
+                        insertCount++;
                     }
                 }
+                await batch.commit();
+            }
+        } else {
+            // 🌟 LOGIKA IMPORT CUSTOMER / SUPPLIER / SALES (Biasa)
+            const BATCH_LIMIT = 400; 
+            const chunks = [];
+            for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) {
+                chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
+            }
 
-                if (existingDocId && existingDocId !== "pending_insert") {
-                    const docRef = doc(db, collectionName, existingDocId);
-                    batch.update(docRef, updatePayload);
-                    updateCount++;
-                } else {
-                    const newDocRef = doc(collection(db, collectionName)); 
-                    // Pastikan ID PO diset sebagai Document ID jika ini transaksi PO baru
-                    if (this.importConfig.target === 'po' && insertPayload.id) {
-                        batch.set(doc(db, collectionName, insertPayload.id), insertPayload);
+            for (const chunk of chunks) {
+                const batch = writeBatch(db); 
+                
+                chunk.forEach((row) => {
+                    if (!row[0]) return; 
+
+                    let existingDocId = null;
+                    let insertPayload = {
+                        companyId: compId, createdAt: new Date(),
+                        createdBy: this.userProfile?.name || this.currentUser?.name || "Admin",
+                        updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin"
+                    };
+                    let updatePayload = {
+                        updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin",
+                        updatedAt: new Date()
+                    };
+
+                    if (this.importConfig.target === 'sales') {
+                        const invoiceId = row[0].toString().trim();
+                        const date = row[1] ? row[1].toString().trim() : '';
+                        const outletName = row[2] ? row[2].toString().trim() : '';
+                        const cashierName = row[3] ? row[3].toString().trim() : '';
+                        const customerName = row[4] ? row[4].toString().trim() : '';
+                        const orderType = row[5] ? row[5].toString().trim() : '';
+                        const paymentStatus = row[6] ? row[6].toString().trim() : '';
+                        const paymentMethod = row[7] ? row[7].toString().trim() : '';
+                        
+                        let rawTotal = row[8] ? String(row[8]).replace(/[^0-9]/g, '') : '0';
+                        const grandTotal = parseInt(rawTotal) || 0;
+
+                        if (invoiceId && existingInvoices.has(invoiceId)) existingDocId = existingInvoices.get(invoiceId);
+
+                        if (existingDocId) {
+                            updatePayload = { ...updatePayload, dateStr: date, outletName, cashierName, customerName, orderType, paymentStatus, paymentMethod, total: grandTotal };
+                        } else {
+                            insertPayload = { ...insertPayload, id: invoiceId, dateStr: date, outletName, cashierName, customerName, orderType, paymentStatus, paymentMethod, total: grandTotal };
+                            existingInvoices.set(invoiceId, "pending_insert"); 
+                        }
+
                     } else {
-                        batch.set(newDocRef, insertPayload);
-                    }
-                    insertCount++;
-                }
-            });
+                        const name = row[0].toString().trim();
+                        const phone = row[1] ? row[1].toString().trim() : '';
+                        const address = row[2] ? row[2].toString().trim() : '';
 
-            await batch.commit(); 
+                        if (phone && existingPhones.has(phone)) existingDocId = existingPhones.get(phone);
+                        else if (existingNames.has(name.toLowerCase())) existingDocId = existingNames.get(name.toLowerCase());
+
+                        if (existingDocId) {
+                            if (name) updatePayload.name = name;
+                            if (phone) updatePayload.phone = phone;
+                            if (address) updatePayload.address = address;
+                        } else {
+                            insertPayload = { ...insertPayload, name, phone, address };
+                            if (this.importConfig.target === 'customers') insertPayload.membershipId = '';
+                            existingNames.set(name.toLowerCase(), "pending_insert");
+                            if (phone) existingPhones.set(phone, "pending_insert");
+                        }
+                    }
+
+                    if (existingDocId && existingDocId !== "pending_insert") {
+                        const docRef = doc(db, collectionName, existingDocId);
+                        batch.update(docRef, updatePayload);
+                        updateCount++;
+                    } else {
+                        if (this.importConfig.target === 'sales' && insertPayload.id) {
+                            batch.set(doc(db, collectionName, insertPayload.id), insertPayload);
+                        } else {
+                            batch.set(doc(collection(db, collectionName)), insertPayload);
+                        }
+                        insertCount++;
+                    }
+                });
+                await batch.commit(); 
+            }
         }
 
         this.importConfig.step = 3; 
@@ -12521,7 +12524,7 @@ async processImport() {
         if (this.importConfig.target === 'customers' && typeof this.fetchCustomers === 'function') await this.fetchCustomers();
         else if (this.importConfig.target === 'suppliers' && typeof this.fetchSuppliers === 'function') await this.fetchSuppliers();
         else if (this.importConfig.target === 'sales' && typeof this.fetchTransactions === 'function') await this.fetchTransactions();
-        else if (this.importConfig.target === 'po' && typeof this.fetchPurchases === 'function') await this.fetchPurchases(); // 🌟 REFRESH TABEL PO
+        else if (this.importConfig.target === 'po' && typeof this.fetchPurchases === 'function') await this.fetchPurchases();
 
         Swal.fire('Berhasil', `Proses Selesai!\n- ${insertCount} Data Baru ditambahkan.\n- ${updateCount} Data Lama diperbarui.`, 'success');
 
