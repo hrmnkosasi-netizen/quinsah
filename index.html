@@ -12248,9 +12248,19 @@ previewExportData() {
         dataSumber = this.filteredAllRatings || [];
         this.exportConfig.previewData = dataSumber.slice(0, 5).map(r => ({ col1: r.date, col2: r.customerName || '-', col3: r.invoiceId, col4: r.rating + ' Bintang', col5: r.review || '-' }));
     } else if (this.exportConfig.target === 'sales') {
-        this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Status', 'Total'];
+        // 🌟 PREVIEW SALES DIPERBARUI (Ditambah Produk & Qty)
+        this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Nama Produk', 'Qty', 'Status', 'Total'];
         dataSumber = this.filteredTransactions || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(t => ({ col1: t.id || '-', col2: t.dateStr || '-', col3: typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global', col4: t.cashierName || t.cashier || '-', col5: t.customer || '-', col6: t.paymentStatus || 'LUNAS', col7: t.total || 0 }));
+        let flatData = [];
+        dataSumber.forEach(t => {
+            let namaCabang = typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global';
+            if (t.items && t.items.length > 0) {
+                t.items.forEach(item => flatData.push({ col1: t.id, col2: t.dateStr, col3: namaCabang, col4: item.productName || item.name, col5: item.qty, col6: t.paymentStatus, col7: t.total }));
+            } else {
+                flatData.push({ col1: t.id, col2: t.dateStr, col3: namaCabang, col4: '-', col5: 0, col6: t.paymentStatus, col7: t.total });
+            }
+        });
+        this.exportConfig.previewData = flatData.slice(0, 5);
     } else if (this.exportConfig.target === 'po') {
         this.exportConfig.previewHeaders = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'Nama Produk', 'Qty', 'Harga Beli'];
         dataSumber = this.filteredPurchases || [];
@@ -12304,8 +12314,24 @@ processExport() {
         if (!this.filteredAllRatings || this.filteredAllRatings.length === 0) return alert('Tidak ada data ulasan!');
         formattedData = this.filteredAllRatings.map(r => ({ "Tanggal": r.date || '-', "Invoice": r.invoiceId || '-', "Nama Pelanggan": r.customerName || 'Pelanggan', "No Telepon": this.getCustomerPhone ? this.getCustomerPhone(r) : '-', "Outlet": this.getOutletNameForReview ? this.getOutletNameForReview(r) : '-', "Bintang": r.rating || 0, "Ulasan": (r.review || '-').replace(/\n/g, ' ') }));
     } else if (this.exportConfig.target === 'sales') {
+        // 🌟 EXPORT SALES DIPERBARUI (Baris dipecah per Produk seperti PO)
         if (!this.filteredTransactions || this.filteredTransactions.length === 0) return alert('Tidak ada data penjualan!');
-        formattedData = this.filteredTransactions.map(t => ({ "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global/Pusat', "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Status": t.paymentStatus || 'LUNAS', "Pembayaran": t.paymentMethod || '-', "Total": t.total || 0 }));
+        this.filteredTransactions.forEach(t => {
+            let namaCabang = typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global/Pusat';
+            if (t.items && t.items.length > 0) {
+                t.items.forEach(item => formattedData.push({
+                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-',
+                    "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Status": t.paymentStatus || 'LUNAS', "Pembayaran": t.paymentMethod || '-', "Total": t.total || 0,
+                    "Nama Produk": item.productName || item.name || '-', "SKU / Varian": item.variantSku || item.sku || '-', "Qty": item.qty || 0, "Harga Satuan": item.price || item.finalPrice || item.sellPrice || 0
+                }));
+            } else {
+                formattedData.push({
+                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-',
+                    "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Status": t.paymentStatus || 'LUNAS', "Pembayaran": t.paymentMethod || '-', "Total": t.total || 0,
+                    "Nama Produk": '-', "SKU / Varian": '-', "Qty": 0, "Harga Satuan": 0
+                });
+            }
+        });
     } else if (this.exportConfig.target === 'po') {
         if (!this.filteredPurchases || this.filteredPurchases.length === 0) return alert('Tidak ada data PO!');
         this.filteredPurchases.forEach(po => {
@@ -12389,7 +12415,8 @@ downloadTemplate() {
     } else if (this.importConfig.target === 'suppliers') {
         headers = ['Nama Supplier', 'No. Telepon', 'Alamat'];
     } else if (this.importConfig.target === 'sales') {
-        headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
+        // 🌟 HEADER TEMPLATE SALES DITAMBAH ITEM
+        headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan'];
     } else if (this.importConfig.target === 'po') {
         headers = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Status Barang', 'Status Bayar', 'Metode Bayar', 'Jatuh Tempo', 'Pajak (%)', 'Pajak (Rp)', 'DP / Dibayar', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan'];
     } else {
@@ -12430,7 +12457,8 @@ handleFileUpload(event) {
                 } else if (this.importConfig.target === 'suppliers') {
                     expectedHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
                 } else if (this.importConfig.target === 'sales') {
-                    expectedHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
+                    // 🌟 VALIDASI HEADER SALES DIPERBARUI
+                    expectedHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan'];
                 } else if (this.importConfig.target === 'po') {
                     expectedHeaders = ['No. Invoice / PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Status Barang', 'Status Bayar', 'Metode Bayar', 'Jatuh Tempo', 'Pajak (%)', 'Pajak (Rp)', 'DP / Dibayar', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan'];
                 }
@@ -12504,7 +12532,7 @@ async processImport() {
             const docId = docSnap.id;
             if (data.phone) existingPhones.set(data.phone.toString().trim(), docId);
             if (data.name) existingNames.set(data.name.toString().toLowerCase().trim(), docId);
-            if (data.invoiceId) existingInvoices.set(data.invoiceId.toString().trim(), docId);
+            if (data.invoiceId || data.id) existingInvoices.set(String(data.invoiceId || data.id).trim(), docId);
             if (collectionName === "purchases") {
                 const poRef = data.invoiceNo || docId;
                 existingPOs.set(poRef.toString().trim(), docId);
@@ -12515,7 +12543,7 @@ async processImport() {
         let updateCount = 0;
 
         if (this.importConfig.target === 'po') {
-            // 🌟 LOGIKA GROUPING KHUSUS PO (Multi-Item Excel ke 1 Dokumen)
+            // 🌟 LOGIKA GROUPING KHUSUS PO 
             let poGroups = {};
             for (let row of dataRows) {
                 let poId = row[0] ? row[0].toString().trim() : null;
@@ -12602,8 +12630,147 @@ async processImport() {
                 }
                 await batch.commit();
             }
+            
+        } else if (this.importConfig.target === 'sales') {
+            // 🌟 LOGIKA GROUPING KHUSUS SALES (MULTIPLE ITEMS & POTONG STOK)
+            let salesGroups = {};
+            for (let row of dataRows) {
+                let invId = row[0] ? row[0].toString().trim() : null;
+                if (!invId) continue;
+                if (!salesGroups[invId]) salesGroups[invId] = [];
+                salesGroups[invId].push(row);
+            }
+
+            let salesArray = Object.values(salesGroups);
+            // Limit diperkecil jadi 40 krn 1 Transaksi bisa hit 1 Doc Trx + Multi Doc Mutasi + Multi Doc Product (Hindari Firestore Batch limit 500)
+            const BATCH_LIMIT = 40; 
+
+            for (let i = 0; i < salesArray.length; i += BATCH_LIMIT) {
+                const batch = writeBatch(db);
+                let chunkSales = salesArray.slice(i, i + BATCH_LIMIT);
+                
+                let chunkProductUpdates = {}; // Menyimpan keranjang update produk 1 chunk
+
+                for (let rows of chunkSales) {
+                    let header = rows[0];
+                    let invId = header[0].toString().trim();
+                    let dateStr = header[1] ? header[1].toString().trim() : '';
+                    let outletName = header[2] ? header[2].toString().trim() : '';
+                    let cashierName = header[3] ? header[3].toString().trim() : '';
+                    let customerName = header[4] ? header[4].toString().trim() : 'Umum';
+                    let orderType = header[5] ? header[5].toString().trim() : 'direct';
+                    let paymentStatus = header[6] ? header[6].toString().trim() : 'LUNAS';
+                    let paymentMethod = header[7] ? header[7].toString().trim() : 'CASH';
+                    let rawTotal = header[8] ? String(header[8]).replace(/[^0-9]/g, '') : '0';
+                    let grandTotal = parseInt(rawTotal) || 0;
+
+                    let matchedOutletId = '';
+                    if (this.outlets && this.outlets.length > 0) {
+                        let found = this.outlets.find(o => o.name.toLowerCase() === outletName.toLowerCase());
+                        if (found) matchedOutletId = found.id;
+                    }
+
+                    let items = [];
+                    let isNewInvoice = !existingInvoices.has(invId);
+
+                    for (let r of rows) {
+                        let prodName = r[9] ? r[9].toString().trim() : '';
+                        let variant = r[10] ? r[10].toString().trim() : '';
+                        let qty = r[11] ? parseInt(String(r[11]).replace(/[^0-9]/g, '')) : 0;
+                        let price = r[12] ? parseInt(String(r[12]).replace(/[^0-9]/g, '')) : 0;
+
+                        if (prodName && prodName !== '-' && qty > 0) {
+                            let matchedProductId = '';
+                            let prodRef = null;
+                            if (this.products && this.products.length > 0) {
+                                let fProd = this.products.find(p => p.name.toLowerCase() === prodName.toLowerCase() || (p.sku && p.sku.toLowerCase() === prodName.toLowerCase()));
+                                if (fProd) {
+                                    matchedProductId = fProd.id;
+                                    prodRef = fProd; 
+                                }
+                            }
+
+                            items.push({
+                                productId: matchedProductId, productName: prodName, name: prodName, 
+                                variantName: variant, variantSku: variant, sku: variant, 
+                                qty: qty, price: price, finalPrice: price
+                            });
+
+                            // 🌟 POTONG STOK & CATAT MUTASI HANYA JIKA INVOICE BELUM PERNAH ADA DI DATABASE
+                            if (isNewInvoice && prodRef) {
+                                let outId = matchedOutletId || this.posActiveOutletId || '';
+                                
+                                if (!chunkProductUpdates[prodRef.id]) {
+                                    chunkProductUpdates[prodRef.id] = JSON.parse(JSON.stringify(prodRef));
+                                }
+                                let prodToUpdate = chunkProductUpdates[prodRef.id];
+
+                                // Kurangi stok
+                                if (variant && variant !== '-') {
+                                    let vList = prodToUpdate.variants || [];
+                                    let vIdx = vList.findIndex(v => v.variantSku === variant || v.name === variant);
+                                    if (vIdx !== -1) {
+                                        if (!prodToUpdate.variants[vIdx].outletStocks) prodToUpdate.variants[vIdx].outletStocks = {};
+                                        prodToUpdate.variants[vIdx].outletStocks[outId] = (prodToUpdate.variants[vIdx].outletStocks[outId] || 0) - qty;
+                                    }
+                                } else {
+                                    if (!prodToUpdate.baseOutletStocks) prodToUpdate.baseOutletStocks = {};
+                                    prodToUpdate.baseOutletStocks[outId] = (prodToUpdate.baseOutletStocks[outId] || 0) - qty;
+                                }
+
+                                // CATAT LOG MUTASI KELUAR
+                                let logRef = doc(collection(db, "stockLogs"));
+                                batch.set(logRef, {
+                                    companyId: compId,
+                                    createdAt: new Date(),
+                                    dateStr: dateStr || new Date().toLocaleString('id-ID'),
+                                    type: 'OUT',
+                                    productId: prodRef.id,
+                                    sku: prodRef.sku || '-',
+                                    productName: prodRef.name || '-',
+                                    variantSku: variant || null,
+                                    variantName: variant || '-',
+                                    qtyChange: -qty,
+                                    outletId: outId,
+                                    outletName: outletName || 'Outlet',
+                                    refId: invId,
+                                    userName: cashierName || 'Sistem (Import)',
+                                    note: 'Penjualan (Import Excel)'
+                                });
+                            }
+                        }
+                    }
+
+                    let docPayload = {
+                        id: invId, dateStr, outletId: matchedOutletId, outletName, cashierName, 
+                        customer: customerName, orderType, paymentStatus, paymentMethod, 
+                        total: grandTotal, items: items, fulfillmentStatus: 'COMPLETED'
+                    };
+
+                    let existingDocId = existingInvoices.get(invId);
+                    if (existingDocId && existingDocId !== "pending_insert") {
+                        batch.update(doc(db, collectionName, existingDocId), { updatedAt: new Date(), ...docPayload });
+                        updateCount++;
+                    } else {
+                        batch.set(doc(db, collectionName, invId), { companyId: compId, createdAt: new Date(), ...docPayload });
+                        existingInvoices.set(invId, invId);
+                        insertCount++;
+                    }
+                }
+                
+                // Masukkan gabungan update stok seluruh produk yang terpangkas di chunk ini ke batch
+                for (let prodId in chunkProductUpdates) {
+                    batch.update(doc(db, "products", prodId), {
+                        variants: chunkProductUpdates[prodId].variants || [],
+                        baseOutletStocks: chunkProductUpdates[prodId].baseOutletStocks || {}
+                    });
+                }
+
+                await batch.commit();
+            }
+            
         } else {
-            // 🌟 LOGIKA IMPORT CUSTOMER / SUPPLIER / SALES (Biasa)
+            // 🌟 LOGIKA IMPORT CUSTOMER / SUPPLIER (Biasa, Baris Tunggal)
             const BATCH_LIMIT = 400; 
             const chunks = [];
             for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) {
@@ -12627,66 +12794,31 @@ async processImport() {
                         updatedAt: new Date()
                     };
 
-                    if (this.importConfig.target === 'sales') {
-                        const invoiceId = row[0].toString().trim();
-                        const date = row[1] ? row[1].toString().trim() : '';
-                        const outletName = row[2] ? row[2].toString().trim() : '';
-                        const cashierName = row[3] ? row[3].toString().trim() : '';
-                        const customerName = row[4] ? row[4].toString().trim() : '';
-                        const orderType = row[5] ? row[5].toString().trim() : '';
-                        const paymentStatus = row[6] ? row[6].toString().trim() : '';
-                        const paymentMethod = row[7] ? row[7].toString().trim() : '';
-                        
-                        let rawTotal = row[8] ? String(row[8]).replace(/[^0-9]/g, '') : '0';
-                        const grandTotal = parseInt(rawTotal) || 0;
+                    const name = row[0] ? row[0].toString().trim() : '';
+                    const phone = row[1] ? row[1].toString().trim() : '';
+                    const address = row[2] ? row[2].toString().trim() : '';
+                    const membershipStr = row[3] ? row[3].toString().trim() : ''; 
 
-                        if (invoiceId && existingInvoices.has(invoiceId)) existingDocId = existingInvoices.get(invoiceId);
+                    if (phone && existingPhones.has(phone)) existingDocId = existingPhones.get(phone);
+                    else if (existingNames.has(name.toLowerCase())) existingDocId = existingNames.get(name.toLowerCase());
 
-                        if (existingDocId) {
-                            updatePayload = { ...updatePayload, dateStr: date, outletName, cashierName, customerName, orderType, paymentStatus, paymentMethod, total: grandTotal };
-                        } else {
-                            insertPayload = { ...insertPayload, id: invoiceId, dateStr: date, outletName, cashierName, customerName, orderType, paymentStatus, paymentMethod, total: grandTotal };
-                            existingInvoices.set(invoiceId, "pending_insert"); 
-                        }
+                    let matchedMembershipId = '';
+                    if (this.importConfig.target === 'customers' && membershipStr && this.memberships && this.memberships.length > 0) {
+                        let found = this.memberships.find(m => m.tierName.toLowerCase() === membershipStr.toLowerCase() || m.id === membershipStr);
+                        if (found) matchedMembershipId = found.id;
+                    }
 
+                    if (existingDocId) {
+                        if (name) updatePayload.name = name;
+                        if (phone) updatePayload.phone = phone;
+                        if (address) updatePayload.address = address;
+                        if (this.importConfig.target === 'customers') updatePayload.membershipId = matchedMembershipId;
                     } else {
-                        const name = row[0] ? row[0].toString().trim() : '';
-                        const phone = row[1] ? row[1].toString().trim() : '';
-                        const address = row[2] ? row[2].toString().trim() : '';
+                        insertPayload = { ...insertPayload, name, phone, address };
+                        if (this.importConfig.target === 'customers') insertPayload.membershipId = matchedMembershipId;
                         
-                        // PERBAIKAN: Ambil data dari kolom ke-4 (Index 3)
-                        const membershipStr = row[3] ? row[3].toString().trim() : ''; 
-
-                        if (phone && existingPhones.has(phone)) existingDocId = existingPhones.get(phone);
-                        else if (existingNames.has(name.toLowerCase())) existingDocId = existingNames.get(name.toLowerCase());
-
-                        // PERBAIKAN: Mencari ID Membership berdasarkan nama Tier
-                        let matchedMembershipId = '';
-                        if (this.importConfig.target === 'customers' && membershipStr && this.memberships && this.memberships.length > 0) {
-                            let found = this.memberships.find(m => m.tierName.toLowerCase() === membershipStr.toLowerCase() || m.id === membershipStr);
-                            if (found) matchedMembershipId = found.id;
-                        }
-
-                        if (existingDocId) {
-                            if (name) updatePayload.name = name;
-                            if (phone) updatePayload.phone = phone;
-                            if (address) updatePayload.address = address;
-                            
-                            // PERBAIKAN: Update membershipId
-                            if (this.importConfig.target === 'customers') {
-                                updatePayload.membershipId = matchedMembershipId;
-                            }
-                        } else {
-                            insertPayload = { ...insertPayload, name, phone, address };
-                            
-                            // PERBAIKAN: Masukkan membershipId saat tambah baru
-                            if (this.importConfig.target === 'customers') {
-                                insertPayload.membershipId = matchedMembershipId;
-                            }
-                            
-                            existingNames.set(name.toLowerCase(), "pending_insert");
-                            if (phone) existingPhones.set(phone, "pending_insert");
-                        }
+                        existingNames.set(name.toLowerCase(), "pending_insert");
+                        if (phone) existingPhones.set(phone, "pending_insert");
                     }
 
                     if (existingDocId && existingDocId !== "pending_insert") {
@@ -12694,11 +12826,7 @@ async processImport() {
                         batch.update(docRef, updatePayload);
                         updateCount++;
                     } else {
-                        if (this.importConfig.target === 'sales' && insertPayload.id) {
-                            batch.set(doc(db, collectionName, insertPayload.id), insertPayload);
-                        } else {
-                            batch.set(doc(collection(db, collectionName)), insertPayload);
-                        }
+                        batch.set(doc(collection(db, collectionName)), insertPayload);
                         insertCount++;
                     }
                 });
