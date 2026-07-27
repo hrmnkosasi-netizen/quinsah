@@ -1556,7 +1556,23 @@ body.sidebar-open {
 </div>       
         
           <div v-if="currentView === 'payment'" class="dashboard-card">
-            <h6 class="fw-bold mb-3 pb-2 border-bottom"><i class="bi bi-bank me-2"></i>Manajemen Keuangan & Arus Kas</h6>
+            <!-- ========================================== -->
+            <!-- 🌟 HEADER DENGAN TOMBOL EXPORT DINAMIS 🌟 -->
+            <!-- ========================================== -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 pb-2 border-bottom gap-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-bank me-2"></i>Manajemen Keuangan & Arus Kas</h6>
+                
+                <div class="btn-group shadow-sm" role="group">
+                    <!-- TARGET EXPORT MENGGUNAKAN VARIABEL paymentTab -->
+                    <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="exportConfig.showModal = true; exportConfig.target = paymentTab; exportConfig.showPreview = false">
+                        <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan 
+                        <span v-if="paymentTab === 'sales_payment'" class="fw-bold">Pemasukan</span>
+                        <span v-else-if="paymentTab === 'purchase_payment'" class="fw-bold">Pengeluaran</span>
+                        <span v-else-if="paymentTab === 'ar_data'" class="fw-bold text-danger">Piutang (AR)</span>
+                        <span v-else-if="paymentTab === 'ap_data'" class="fw-bold text-danger">Hutang (AP)</span>
+                    </button>
+                </div>
+            </div>
             
             <!-- Baris 1: Navigasi Tab (Dipisah agar tidak sempit) -->
             <div class="row mb-3">
@@ -12100,56 +12116,41 @@ async fetchAllRatings() {
 
 getExportDataCount() {
     let count = 0;
-    if (this.exportConfig.target === 'customers') {
-        count = this.filteredCustomers ? this.filteredCustomers.length : 0;
-    } else if (this.exportConfig.target === 'suppliers') {
-        count = this.filteredSuppliers ? this.filteredSuppliers.length : 0;
-    } else if (this.exportConfig.target === 'ratings') {
-        count = this.filteredAllRatings ? this.filteredAllRatings.length : 0;
-    } else if (this.exportConfig.target === 'sales') {
-        count = this.filteredTransactions ? this.filteredTransactions.length : 0;
-    } else if (this.exportConfig.target === 'po') {
-        count = this.filteredPurchases ? this.filteredPurchases.length : 0;
-    }
+    if (this.exportConfig.target === 'customers') count = this.filteredCustomers ? this.filteredCustomers.length : 0;
+    else if (this.exportConfig.target === 'suppliers') count = this.filteredSuppliers ? this.filteredSuppliers.length : 0;
+    else if (this.exportConfig.target === 'ratings') count = this.filteredAllRatings ? this.filteredAllRatings.length : 0;
+    else if (this.exportConfig.target === 'sales') count = this.filteredTransactions ? this.filteredTransactions.length : 0;
+    else if (this.exportConfig.target === 'po') count = this.filteredPurchases ? this.filteredPurchases.length : 0;
+    
+    // 🌟 HITUNGAN DATA EXPORT KEUANGAN
+    else if (this.exportConfig.target === 'sales_payment') count = this.financeSalesPayments ? this.financeSalesPayments.reduce((sum, g) => sum + g.items.length, 0) : 0;
+    else if (this.exportConfig.target === 'purchase_payment') count = this.financePurchasePayments ? this.financePurchasePayments.reduce((sum, g) => sum + g.items.length, 0) : 0;
+    else if (this.exportConfig.target === 'ar_data') count = this.financeARList ? this.financeARList.length : 0;
+    else if (this.exportConfig.target === 'ap_data') count = this.financeAPList ? this.financeAPList.length : 0;
     return count;
 },
 
 previewExportData() {
     this.exportConfig.showPreview = true;
     this.exportConfig.previewData = [];
-    
     let dataSumber = [];
 
     if (this.exportConfig.target === 'customers') {
         this.exportConfig.previewHeaders = ['Nama', 'No. Telepon', 'Alamat', 'Diskon Member'];
         dataSumber = this.filteredCustomers || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(c => ({
-            col1: c.name, col2: c.phone, col3: c.address || '-', col4: this.getMembershipDiscount(c.membershipId) + '%'
-        }));
+        this.exportConfig.previewData = dataSumber.slice(0, 5).map(c => ({ col1: c.name, col2: c.phone, col3: c.address || '-', col4: this.getMembershipDiscount(c.membershipId) + '%' }));
     } else if (this.exportConfig.target === 'suppliers') {
         this.exportConfig.previewHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
         dataSumber = this.filteredSuppliers || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(s => ({
-            col1: s.name, col2: s.phone, col3: s.address || '-'
-        }));
+        this.exportConfig.previewData = dataSumber.slice(0, 5).map(s => ({ col1: s.name, col2: s.phone, col3: s.address || '-' }));
     } else if (this.exportConfig.target === 'ratings') {
         this.exportConfig.previewHeaders = ['Tanggal', 'Pelanggan', 'Invoice', 'Rating', 'Ulasan'];
         dataSumber = this.filteredAllRatings || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(r => ({
-            col1: r.date, col2: r.customerName || '-', col3: r.invoiceId, col4: r.rating + ' Bintang', col5: r.review || '-'
-        }));
+        this.exportConfig.previewData = dataSumber.slice(0, 5).map(r => ({ col1: r.date, col2: r.customerName || '-', col3: r.invoiceId, col4: r.rating + ' Bintang', col5: r.review || '-' }));
     } else if (this.exportConfig.target === 'sales') {
-        this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Status', 'Pembayaran', 'Total'];
+        this.exportConfig.previewHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Status', 'Total'];
         dataSumber = this.filteredTransactions || [];
-        this.exportConfig.previewData = dataSumber.slice(0, 5).map(t => {
-            let namaCabang = 'Global/Pusat';
-            if (typeof this.getOutletName === 'function' && t.outletId) namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
-            return {
-                col1: t.id || '-', col2: t.dateStr || '-', col3: namaCabang, col4: t.cashierName || t.cashier || '-',
-                col5: t.customer || '-', col6: t.orderType || '-', col7: t.paymentStatus || 'LUNAS',
-                col8: t.paymentMethod || '-', col9: t.total || 0 
-            };
-        });
+        this.exportConfig.previewData = dataSumber.slice(0, 5).map(t => ({ col1: t.id || '-', col2: t.dateStr || '-', col3: typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global', col4: t.cashierName || t.cashier || '-', col5: t.customer || '-', col6: t.paymentStatus || 'LUNAS', col7: t.total || 0 }));
     } else if (this.exportConfig.target === 'po') {
         this.exportConfig.previewHeaders = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'Nama Produk', 'Qty', 'Harga Beli'];
         dataSumber = this.filteredPurchases || [];
@@ -12157,61 +12158,57 @@ previewExportData() {
         dataSumber.forEach(po => {
             let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : 'Pusat';
             let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
-            if (po.items && po.items.length > 0) {
-                po.items.forEach(item => {
-                    flatData.push({ col1: po.id || '-', col2: po.dateStr || '-', col3: namaCabang, col4: namaSupplier, col5: item.productName || '-', col6: item.qty || 0, col7: item.price || 0 });
-                });
-            } else {
-                flatData.push({ col1: po.id || '-', col2: po.dateStr || '-', col3: namaCabang, col4: namaSupplier, col5: '-', col6: 0, col7: 0 });
-            }
+            if (po.items && po.items.length > 0) po.items.forEach(item => flatData.push({ col1: po.id, col2: po.dateStr, col3: namaCabang, col4: namaSupplier, col5: item.productName, col6: item.qty, col7: item.price }));
+            else flatData.push({ col1: po.id, col2: po.dateStr, col3: namaCabang, col4: namaSupplier, col5: '-', col6: 0, col7: 0 });
         });
+        this.exportConfig.previewData = flatData.slice(0, 5);
+        
+    // 🌟 PREVIEW KHUSUS KEUANGAN
+    } else if (this.exportConfig.target === 'sales_payment') {
+        this.exportConfig.previewHeaders = ['Waktu', 'Metode', 'No. Invoice', 'Outlet', 'Pelanggan', 'Nominal Masuk'];
+        let flatData = [];
+        (this.financeSalesPayments || []).forEach(group => {
+            (group.items || []).forEach(item => flatData.push({ col1: `${item.date} (${item.type})`, col2: group.method, col3: item.id, col4: this.getOutletName(item.outletId) || '-', col5: item.name, col6: item.amount }));
+        });
+        this.exportConfig.previewData = flatData.slice(0, 5);
+    } else if (this.exportConfig.target === 'purchase_payment') {
+        this.exportConfig.previewHeaders = ['Waktu', 'Metode', 'No. PO', 'Outlet', 'Supplier', 'Nominal Keluar'];
+        let flatData = [];
+        (this.financePurchasePayments || []).forEach(group => {
+            (group.items || []).forEach(item => flatData.push({ col1: `${item.date} (${item.type})`, col2: group.method, col3: item.id, col4: this.getOutletName(item.outletId) || '-', col5: item.name, col6: item.amount }));
+        });
+        this.exportConfig.previewData = flatData.slice(0, 5);
+    } else if (this.exportConfig.target === 'ar_data') {
+        this.exportConfig.previewHeaders = ['No. Invoice', 'Tgl Invoice', 'Outlet', 'Pelanggan', 'Total Tagihan', 'Sisa Piutang'];
+        let flatData = (this.financeARList || []).map(ar => ({ col1: ar.id, col2: ar.dateStr || '-', col3: this.getOutletName(ar.outletId) || '-', col4: this.getCustomerName(ar.customerId) || 'Umum', col5: ar.total, col6: this.getSisaTagihan(ar) }));
+        this.exportConfig.previewData = flatData.slice(0, 5);
+    } else if (this.exportConfig.target === 'ap_data') {
+        this.exportConfig.previewHeaders = ['No. PO', 'Tgl PO', 'Outlet', 'Supplier', 'Jatuh Tempo', 'Sisa Hutang'];
+        let flatData = (this.financeAPList || []).map(ap => ({ col1: ap.id, col2: (ap.dateStr || '').split(',')[0], col3: this.getOutletName(ap.outletId) || '-', col4: this.getSupplierName(ap.supplierId) || '-', col5: ap.dueDate || '-', col6: this.getSisaTagihan(ap) }));
         this.exportConfig.previewData = flatData.slice(0, 5);
     }
 },
 
 processExport() {
-    let dataToExport = [];
     let formattedData = [];
     const today = new Date().toISOString().split('T')[0];
     let fileName = `Data_${this.exportConfig.target}_${today}`;
 
     if (this.exportConfig.target === 'customers') {
-        dataToExport = this.filteredCustomers;
-        if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data pelanggan untuk diexport!');
-        formattedData = dataToExport.map(c => ({
-            "Nama Pelanggan": c.name || '-', "No Telepon": c.phone || '-', "Alamat": c.address || '-', "Diskon Member": this.getMembershipDiscount(c.membershipId) + '%'
-        }));
+        if (!this.filteredCustomers || this.filteredCustomers.length === 0) return alert('Tidak ada data pelanggan!');
+        formattedData = this.filteredCustomers.map(c => ({ "Nama Pelanggan": c.name || '-', "No Telepon": c.phone || '-', "Alamat": c.address || '-', "Diskon Member": this.getMembershipDiscount(c.membershipId) + '%' }));
     } else if (this.exportConfig.target === 'suppliers') {
-        dataToExport = this.filteredSuppliers;
-        if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data supplier untuk diexport!');
-        formattedData = dataToExport.map(s => ({
-            "Nama Supplier": s.name || '-', "No Telepon": s.phone || '-', "Alamat": s.address || '-'
-        }));
+        if (!this.filteredSuppliers || this.filteredSuppliers.length === 0) return alert('Tidak ada data supplier!');
+        formattedData = this.filteredSuppliers.map(s => ({ "Nama Supplier": s.name || '-', "No Telepon": s.phone || '-', "Alamat": s.address || '-' }));
     } else if (this.exportConfig.target === 'ratings') {
-        dataToExport = this.filteredAllRatings;
-        if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data ulasan untuk diexport!');
-        formattedData = dataToExport.map(r => ({
-            "Tanggal": r.date || '-', "Invoice": r.invoiceId || '-', "Nama Pelanggan": r.customerName || 'Pelanggan',
-            "No Telepon": this.getCustomerPhone ? this.getCustomerPhone(r) : '-', "Outlet": this.getOutletNameForReview ? this.getOutletNameForReview(r) : '-',
-            "Bintang": r.rating || 0, "Ulasan": (r.review || '-').replace(/\n/g, ' ')
-        }));
+        if (!this.filteredAllRatings || this.filteredAllRatings.length === 0) return alert('Tidak ada data ulasan!');
+        formattedData = this.filteredAllRatings.map(r => ({ "Tanggal": r.date || '-', "Invoice": r.invoiceId || '-', "Nama Pelanggan": r.customerName || 'Pelanggan', "No Telepon": this.getCustomerPhone ? this.getCustomerPhone(r) : '-', "Outlet": this.getOutletNameForReview ? this.getOutletNameForReview(r) : '-', "Bintang": r.rating || 0, "Ulasan": (r.review || '-').replace(/\n/g, ' ') }));
     } else if (this.exportConfig.target === 'sales') {
-        dataToExport = this.filteredTransactions;
-        if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data penjualan untuk diexport!');
-        formattedData = dataToExport.map(t => {
-            let namaCabang = 'Global/Pusat';
-            if (typeof this.getOutletName === 'function' && t.outletId) namaCabang = this.getOutletName(t.outletId) || 'Global/Pusat';
-            return {
-                "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang,
-                "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-',
-                "Tipe Pesanan": t.orderType || '-', "Status": t.paymentStatus || 'LUNAS',
-                "Pembayaran": t.paymentMethod || '-', "Total": t.total || 0
-            };
-        });
+        if (!this.filteredTransactions || this.filteredTransactions.length === 0) return alert('Tidak ada data penjualan!');
+        formattedData = this.filteredTransactions.map(t => ({ "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global/Pusat', "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Status": t.paymentStatus || 'LUNAS', "Pembayaran": t.paymentMethod || '-', "Total": t.total || 0 }));
     } else if (this.exportConfig.target === 'po') {
-        dataToExport = this.filteredPurchases;
-        if (!dataToExport || dataToExport.length === 0) return alert('Tidak ada data PO untuk diexport!');
-        dataToExport.forEach(po => {
+        if (!this.filteredPurchases || this.filteredPurchases.length === 0) return alert('Tidak ada data PO!');
+        this.filteredPurchases.forEach(po => {
             let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-';
             let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
             let statusBarang = po.poStatus || 'PENDING';
@@ -12220,25 +12217,36 @@ processExport() {
             let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
 
             if (po.items && po.items.length > 0) {
-                po.items.forEach(item => {
-                    formattedData.push({
-                        "No. Invoice / PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-',
-                        "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem',
-                        "Status Barang": statusBarang, "Status Bayar": statusBayar, "Metode Bayar": po.paymentMethod || 'CASH',
-                        "Jatuh Tempo": po.dueDate || '', "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0,
-                        "DP / Dibayar": dp, "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '',
-                        "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0
-                    });
-                });
-            } else {
-                formattedData.push({
-                    "No. Invoice / PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-',
-                    "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem',
-                    "Status Barang": statusBarang, "Status Bayar": statusBayar, "Metode Bayar": po.paymentMethod || 'CASH',
-                    "Jatuh Tempo": po.dueDate || '', "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0,
-                    "DP / Dibayar": dp, "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0
-                });
+                po.items.forEach(item => formattedData.push({ "No. Invoice / PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-', "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem', "Status Barang": statusBarang, "Status Bayar": statusBayar, "Metode Bayar": po.paymentMethod || 'CASH', "Jatuh Tempo": po.dueDate || '', "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0, "DP / Dibayar": dp, "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '', "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0 }));
             }
+        });
+        
+    // 🌟 PROSES EXPORT DOWNLOAD KHUSUS KEUANGAN
+    } else if (this.exportConfig.target === 'sales_payment') {
+        if (!this.financeSalesPayments || this.financeSalesPayments.length === 0) return alert('Tidak ada data pembayaran masuk!');
+        (this.financeSalesPayments || []).forEach(group => {
+            (group.items || []).forEach(item => {
+                formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. Invoice": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Pelanggan": item.name, "Nominal Masuk": item.amount });
+            });
+        });
+    } else if (this.exportConfig.target === 'purchase_payment') {
+        if (!this.financePurchasePayments || this.financePurchasePayments.length === 0) return alert('Tidak ada data pembayaran keluar!');
+        (this.financePurchasePayments || []).forEach(group => {
+            (group.items || []).forEach(item => {
+                formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. PO": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Supplier": item.name, "Nominal Keluar": item.amount });
+            });
+        });
+    } else if (this.exportConfig.target === 'ar_data') {
+        if (!this.financeARList || this.financeARList.length === 0) return alert('Tidak ada data Piutang!');
+        formattedData = (this.financeARList || []).map(ar => {
+            let rincian = (this.getPaymentBreakdown(ar) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
+            return { "No. Invoice": ar.id, "Tgl Invoice": ar.dateStr || '-', "Outlet": this.getOutletName(ar.outletId) || '-', "Pelanggan": this.getCustomerName(ar.customerId) || 'Umum', "Total Tagihan": ar.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ar) || 0, "Sisa Piutang": this.getSisaTagihan(ar) || 0 };
+        });
+    } else if (this.exportConfig.target === 'ap_data') {
+        if (!this.financeAPList || this.financeAPList.length === 0) return alert('Tidak ada data Hutang!');
+        formattedData = (this.financeAPList || []).map(ap => {
+            let rincian = (this.getPaymentBreakdown(ap) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
+            return { "No. PO": ap.id, "Tgl PO": (ap.dateStr || '').split(',')[0], "Outlet": this.getOutletName(ap.outletId) || '-', "Supplier": this.getSupplierName(ap.supplierId) || '-', "Jatuh Tempo": ap.dueDate || 'Belum Diatur', "Total Tagihan": ap.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ap) || 0, "Sisa Hutang": this.getSisaTagihan(ap) || 0 };
         });
     } else {
         return alert("Error: Target export tidak dikenali.");
