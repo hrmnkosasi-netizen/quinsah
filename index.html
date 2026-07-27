@@ -18973,19 +18973,19 @@ let item = {
         }
 
         // =================================================================
-        // 2. KUNCI SEMUA VARIABEL TOTALAN
+        // 2. KUNCI SEMUA VARIABEL TOTALAN (🌟 DIBULATKAN AGAR AMAN DARI DESIMAL)
         // =================================================================
-        let currentSubtotalBase = this.subtotalBase || 0;
+        let currentSubtotalBase = Math.round(this.subtotalBase || 0);
         let currentGlobalDiscountType = this.globalDiscountType || 'none';
-        let currentGlobalDiscountValue = this.globalDiscountValue || 0;
-        let currentGlobalDiscountAmt = this.globalDiscountAmount || 0;
-        let currentDiscountAmt = (this.discountAmount + this.posDiscountAmount + currentGlobalDiscountAmt) || 0;
-        let currentTaxAmt = this.taxAmount || 0;
-        let currentServiceAmt = this.serviceAmount || 0;
+        let currentGlobalDiscountValue = Number(this.globalDiscountValue || 0);
+        let currentGlobalDiscountAmt = Math.round(this.globalDiscountAmount || 0);
+        let currentDiscountAmt = Math.round((this.discountAmount + this.posDiscountAmount + currentGlobalDiscountAmt) || 0);
+        let currentTaxAmt = Math.round(this.taxAmount || 0);
+        let currentServiceAmt = Math.round(this.serviceAmount || 0);
         
         // 🌟 TANGKAP NILAI ONGKIR SAAT CHECKOUT (JIKA TIPE DELIVERY)
-        let currentShippingCost = (this.posOrderType === 'delivery') ? (Number(this.posShippingCost) || 0) : 0;
-        let currentTotal = this.total || 0; // Seharusnya 'this.total' sudah mencakup ongkir dari computed property
+        let currentShippingCost = Math.round((this.posOrderType === 'delivery') ? (Number(this.posShippingCost) || 0) : 0);
+        let currentTotal = Math.round(this.total || 0); 
 
         let cleanItems = (this.cart || []).map(c => JSON.parse(JSON.stringify({
             ...c,
@@ -18994,7 +18994,7 @@ let item = {
             variantName: c.variantName || null,
             note: c.note || '',
             // [DIPERBAIKI] Pastikan harga valid jika fungsi getFinalItemPrice tidak ditemukan
-            finalPrice: typeof this.getFinalItemPrice === 'function' ? this.getFinalItemPrice(c) : (c.finalPrice || c.sellPrice || 0),
+            finalPrice: Math.round(typeof this.getFinalItemPrice === 'function' ? this.getFinalItemPrice(c) : (c.finalPrice || c.sellPrice || 0)),
             cutBatches: [], 
             totalCogs: 0    
         })));
@@ -19010,15 +19010,19 @@ let item = {
         let finalSplitPayments = [];
         
         if (this.isSplitPayment) {
-            nominalSurcharge = this.splitPayments.reduce((sum, p) => sum + (p.surchargeAmount || 0), 0);
+            nominalSurcharge = this.splitPayments.reduce((sum, p) => sum + Number(p.surchargeAmount || 0), 0);
             uangDiterima = this.splitPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-            let grandTotal = currentTotal + nominalSurcharge;
             
+            // 🌟 PEMBULATAN MUTLAK MENCEGAH BUG 0.2299999
+            let grandTotal = Math.round(currentTotal + nominalSurcharge);
+            uangDiterima = Math.round(uangDiterima);
             sisaHutang = Math.max(0, grandTotal - uangDiterima);
+            
             finalPaymentMethod = 'SPLIT';
             finalSplitPayments = JSON.parse(JSON.stringify(this.splitPayments));
             
-            if (sisaHutang > 0 && this.selectedCustomer && this.selectedCustomer.id) {
+            // Pengaman: Pastikan sisa hutang yang di-push benar-benar nyata (>= 1)
+            if (sisaHutang >= 1 && this.selectedCustomer && this.selectedCustomer.id) {
                 finalSplitPayments.push({
                     method: 'HUTANG',
                     baseAmount: sisaHutang,
@@ -19039,20 +19043,27 @@ let item = {
                 }
             }
             
-            let grandTotal = currentTotal + nominalSurcharge;
-            let inputUang = Number(this.paymentData.amountReceived) || 0;
-            uangDiterima = (inputUang === 0 || inputUang === currentTotal) ? grandTotal : inputUang;
+            // 🌟 PEMBULATAN MUTLAK
+            let grandTotal = Math.round(currentTotal + nominalSurcharge);
+            let inputUang = Math.round(Number(this.paymentData.amountReceived) || 0);
+            uangDiterima = (inputUang === 0 || inputUang >= grandTotal) ? Math.max(grandTotal, inputUang) : inputUang;
             sisaHutang = Math.max(0, grandTotal - uangDiterima);
             finalPaymentMethod = this.paymentData.method || 'CASH';
         }
 
-        let grandTotal = currentTotal + nominalSurcharge;
+        // Kunci variabel utama sebagai Integer
+        let grandTotal = Math.round(currentTotal + nominalSurcharge);
+        uangDiterima = Math.round(uangDiterima);
+        sisaHutang = Math.round(sisaHutang);
+        nominalMdr = Math.round(nominalMdr);
+        nominalSurcharge = Math.round(nominalSurcharge);
         
-        // 🌟 LOGIKA COD: Jika Delivery dan COD, ubah status pembayaran
+        // 🌟 LOGIKA COD & PAYMENT STATUS (SEKARANG SUDAH 100% AKURAT)
         let finalPaymentStatus = (uangDiterima >= grandTotal) ? 'LUNAS' : (uangDiterima > 0 ? 'SEBAGIAN' : 'BELUM LUNAS');
+        
         if (this.posOrderType === 'delivery' && this.metodeBayarPengiriman === 'COD') {
             finalPaymentStatus = 'BELUM LUNAS';
-            sisaHutang = grandTotal; // Set seluruhnya menjadi hutang/piutang jika COD
+            sisaHutang = grandTotal; 
             uangDiterima = 0;
             finalPaymentMethod = 'COD';
         }
@@ -19100,7 +19111,7 @@ let item = {
             fulfillmentStatus: fStatus,
             fulfillmentUpdatedAt: new Date().toLocaleString('id-ID'),
             
-            // 🌟 DATA PENGIRIMAN (DIMASUKKAN KE DATABASE)
+            // 🌟 DATA PENGIRIMAN
             courier: this.posOrderType === 'delivery' ? (this.posCourier || '') : '',
             shippingCost: currentShippingCost,
             isCOD: this.posOrderType === 'delivery' ? (String(this.posIsCOD) === 'true') : false,
@@ -19121,15 +19132,13 @@ let item = {
             discountAmt: currentDiscountAmt,
             taxAmt: currentTaxAmt,
             serviceAmt: currentServiceAmt,
-            total: grandTotal, // <- Pastikan ini sudah termasuk Ongkir (dr variable grandTotal)
+            total: grandTotal, 
             items: cleanItems
         };
 
         let trxData = JSON.parse(JSON.stringify(trxRaw));
         trxData.createdAt = serverTimestamp();
         this.posCustomInvoice = trxData.id;
-
-        // KITA TUNDA setDoc! Jangan masukkan ke Firebase dulu.
 
         // ==========================================
         // 6. ENGINE POTONG STOK & BATCH (DIMASUKKAN KE BATCH FIREBASE)
@@ -19139,7 +19148,6 @@ let item = {
 
         for (let i = 0; i < trxData.items.length; i++) {
             let item = trxData.items[i];
-            // [DIPERBAIKI] Pengaman produk kosong
             let prod = (this.products || []).find(p => p.id === item.productId);
             if (!prod) continue;
 
@@ -19149,7 +19157,6 @@ let item = {
             let totalItemCogs = 0; 
 
             if (item.variantSku) {
-                // [DIPERBAIKI] Pengaman variants array
                 let variantsList = prodCopy.variants || [];
                 let vIdx = variantsList.findIndex(v => v.variantSku === item.variantSku);
                 
@@ -19269,7 +19276,6 @@ let item = {
                 variantName: item.variantName || '-',
                 qtyChange: -item.qty,
                 outletId: trxData.outletId,
-                // [DIPERBAIKI] Pengecekan getOutletName aman
                 outletName: (typeof this.getOutletName === 'function' ? this.getOutletName(trxData.outletId) : 'Toko Utama') || 'Toko Utama',
                 refId: trxData.id,
                 userName: finalCashierName,
@@ -19285,7 +19291,6 @@ let item = {
                 let linkedProdId = opsi.productId;
                 if (!linkedProdId) continue;
 
-                // [DIPERBAIKI] Pengaman optional chaining
                 let linkedProd = (this.products || []).find(p => p.id === linkedProdId);
                 if (!linkedProd) continue;
 
@@ -19423,11 +19428,10 @@ let item = {
             }
 
             // 🌟 LANGKAH 2: SETELAH BARANG DIKURANGI, BARU HITUNG ULANG TOTAL!
-            oldTrx.subtotal = (oldTrx.items || []).reduce((sum, item) => sum + (item.qty * (item.finalPrice || item.sellPrice || item.price || 0)), 0);
+            oldTrx.subtotal = Math.round((oldTrx.items || []).reduce((sum, item) => sum + (item.qty * (item.finalPrice || item.sellPrice || item.price || 0)), 0));
             
             let isBatalTotal = (oldTrx.subtotal === 0);
             if (isBatalTotal) {
-                // Semua biaya tambahan dihapus jika transaksi lama ternyata batal semua
                 oldTrx.taxAmt = 0;
                 oldTrx.serviceFee = 0;
                 oldTrx.serviceAmt = 0;
@@ -19435,14 +19439,14 @@ let item = {
                 oldTrx.mdrFee = 0;
             }
 
-            oldTrx.total = oldTrx.subtotal + (oldTrx.taxAmt || 0) + (oldTrx.serviceFee || 0) + (oldTrx.serviceAmt || 0) + (oldTrx.surchargeFee || 0) + (oldTrx.mdrFee || 0);
-            oldTrx.sisaTagihan = 0; // Transaksi lama tidak mungkin ada sisa tagihan lagi setelah di-refund
+            oldTrx.total = Math.round(oldTrx.subtotal + (oldTrx.taxAmt || 0) + (oldTrx.serviceFee || 0) + (oldTrx.serviceAmt || 0) + (oldTrx.surchargeFee || 0) + (oldTrx.mdrFee || 0));
+            oldTrx.sisaTagihan = 0; 
 
             // Potong uang kasir
-            oldTrx.amountReceived = (oldTrx.amountReceived || 0) - refundTotal;
+            oldTrx.amountReceived = Math.round((oldTrx.amountReceived || 0) - refundTotal);
             if (oldTrx.amountReceived < 0) oldTrx.amountReceived = 0;
             
-            oldTrx.cashSubmitted = (oldTrx.cashSubmitted || 0) - refundTotal;
+            oldTrx.cashSubmitted = Math.round((oldTrx.cashSubmitted || 0) - refundTotal);
             if (oldTrx.cashSubmitted < 0) oldTrx.cashSubmitted = 0;
 
             let isSisaBarangAda = (oldTrx.items || []).some(i => i.qty > 0);
@@ -19480,11 +19484,8 @@ let item = {
         // =================================================================
         // 8. UPDATE FINAL & EKSEKUSI KERANJANG FIREBASE
         // =================================================================
-        // [BATCH 5] Masukkan data Nota/Transaksi
         batch.set(doc(db, "transactions", trxData.id), trxData);
 
-        // 🚀🚀 TEMBAK SEMUANYA KE SERVER DALAM 1 PERINTAH!
-        // [DIPERBAIKI] Disusun rapi dengan then-catch agar background process tidak memblokir UI.
         batch.commit().then(() => {
             console.log(`Invoice ${trxData.id} berhasil disinkronkan.`);
         }).catch(err => {
@@ -19495,14 +19496,10 @@ let item = {
         this.printMode = 'receipt';
         this.hideModal('paymentModal');
 
-        // 1. CEK PRINTER BLUETOOTH (TABLET / MOBILE)
-        // Jika Bluetooth terhubung, cetak struk dari mesin thermal
         if (this.printerCharacteristic) {
             this.printReceiptBluetooth(trxData); 
         }
 
-        // 2. CEK PRINTER WEB STANDAR (PC / LAPTOP)
-        // Munculkan popup print bawaan browser HANYA JIKA Bluetooth tidak terhubung
         setTimeout(() => {
             if (!this.printerCharacteristic && typeof this.triggerPrint === 'function') {
                 this.triggerPrint(trxData, 'receipt');
@@ -19510,9 +19507,8 @@ let item = {
         }, 500);
 
         // =================================================================
-        // 9. 🌟 RESET SEMUA FORM KASIR KE KONDISI AWAL (TERMASUK ONGKIR)
+        // 9. 🌟 RESET SEMUA FORM KASIR KE KONDISI AWAL
         // =================================================================
-        // [DIPERBAIKI] Penanganan Async/Await untuk Invoice Number
         if (typeof this.generateInvoiceNumber === 'function') {
             let nextInvoice = this.generateInvoiceNumber('POS');
             if (nextInvoice instanceof Promise) {
@@ -19535,7 +19531,6 @@ let item = {
         this.isSplitPayment = false; 
         this.splitPayments = [];     
 
-        // 🌟 KEMBALIKAN SEMUA VARIABEL PENGIRIMAN KE DEFAULT
         this.posOrderType = 'direct';
         this.posCourier = '';
         this.posShippingCost = 0;
@@ -19547,7 +19542,6 @@ let item = {
         console.error("Gagal proses transaksi:", err);
         Swal.fire('Error', 'Terjadi kesalahan sistem saat menyimpan transaksi.', 'error');
     } finally {
-        // [DIPERBAIKI] Memastikan loading state mati bagaimanapun kondisinya (berhasil maupun error)
         this.isProcessing = false;
     }
 },
