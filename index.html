@@ -3999,14 +3999,24 @@ body.sidebar-open {
                                     <td class="fw-bold small text-dark">{{ alert.name }}</td>
                                     <td><code class="text-secondary bg-light px-2 py-1 rounded">{{ alert.sku }}</code></td>
                                     
-                                    <!-- Angka stok utama (Bisa minus/habis sesuai filter) -->
-                                    <td class="text-center fw-bold text-danger fs-5">{{ alert.currentStock }}</td>
+                                    <!-- Angka stok utama (Warna dinamis) -->
+                                    <td class="text-center fw-bold fs-5" :class="alert.currentStock <= 0 ? 'text-dark' : (alert.currentStock < alert.minStock ? 'text-danger' : 'text-warning')">
+                                        {{ alert.currentStock }}
+                                    </td>
                                     
                                     <td style="min-width: 200px;" class="bg-light">
-                                        <!-- 🌟 Looping cabang yang Cerdas: Jika difilter, HANYA tampilkan cabang tersebut -->
+                                        <!-- 🌟 Looping cabang yang Cerdas: Logika Warna Kuning & Merah -->
                                         <div v-for="out in (alertOutletFilter ? outlets.filter(o => o.id === alertOutletFilter) : outlets)" :key="out.id" class="d-flex justify-content-between border-bottom border-secondary border-opacity-25 pb-1 mb-1" style="font-size: 0.75rem;">
                                             <span class="text-muted"><i class="bi bi-shop me-1"></i>{{ out.name }}</span>
-                                            <span class="fw-bold" :class="(alert.outletStocks && alert.outletStocks[out.id] <= 0) ? 'text-danger' : 'text-success'">
+                                            
+                                            <span class="fw-bold" 
+                                                  :class="(() => {
+                                                      let sisa = (alert.outletStocks && alert.outletStocks[out.id]) ? alert.outletStocks[out.id] : 0;
+                                                      if (sisa <= 0) return 'text-danger'; // Habis / Minus = Merah
+                                                      if (sisa < alert.minStock) return 'text-danger'; // Di bawah min = Merah
+                                                      if (sisa >= alert.minStock && sisa <= (alert.minStock + 5)) return 'text-warning'; // Mendekati batas min = Kuning
+                                                      return 'text-muted'; // Jika sisa > minimum (aman), beri warna abu-abu netral
+                                                  })()">
                                                 {{ (alert.outletStocks && alert.outletStocks[out.id]) ? alert.outletStocks[out.id] : 0 }}
                                             </span>
                                         </div>
@@ -4015,7 +4025,8 @@ body.sidebar-open {
                                     <td class="text-center text-muted fw-bold">{{ alert.minStock }}</td>
                                     <td class="text-center">
                                         <span v-if="alert.currentStock <= 0" class="badge bg-dark px-3 py-2 shadow-sm">HABIS TOTAL</span>
-                                        <span v-else class="badge bg-danger px-3 py-2 shadow-sm">SEGERA RESTOCK</span>
+                                        <span v-else-if="alert.currentStock < alert.minStock" class="badge bg-danger px-3 py-2 shadow-sm">SEGERA RESTOCK</span>
+                                        <span v-else class="badge bg-warning text-dark px-3 py-2 shadow-sm">HAMPIR HABIS</span>
                                     </td>
                                 </tr>
                                 <tr v-if="!lowStockItems || lowStockItems.length === 0">
