@@ -19211,7 +19211,7 @@ let item = {
                         confirmButtonColor: '#dc2626'
                     });
                     
-                    // [DIPERBAIKI] Pastikan men-generate ulang dengan aman jika fungsi tersedia
+                    // Pastikan men-generate ulang dengan aman jika fungsi tersedia
                     if (typeof this.generateInvoiceNumber === 'function') {
                         let regeneratedInv = this.generateInvoiceNumber('POS');
                         if (regeneratedInv instanceof Promise) regeneratedInv = await regeneratedInv;
@@ -19233,7 +19233,6 @@ let item = {
         // 1. LOGIKA EDIT (Pembatalan dimasukkan ke Batch)
         // =================================================================
         if (this.isEditingInvoice && this.originalEditTrx) {
-            // [DIPERBAIKI] Dibungkus try-catch agar jika fungsi revert error, transaksi tetap jalan
             try {
                 await this.revertPosStock(this.originalEditTrx); 
             } catch (revertErr) {
@@ -19263,14 +19262,13 @@ let item = {
             variantSku: c.variantSku || null,
             variantName: c.variantName || null,
             note: c.note || '',
-            // [DIPERBAIKI] Pastikan harga valid jika fungsi getFinalItemPrice tidak ditemukan
             finalPrice: Math.round(typeof this.getFinalItemPrice === 'function' ? this.getFinalItemPrice(c) : (c.finalPrice || c.sellPrice || 0)),
             cutBatches: [], 
             totalCogs: 0    
         })));
 
         // =================================================================
-        // 3. LOGIKA MDR, SURCHARGE & UANG DITERIMA (TERMASUK SPLIT PAYMENT) 
+        // 3. 🌟 LOGIKA MDR, SURCHARGE & UANG DITERIMA (FIX BUG HUTANG)
         // =================================================================
         let nominalMdr = 0;
         let nominalSurcharge = 0;
@@ -19283,15 +19281,20 @@ let item = {
             nominalSurcharge = this.splitPayments.reduce((sum, p) => sum + Number(p.surchargeAmount || 0), 0);
             uangDiterima = this.splitPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
             
-            // 🌟 PEMBULATAN MUTLAK MENCEGAH BUG 0.2299999
+            // 🌟 PEMBULATAN MUTLAK
             let grandTotal = Math.round(currentTotal + nominalSurcharge);
             uangDiterima = Math.round(uangDiterima);
+            
+            // 🌟 FIX BUG HUTANG: Jika input split payment pas dengan currentTotal, sesuaikan dengan grandTotal
+            if (uangDiterima === Math.round(currentTotal) && nominalSurcharge > 0) {
+                uangDiterima = grandTotal;
+            }
+
             sisaHutang = Math.max(0, grandTotal - uangDiterima);
             
             finalPaymentMethod = 'SPLIT';
             finalSplitPayments = JSON.parse(JSON.stringify(this.splitPayments));
             
-            // Pengaman: Pastikan sisa hutang yang di-push benar-benar nyata (>= 1)
             if (sisaHutang >= 1 && this.selectedCustomer && this.selectedCustomer.id) {
                 finalSplitPayments.push({
                     method: 'HUTANG',
@@ -19316,7 +19319,16 @@ let item = {
             // 🌟 PEMBULATAN MUTLAK
             let grandTotal = Math.round(currentTotal + nominalSurcharge);
             let inputUang = Math.round(Number(this.paymentData.amountReceived) || 0);
-            uangDiterima = (inputUang === 0 || inputUang >= grandTotal) ? Math.max(grandTotal, inputUang) : inputUang;
+            
+            // 🌟 FIX BUG HUTANG: 
+            // Jika input uang 0 (auto-lunas), ATAU input uang sama dengan total sblm admin (klik 'uang pas' dari UI)
+            // Sistem akan menyesuaikan penerimaan otomatis mengcover grandTotal (termasuk admin).
+            if (inputUang === 0 || inputUang === Math.round(currentTotal) || inputUang >= grandTotal) {
+                uangDiterima = Math.max(grandTotal, (inputUang === Math.round(currentTotal) ? grandTotal : inputUang));
+            } else {
+                uangDiterima = inputUang;
+            }
+            
             sisaHutang = Math.max(0, grandTotal - uangDiterima);
             finalPaymentMethod = this.paymentData.method || 'CASH';
         }
