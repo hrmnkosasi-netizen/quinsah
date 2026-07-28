@@ -13344,17 +13344,17 @@ async processImport() {
         // MODUL PRINTER BLUETOOTH (ESC/POS)
         // ==========================================
             
-                    async connectBluetoothPrinter() {
+                async connectBluetoothPrinter() {
             try {
-                // 1. Mencari perangkat Bluetooth
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: [
-                        '0000ffe0-0000-1000-8000-00805f9b34fb', // 🌟 Prioritas Utama (SPP)
-                        '000018f0-0000-1000-8000-00805f9b34fb',
-                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-                        '49535343-fe7d-4ae5-8fa9-9fafd205e455',
-                        '0000180a-0000-1000-8000-00805f9b34fb'
+                        '000018f0-0000-1000-8000-00805f9b34fb', 
+                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2', 
+                        '0000fee7-0000-1000-8000-00805f9b34fb',
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Jalur MPT-III
+                        '0000180a-0000-1000-8000-00805f9b34fb',
+                        '0000ffe0-0000-1000-8000-00805f9b34fb'
                     ]
                 });
                 
@@ -13362,47 +13362,23 @@ async processImport() {
                 const services = await server.getPrimaryServices();
                 let validCharacteristic = null;
 
-                // 🌟 PERBAIKAN: Urutan dibalik! FFE1 harus jadi raja (Prioritas 1)
-                const targetCharacteristicUUIDs = [
-                    '0000ffe1-0000-1000-8000-00805f9b34fb', // JALUR CETAK UTAMA (Panda/MPT)
-                    '00002af1-0000-1000-8000-00805f9b34fb', // Alternatif 1
-                    'be4f16b2-6c70-4f81-801a-8ce44056d812', // Alternatif 2
-                    '49535343-8841-43f4-a8d4-ecbe34729bb3'  // Alternatif Terakhir (Sering zonk)
-                ];
-
-                // 3. Memastikan jalur data (Write) tersedia
-                // Kita gunakan loop ganda yang lebih ketat untuk memastikan urutan prioritas dihargai
-                for (let targetUuid of targetCharacteristicUUIDs) {
-                    for (const service of services) {
-                        try {
-                            const characteristics = await service.getCharacteristics();
-                            for (const char of characteristics) {
-                                if (char.uuid === targetUuid && (char.properties.write || char.properties.writeWithoutResponse)) {
-                                    validCharacteristic = char;
-                                    break;
-                                }
-                            }
-                        } catch (e) {
-                            // Abaikan service yang error saat dibaca
-                            continue;
-                        }
-                        if (validCharacteristic) break;
-                    }
-                    if (validCharacteristic) break; // Jika prioritas tinggi sudah ketemu, langsung stop!
-                }
-
-                // Fallback terakhir jika semua target gagal
-                if (!validCharacteristic) {
-                    for (const service of services) {
+                // 1. Ambil characteristic apa saja yang penting BISA DITULIS
+                for (const service of services) {
+                    try {
                         const characteristics = await service.getCharacteristics();
                         for (const char of characteristics) {
-                            if (char.properties.write || char.properties.writeWithoutResponse) {
+                            if (char.properties.writeWithoutResponse || char.properties.write) {
                                 validCharacteristic = char;
-                                break;
+                                // Jika ketemu jalur andalan MPT, langsung hentikan pencarian (Prioritas)
+                                if (char.uuid.includes('49535343') || char.uuid.includes('ffe1')) {
+                                    break; 
+                                }
                             }
                         }
-                        if (validCharacteristic) break;
+                    } catch (e) {
+                        continue;
                     }
+                    if (validCharacteristic && (validCharacteristic.uuid.includes('49535343') || validCharacteristic.uuid.includes('ffe1'))) break;
                 }
 
                 if (validCharacteristic) {
@@ -13411,16 +13387,15 @@ async processImport() {
                     this.printerDevice = device;
 
                     this.printerDevice.addEventListener('gattserverdisconnected', this.onPrinterDisconnected);
-                    alert(`SEMPURNA!\nPrinter ${device.name} terhubung.\nJalur Data: ${validCharacteristic.uuid.split('-')[0]}`);
+                    alert(`SEMPURNA!\nPrinter terhubung (Jalur: ${validCharacteristic.uuid.split('-')[0]}).\nSekarang coba lakukan Print!`);
                 } else {
-                    alert("Koneksi gagal: Jalur cetak data (Write) tidak ditemukan pada mesin ini.");
+                    alert("Koneksi gagal: Printer tidak memiliki jalur untuk menerima teks.");
                     this.printerCharacteristic = null;
                     this.printerDevice = null; 
                 }
             } catch (error) {
                 console.error("Koneksi Printer Gagal:", error);
-                alert("Proses terhenti: " + error.message);
-                
+                alert("Koneksi dibatalkan / gagal: " + error.message);
                 this.printerCharacteristic = null;
                 this.printerDevice = null;
             }
@@ -13440,7 +13415,7 @@ async processImport() {
         },
 
         formatPrintLine(leftText, rightText) {
-            let width = parseInt(this.printerPaperSize); 
+            let width = parseInt(this.printerPaperSize) || 32; 
             let spaceLength = width - leftText.length - rightText.length;
             if (spaceLength < 1) spaceLength = 1;
             return leftText + ' '.repeat(spaceLength) + rightText + '\n';
@@ -13453,16 +13428,14 @@ async processImport() {
             }
 
             const ESC = '\x1B';
-            const GS = '\x1D';
             const INIT = ESC + '@';
             const ALIGN_CENTER = ESC + 'a' + '\x01';
             const ALIGN_LEFT = ESC + 'a' + '\x00';
             const BOLD_ON = ESC + 'E' + '\x01';
             const BOLD_OFF = ESC + 'E' + '\x00';
-            const CUT_PAPER = GS + 'V' + '\x41' + '\x10'; 
             
-            let garis = '-'.repeat(this.printerPaperSize) + '\n';
-            let garisGanda = '='.repeat(this.printerPaperSize) + '\n';
+            let garis = '-'.repeat(this.printerPaperSize || 32) + '\n';
+            let garisGanda = '='.repeat(this.printerPaperSize || 32) + '\n';
 
             let text = INIT;
             
@@ -13490,9 +13463,7 @@ async processImport() {
                     let qtyPrice = `${item.qty} x ${this.formatNumber(item.finalPrice || item.sellPrice)}`;
                     let subTotal = this.formatNumber(item.qty * (item.finalPrice || item.sellPrice));
                     
-                    if (item.productId === 'EXCHANGE') {
-                        subTotal = '-' + subTotal;
-                    }
+                    if (item.productId === 'EXCHANGE') subTotal = '-' + subTotal;
                     text += this.formatPrintLine(qtyPrice, subTotal);
                 });
             }
@@ -13500,7 +13471,6 @@ async processImport() {
 
             // Total & Pembayaran
             text += this.formatPrintLine('Subtotal', this.formatNumber(trx.total));
-            
             if (trx.discountAmt > 0 || trx.globalDiscountAmt > 0) {
                 let totalDiskon = Number(trx.discountAmt || 0) + Number(trx.globalDiscountAmt || 0);
                 text += this.formatPrintLine('Diskon', '-' + this.formatNumber(totalDiskon));
@@ -13525,53 +13495,38 @@ async processImport() {
             text += '\n' + ALIGN_CENTER;
             text += 'Terima kasih atas kunjungan Anda\n';
             text += 'Barang yg sdh dibeli tdk dpt ditukar\n';
-            
-            // 🌟 PERBAIKAN 1: Tambahkan banyak "Enter" agar kertas terdorong keluar 
-            // melewati gigi printer, lalu HAPUS kode `text += CUT_PAPER;`
             text += '\n\n\n\n\n\n'; 
 
-                                    // 2. MENGIRIM DATA KE PRINTER (MODE STABIL MPT-III)
             let encoder = new TextEncoder();
             let uint8array = encoder.encode(text);
             
             try {
-                let CHUNK_SIZE = 20; 
-                let i = 0;
+                // 🌟 PERBAIKAN UTAMA MPT-III: Ukuran chunk diatur ke 50 byte
+                let CHUNK_SIZE = 50; 
                 
-                while (i < uint8array.length) {
+                // 🌟 KUNCI: Kita MENGHARUSKAN pakai metode WithoutResponse jika tersedia
+                let canWriteWithoutResponse = this.printerCharacteristic.properties.writeWithoutResponse;
+                
+                for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
                     let chunk = uint8array.slice(i, i + CHUNK_SIZE);
                     
-                    try {
-                        // 🌟 PERBAIKAN 2: Prioritaskan "writeValue" (dengan response) 
-                        // agar mesin MPT-III tidak tersedak.
-                        if (this.printerCharacteristic.properties.write) {
-                            await this.printerCharacteristic.writeValue(chunk);
-                        } else if (this.printerCharacteristic.properties.writeWithoutResponse) {
-                            await this.printerCharacteristic.writeValueWithoutResponse(chunk);
-                        }
-                        
-                        i += CHUNK_SIZE; 
-                        
-                        // 🌟 PERBAIKAN 3: Perbesar jeda napas printer menjadi 50ms
-                        await new Promise(resolve => setTimeout(resolve, 50)); 
-                        
-                    } catch (e) {
-                        if (e.message.toLowerCase().includes('progress') || e.message.toLowerCase().includes('gatt') || e.message.toLowerCase().includes('busy')) {
-                            console.warn("GATT Sibuk, menunggu 250ms...");
-                            await new Promise(resolve => setTimeout(resolve, 250)); 
-                        } else {
-                            throw e; 
-                        }
+                    if (canWriteWithoutResponse) {
+                        await this.printerCharacteristic.writeValueWithoutResponse(chunk);
+                    } else {
+                        await this.printerCharacteristic.writeValue(chunk);
                     }
+                    
+                    // Jeda napas mesin printer 40ms per potongan teks
+                    await new Promise(resolve => setTimeout(resolve, 40)); 
                 }
                 
-                console.log("Struk berhasil dicetak sempurna!");
+                console.log("Struk berhasil dikirim ke mesin printer!");
                 
             } catch (err) {
                 console.error("Gagal mengirim teks print:", err);
-                alert("Koneksi terputus saat mencetak: " + err.message);
-    }
-    }, 
+                alert("Proses cetak gagal: " + err.message);
+            }
+        },
 
         async testPrint() {
             let dummyTrx = {
