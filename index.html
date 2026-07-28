@@ -4042,6 +4042,9 @@ body.sidebar-open {
                 </div>
             </div>
 
+            <!-- ========================================== -->
+            <!-- 🌟 TAB INFORMASI STOK -->
+            <!-- ========================================== -->
             <div v-if="invTab==='stocks'">
                 <div class="row g-2 mb-3">
                     <div class="col-md-6">
@@ -4102,12 +4105,13 @@ body.sidebar-open {
                             <thead class="table-light text-center">
                                 <tr>
                                     <th rowspan="2" class="align-middle text-start">Produk / Nama Varian</th>
+                                    <!-- 🌟 TAMBAHAN: Kolom SKU Dipisah -->
+                                    <th rowspan="2" class="align-middle text-center">SKU</th>
                                     <th colspan="2" class="align-middle text-center bg-secondary bg-opacity-10">Harga (Rp)</th>
                                     <th :colspan="displayOutlets.length > 0 ? displayOutlets.length : 1">Stok Fisik Outlet</th>
                                     <th rowspan="2" class="align-middle bg-danger text-white">{{ invOutletFilter ? 'Total Outlet Ini' : 'Total Keseluruhan' }}</th>
                                 </tr>
                                 <tr>
-                                    <!-- 🌟 PERBAIKAN JUDUL KOLOM HPP DINAMIS -->
                                     <th class="bg-secondary bg-opacity-10 text-center" title="Metode HPP Aktif">
                                         HPP 
                                         <div style="font-size:0.6rem;" class="fw-bold text-primary mt-1" v-if="appSettings && appSettings.hppMethod">
@@ -4125,9 +4129,12 @@ body.sidebar-open {
                             <tbody>
                                 <template v-for="p in filteredInventoryProducts" :key="p.id">
                                     <tr class="table-secondary fw-bold" v-if="!p.variants || p.variants.length === 0 || invSearchQuery === '' || (p.name.toLowerCase().includes(invSearchQuery.toLowerCase()) || (p.sku && p.sku.toLowerCase().includes(invSearchQuery.toLowerCase())))">
-                                        <td><i class="bi bi-box me-1"></i>{{ p.name }} <span class="sku-badge ms-2" @click="showBarcode(p.sku)">{{ p.sku }}</span></td>
+                                        <td class="align-middle"><i class="bi bi-box me-1"></i>{{ p.name }}</td>
+                                        <!-- 🌟 Kolom SKU Produk Utama -->
+                                        <td class="align-middle text-center">
+                                            <span class="sku-badge" style="cursor:pointer;" @click="showBarcode(p.sku)">{{ p.sku }}</span>
+                                        </td>
                                         
-                                        <!-- 🌟 PERBAIKAN KOLOM HPP PRODUK UTAMA DINAMIS -->
                                         <td class="text-center align-middle" style="width: 140px;">
                                             <div class="d-flex justify-content-center align-items-center w-100">
                                                 <div v-if="appSettings && appSettings.hppMethod === 'STANDARD'" 
@@ -4150,25 +4157,27 @@ body.sidebar-open {
                                             </div>
                                         </td>
 
-                                        <td class="text-center text-success">{{ formatNumber(getEffectiveBasePrice(p)) }}</td>
+                                        <td class="text-center text-success align-middle">{{ formatNumber(getEffectiveBasePrice(p)) }}</td>
                                         
-                                        <td v-for="out in displayOutlets" :key="out.id" class="text-center fw-bold">
+                                        <td v-for="out in displayOutlets" :key="out.id" class="text-center fw-bold align-middle">
                                             {{ getProductStockAtOutlet(p, out.id) }} <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
                                         </td>
-                                        <td v-if="displayOutlets.length === 0" class="text-center">-</td>
-                                        <td class="text-center bg-danger bg-opacity-10 fw-bold fs-6">
+                                        <td v-if="displayOutlets.length === 0" class="text-center align-middle">-</td>
+                                        <td class="text-center bg-danger bg-opacity-10 fw-bold fs-6 align-middle">
                                             {{ invOutletFilter ? getProductStockAtOutlet(p, invOutletFilter) : getBaseTotalStock(p) }} 
                                             <span class="text-danger fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
                                         </td>
                                     </tr>
 
                                     <tr v-for="(v, index) in p.variants" :key="index">
-                                        <td class="ps-3 text-muted">
+                                        <td class="ps-3 text-muted align-middle">
                                             <i class="bi bi-arrow-return-right me-1"></i>{{ p.name }} - <span class="text-dark fw-bold">{{ v.name || v.attributes || 'Varian '+(index+1) }}</span>
-                                            <span class="sku-badge bg-dark text-white ms-2" @click="showBarcode(v.variantSku || '-')">{{ v.variantSku || '-' }}</span>
+                                        </td>
+                                        <!-- 🌟 Kolom SKU Varian -->
+                                        <td class="align-middle text-center">
+                                            <span class="sku-badge bg-dark text-white" style="cursor:pointer;" @click="showBarcode(v.variantSku || '-')">{{ v.variantSku || '-' }}</span>
                                         </td>
                                         
-                                        <!-- 🌟 PERBAIKAN KOLOM HPP VARIAN DINAMIS -->
                                         <td class="text-center align-middle" style="width: 140px;">
                                             <div class="d-flex justify-content-center align-items-center w-100">
                                                 <div v-if="appSettings && appSettings.hppMethod === 'STANDARD'" 
@@ -4191,100 +4200,114 @@ body.sidebar-open {
                                             </div>
                                         </td>
 
-                                        <td class="text-center text-success fw-bold">{{ formatNumber(getEffectiveVariantPrice(p, v)) }}</td>
+                                        <td class="text-center text-success fw-bold align-middle">{{ formatNumber(getEffectiveVariantPrice(p, v)) }}</td>
                                         
-                                        <td v-for="out in displayOutlets" :key="out.id" class="text-center fw-semibold">
+                                        <td v-for="out in displayOutlets" :key="out.id" class="text-center fw-semibold align-middle">
                                             {{ (v.outletStocks && v.outletStocks[out.id]) ? v.outletStocks[out.id] : 0 }} <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
                                         </td>
-                                        <td v-if="displayOutlets.length === 0" class="text-center">-</td>
-                                        <td class="text-center fw-bold fs-6">
+                                        <td v-if="displayOutlets.length === 0" class="text-center align-middle">-</td>
+                                        <td class="text-center fw-bold fs-6 align-middle">
                                             {{ invOutletFilter ? (v.outletStocks && v.outletStocks[invOutletFilter] ? v.outletStocks[invOutletFilter] : 0) : getVariantTotalStock(v) }} 
                                             <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
                                         </td>
                                     </tr>
                                 </template>
-                                <tr v-if="filteredInventoryProducts.length === 0"><td :colspan="displayOutlets.length + 4" class="text-center py-4 text-muted">Tidak ada data produk/varian yang sesuai filter.</td></tr>
+                                <!-- Colspan disesuaikan karena penambahan 1 kolom SKU -->
+                                <tr v-if="filteredInventoryProducts.length === 0"><td :colspan="displayOutlets.length + 5" class="text-center py-4 text-muted">Tidak ada data produk/varian yang sesuai filter.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-                </div>
-            
-                <div v-if="invTab==='allocation'" class="dashboard-card">
-                    <div class="row g-2 mb-3 bg-light p-3 rounded border">
-                        <div class="col-md-5">
-                            <label class="form-label small fw-bold">Pencarian Nama / SKU</label>
-                            <input type="text" class="form-control form-control-sm" v-model="invSearchQuery" placeholder="Cari nama produk, SKU, atau varian...">
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label small fw-bold text-primary"><i class="bi bi-shop me-1"></i>Pilih Cabang (Wajib)</label>
-                            <select class="form-select form-select-sm border-primary" v-model="invOutletFilter">
-                                <option value="">-- Silakan Pilih Cabang / Outlet --</option>
-                                <option v-for="o in outlets" :key="o.id" :value="o.id">{{ o.name }}</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-1 bg-white" @click="invSearchQuery=''; invOutletFilter=''"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
-                        </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- 🌟 TAB ALOKASI STOK -->
+            <!-- ========================================== -->
+            <div v-if="invTab==='allocation'" class="dashboard-card">
+                <div class="row g-2 mb-3 bg-light p-3 rounded border">
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold">Pencarian Nama / SKU</label>
+                        <input type="text" class="form-control form-control-sm" v-model="invSearchQuery" placeholder="Cari nama produk, SKU, atau varian...">
                     </div>
-
-                    <div v-if="!invOutletFilter" class="alert alert-warning text-center py-5 shadow-sm border-warning">
-                        <i class="bi bi-diagram-3 fs-1 d-block mb-3 opacity-50"></i>
-                        <h6 class="fw-bold">Pilih Cabang Terlebih Dahulu</h6>
-                        <p class="small mb-0">Fitur <b>Alokasi Stok</b> digunakan untuk memantau barang yang sedang berada di meja kasir. Silakan pilih spesifik 1 cabang pada filter di atas untuk melihat datanya.</p>
+                    <div class="col-md-5">
+                        <label class="form-label small fw-bold text-primary"><i class="bi bi-shop me-1"></i>Pilih Cabang (Wajib)</label>
+                        <select class="form-select form-select-sm border-primary" v-model="invOutletFilter">
+                            <option value="">-- Silakan Pilih Cabang / Outlet --</option>
+                            <option v-for="o in outlets" :key="o.id" :value="o.id">{{ o.name }}</option>
+                        </select>
                     </div>
-
-                    <div class="table-responsive" v-else>
-                        <table class="table table-bordered table-hover align-middle text-nowrap" style="font-size: 0.75rem;">
-                            <thead class="table-light text-center">
-                                <tr>
-                                    <th rowspan="2" class="align-middle text-start">Produk / Nama Varian</th>
-                                    <th colspan="3" class="bg-primary bg-opacity-10 text-primary border-primary">Analisa Alokasi Stok Outlet Terpilih</th>
-                                </tr>
-                                <tr>
-                                    <th class="bg-secondary bg-opacity-10" style="width: 20%;">Stok Fisik (Asli Gudang)</th>
-                                    <th class="bg-warning bg-opacity-10 text-dark" style="width: 20%;">Ditahan (Masuk Kasir)</th>
-                                    <th class="bg-success text-white" style="width: 20%;">Tersedia (Bisa Dijual)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template v-for="p in filteredInventoryProducts" :key="p.id">
-                                    <tr class="table-secondary fw-bold" v-if="!p.variants || p.variants.length === 0 || invSearchQuery === '' || (p.name.toLowerCase().includes(invSearchQuery.toLowerCase()) || (p.sku && p.sku.toLowerCase().includes(invSearchQuery.toLowerCase())))">
-                                        <td><i class="bi bi-box me-1"></i>{{ p.name }} <span class="sku-badge ms-2" @click="showBarcode(p.sku)">{{ p.sku }}</span></td>
-                                        <td class="text-center bg-secondary bg-opacity-10">
-                                            {{ getProductStockAtOutlet(p, invOutletFilter) }} <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
-                                        </td>
-                                        <td class="text-center bg-warning bg-opacity-10 text-danger fs-6">
-                                            {{ getReservedStock(p.sku, invOutletFilter) }} <span class="fw-normal text-dark" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
-                                        </td>
-                                        <td class="text-center bg-success bg-opacity-10 text-success fs-6">
-                                            {{ getAvailableStock(p, null, invOutletFilter) }} <span class="fw-normal text-muted" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
-                                        </td>
-                                    </tr>
-
-                                    <tr v-for="(v, index) in p.variants" :key="index">
-                                        <td class="ps-3 text-muted">
-                                            <i class="bi bi-arrow-return-right me-1"></i>{{ p.name }} - <span class="text-dark fw-bold">{{ v.name || v.attributes || 'Varian '+(index+1) }}</span>
-                                            <span class="sku-badge bg-dark text-white ms-2" @click="showBarcode(v.variantSku || '-')">{{ v.variantSku || '-' }}</span>
-                                        </td>
-                                        <td class="text-center bg-secondary bg-opacity-10 fw-semibold">
-                                            {{ (v.outletStocks && v.outletStocks[invOutletFilter]) ? v.outletStocks[invOutletFilter] : 0 }} <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
-                                        </td>
-                                        <td class="text-center bg-warning bg-opacity-10 text-danger fw-bold fs-6">
-                                            {{ getReservedStock(v.variantSku, invOutletFilter) }} <span class="fw-normal text-dark" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
-                                        </td>
-                                        <td class="text-center bg-success bg-opacity-10 text-success fw-bold fs-6">
-                                            {{ getAvailableStock(p, v, invOutletFilter) }} <span class="fw-normal text-muted" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
-                                        </td>
-                                    </tr>
-                                </template>
-                                <tr v-if="filteredInventoryProducts.length === 0">
-                                    <td colspan="4" class="text-center py-4 text-muted">Tidak ada data produk/varian yang sesuai filter.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-1 bg-white" @click="invSearchQuery=''; invOutletFilter=''"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
                     </div>
                 </div>
+
+                <div v-if="!invOutletFilter" class="alert alert-warning text-center py-5 shadow-sm border-warning">
+                    <i class="bi bi-diagram-3 fs-1 d-block mb-3 opacity-50"></i>
+                    <h6 class="fw-bold">Pilih Cabang Terlebih Dahulu</h6>
+                    <p class="small mb-0">Fitur <b>Alokasi Stok</b> digunakan untuk memantau barang yang sedang berada di meja kasir. Silakan pilih spesifik 1 cabang pada filter di atas untuk melihat datanya.</p>
+                </div>
+
+                <div class="table-responsive" v-else>
+                    <table class="table table-bordered table-hover align-middle text-nowrap" style="font-size: 0.75rem;">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th rowspan="2" class="align-middle text-start">Produk / Nama Varian</th>
+                                <!-- 🌟 TAMBAHAN: Kolom SKU Dipisah -->
+                                <th rowspan="2" class="align-middle text-center">SKU</th>
+                                <th colspan="3" class="bg-primary bg-opacity-10 text-primary border-primary">Analisa Alokasi Stok Outlet Terpilih</th>
+                            </tr>
+                            <tr>
+                                <th class="bg-secondary bg-opacity-10" style="width: 20%;">Stok Fisik (Asli Gudang)</th>
+                                <th class="bg-warning bg-opacity-10 text-dark" style="width: 20%;">Ditahan (Masuk Kasir)</th>
+                                <th class="bg-success text-white" style="width: 20%;">Tersedia (Bisa Dijual)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template v-for="p in filteredInventoryProducts" :key="p.id">
+                                <tr class="table-secondary fw-bold" v-if="!p.variants || p.variants.length === 0 || invSearchQuery === '' || (p.name.toLowerCase().includes(invSearchQuery.toLowerCase()) || (p.sku && p.sku.toLowerCase().includes(invSearchQuery.toLowerCase())))">
+                                    <td class="align-middle"><i class="bi bi-box me-1"></i>{{ p.name }}</td>
+                                    <!-- 🌟 Kolom SKU Produk Utama -->
+                                    <td class="align-middle text-center">
+                                        <span class="sku-badge" style="cursor:pointer;" @click="showBarcode(p.sku)">{{ p.sku }}</span>
+                                    </td>
+                                    <td class="text-center bg-secondary bg-opacity-10 align-middle">
+                                        {{ getProductStockAtOutlet(p, invOutletFilter) }} <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
+                                    </td>
+                                    <td class="text-center bg-warning bg-opacity-10 text-danger fs-6 align-middle">
+                                        {{ getReservedStock(p.sku, invOutletFilter) }} <span class="fw-normal text-dark" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
+                                    </td>
+                                    <td class="text-center bg-success bg-opacity-10 text-success fs-6 align-middle">
+                                        {{ getAvailableStock(p, null, invOutletFilter) }} <span class="fw-normal text-muted" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
+                                    </td>
+                                </tr>
+
+                                <tr v-for="(v, index) in p.variants" :key="index">
+                                    <td class="ps-3 text-muted align-middle">
+                                        <i class="bi bi-arrow-return-right me-1"></i>{{ p.name }} - <span class="text-dark fw-bold">{{ v.name || v.attributes || 'Varian '+(index+1) }}</span>
+                                    </td>
+                                    <!-- 🌟 Kolom SKU Varian -->
+                                    <td class="align-middle text-center">
+                                        <span class="sku-badge bg-dark text-white" style="cursor:pointer;" @click="showBarcode(v.variantSku || '-')">{{ v.variantSku || '-' }}</span>
+                                    </td>
+                                    <td class="text-center bg-secondary bg-opacity-10 fw-semibold align-middle">
+                                        {{ (v.outletStocks && v.outletStocks[invOutletFilter]) ? v.outletStocks[invOutletFilter] : 0 }} <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
+                                    </td>
+                                    <td class="text-center bg-warning bg-opacity-10 text-danger fw-bold fs-6 align-middle">
+                                        {{ getReservedStock(v.variantSku, invOutletFilter) }} <span class="fw-normal text-dark" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
+                                    </td>
+                                    <td class="text-center bg-success bg-opacity-10 text-success fw-bold fs-6 align-middle">
+                                        {{ getAvailableStock(p, v, invOutletFilter) }} <span class="fw-normal text-muted" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
+                                    </td>
+                                </tr>
+                            </template>
+                            <!-- Colspan disesuaikan menjadi 5 karena penambahan kolom SKU -->
+                            <tr v-if="filteredInventoryProducts.length === 0">
+                                <td colspan="5" class="text-center py-4 text-muted">Tidak ada data produk/varian yang sesuai filter.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
                 <div v-if="invTab==='logs'" class="dashboard-card">
                     
