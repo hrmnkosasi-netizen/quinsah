@@ -4397,6 +4397,7 @@ body.sidebar-open {
                             </select>
                         </div>
                     </div>
+                    
                     <div class="table-responsive">
                         <table class="table table-custom table-hover align-middle text-nowrap">
                             <thead class="table-light">
@@ -4404,6 +4405,8 @@ body.sidebar-open {
                                     <th>Nama Produk & Varian</th>
                                     <th>SKU</th>
                                     <th class="text-center text-secondary">Tanggal</th>
+                                    <!-- 🌟 TAMBAHAN: KOLOM LOKASI/CABANG -->
+                                    <th class="text-center text-info">Lokasi (Cabang)</th>
                                     <th class="text-center text-primary">Stok Awal</th>
                                     <th class="text-center text-success">Masuk (In)</th>
                                     <th class="text-center text-danger">Keluar (Out)</th>
@@ -4419,6 +4422,15 @@ body.sidebar-open {
                                     </td>
                                     <td><span class="sku-badge">{{ log.sku }}</span></td>
                                     <td class="text-center text-muted fw-semibold" style="font-size: 0.7rem;">{{ log.displayDate }}</td>
+                                    
+                                    <!-- 🌟 DATA KOLOM LOKASI (Menyesuaikan dengan filter yang aktif) -->
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary bg-opacity-10 text-dark border" style="font-size: 0.65rem;">
+                                            <i class="bi bi-shop me-1"></i>
+                                            {{ stockCardOutlet ? (outlets.find(o => o.id === stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)' }}
+                                        </span>
+                                    </td>
+                                    
                                     <td class="text-center text-primary fw-bold">{{ log.stokAwal }}</td>
                                     <td class="text-center text-success fw-bold">{{ log.masuk }}</td>
                                     <td class="text-center text-danger fw-bold">{{ log.keluar }}</td>
@@ -4430,7 +4442,7 @@ body.sidebar-open {
                                         <span v-else class="text-muted small">-</span>
                                     </td>
                                 </tr>
-                                <tr v-if="stockCardSummary.length === 0"><td colspan="8" class="text-center py-4 text-muted small">Tidak ada data produk/kartu stok sesuai filter.</td></tr>
+                                <tr v-if="stockCardSummary.length === 0"><td colspan="9" class="text-center py-4 text-muted small">Tidak ada data produk/kartu stok sesuai filter.</td></tr>
                             </tbody>
                         </table>
                     </div>
