@@ -13384,7 +13384,7 @@ async processImport() {
                     this.printerServer = server;
                     this.printerDevice = device;
 
-                    this.printerDevice.addEventListener('gattserverdisconnected', this.onPrinterDisconnected);
+                    this.printerDevice.addEventListener('gattserverdisconnected', this.onPrinterDisconnected.bind(this));
                     alert(`SEMPURNA!\nPrinter terhubung (Jalur Data: ${validCharacteristic.uuid.split('-')[0]}).`);
                 } else {
                     throw new Error("Tidak ditemukan jalur cetak (Write) pada printer ini.");
@@ -13408,15 +13408,21 @@ async processImport() {
             this.printerDevice = null;
             this.printerServer = null;
             this.printerCharacteristic = null;
+            this._isPrinting = false;
             alert("Koneksi ke Printer terputus!");
         },
 
         formatPrintLine(leftText, rightText) {
-            let width = parseInt(this.printerPaperSize) || 32; 
-            let spaceLength = width - leftText.length - rightText.length;
-            if (spaceLength < 1) spaceLength = 1;
-            return leftText + ' '.repeat(spaceLength) + rightText + '\n';
-        },
+    // 🌟 Pastikan input selalu menjadi String dan cegah undefined
+    let left = String(leftText || '');
+    let right = String(rightText || '');
+    
+    let width = parseInt(this.printerPaperSize) || 32; 
+    let spaceLength = width - left.length - right.length;
+    if (spaceLength < 1) spaceLength = 1;
+    
+    return left + ' '.repeat(spaceLength) + right + '\n';
+},
 
         async printReceiptBluetooth(trx) {
             if (!this.printerCharacteristic) {
