@@ -4265,12 +4265,14 @@ body.sidebar-open {
                                 <th rowspan="2" class="align-middle text-start">Produk / Nama Varian</th>
                                 <!-- 🌟 TAMBAHAN: Kolom SKU Dipisah -->
                                 <th rowspan="2" class="align-middle text-center">SKU</th>
+                                <!-- 🌟 TAMBAHAN: Kolom Outlet -->
+                                <th rowspan="2" class="align-middle text-center">Outlet</th>
                                 <th colspan="3" class="bg-primary bg-opacity-10 text-primary border-primary">Analisa Alokasi Stok Outlet Terpilih</th>
                             </tr>
                             <tr>
-                                <th class="bg-secondary bg-opacity-10" style="width: 20%;">Stok Fisik (Asli Gudang)</th>
-                                <th class="bg-warning bg-opacity-10 text-dark" style="width: 20%;">Ditahan (Masuk Kasir)</th>
-                                <th class="bg-success text-white" style="width: 20%;">Tersedia (Bisa Dijual)</th>
+                                <th class="bg-secondary bg-opacity-10" style="width: 15%;">Stok Fisik (Asli Gudang)</th>
+                                <th class="bg-warning bg-opacity-10 text-dark" style="width: 15%;">Ditahan (Masuk Kasir)</th>
+                                <th class="bg-success text-white" style="width: 15%;">Tersedia (Bisa Dijual)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -4280,6 +4282,12 @@ body.sidebar-open {
                                     <!-- 🌟 Kolom SKU Produk Utama -->
                                     <td class="align-middle text-center">
                                         <span class="sku-badge" style="cursor:pointer;" @click="showBarcode(p.sku)">{{ p.sku }}</span>
+                                    </td>
+                                    <!-- 🌟 Kolom Outlet Produk Utama -->
+                                    <td class="align-middle text-center">
+                                        <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">
+                                            <i class="bi bi-shop me-1"></i>{{ (outlets.find(o => o.id === invOutletFilter) || {}).name || '-' }}
+                                        </span>
                                     </td>
                                     <td class="text-center bg-secondary bg-opacity-10 align-middle">
                                         {{ getProductStockAtOutlet(p, invOutletFilter) }} <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
@@ -4300,6 +4308,12 @@ body.sidebar-open {
                                     <td class="align-middle text-center">
                                         <span class="sku-badge bg-dark text-white" style="cursor:pointer;" @click="showBarcode(v.variantSku || '-')">{{ v.variantSku || '-' }}</span>
                                     </td>
+                                    <!-- 🌟 Kolom Outlet Varian -->
+                                    <td class="align-middle text-center">
+                                        <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">
+                                            <i class="bi bi-shop me-1"></i>{{ (outlets.find(o => o.id === invOutletFilter) || {}).name || '-' }}
+                                        </span>
+                                    </td>
                                     <td class="text-center bg-secondary bg-opacity-10 fw-semibold align-middle">
                                         {{ (v.outletStocks && v.outletStocks[invOutletFilter]) ? v.outletStocks[invOutletFilter] : 0 }} <span class="text-muted fw-normal" style="font-size: 0.65rem;">{{ p.uom || 'Pcs' }}</span>
                                     </td>
@@ -4311,9 +4325,9 @@ body.sidebar-open {
                                     </td>
                                 </tr>
                             </template>
-                            <!-- Colspan disesuaikan menjadi 5 karena penambahan kolom SKU -->
+                            <!-- Colspan disesuaikan menjadi 6 karena penambahan kolom Outlet -->
                             <tr v-if="filteredInventoryProducts.length === 0">
-                                <td colspan="5" class="text-center py-4 text-muted">Tidak ada data produk/varian yang sesuai filter.</td>
+                                <td colspan="6" class="text-center py-4 text-muted">Tidak ada data produk/varian yang sesuai filter.</td>
                             </tr>
                         </tbody>
                     </table>
