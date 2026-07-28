@@ -3976,7 +3976,7 @@ body.sidebar-open {
                         </select>
                     </div>
                     <div class="col-md-3 d-flex align-items-end">
-                        <button class="btn btn-sm bg-white border text-dark w-100 py-1" @click="exportConfig.target = 'inv_alerts'; previewExportData()">
+                        <button class="btn btn-sm bg-white border text-dark w-100 py-1" @click="exportConfig.showModal = true; exportConfig.target = 'inv_alerts'; exportConfig.showPreview = false">
                             <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Alert</b>
                         </button>
                     </div>
