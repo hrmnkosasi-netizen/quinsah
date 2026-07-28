@@ -12344,7 +12344,13 @@ previewExportData() {
     // 🌟 LOGIKA PREVIEW DISAMAKAN 100% DENGAN LOGIKA EXPORT
     if (this.exportConfig.target === 'categories') {
         let dataSumber = (this.structuredCategories || []).slice(0, 5);
-        formattedData = dataSumber.map(c => ({ "Nama Kategori": c.name || '-', "Tingkat Level": (c.treeLevel !== undefined ? c.treeLevel + 1 : 1) }));
+        let getCatParentName = (c) => {
+            if (!c.parentId) return '-';
+            let allCats = this.categories || this.structuredCategories || [];
+            let p = allCats.find(x => x.id === c.parentId);
+            return p ? p.name : '-';
+        };
+        formattedData = dataSumber.map(c => ({ "Nama Kategori": c.name || '-', "Kategori Induk": getCatParentName(c) }));
     } else if (this.exportConfig.target === 'customers') {
         let dataSumber = (this.filteredCustomers || []).slice(0, 5);
         formattedData = dataSumber.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
@@ -12538,7 +12544,13 @@ processExport() {
 
     if (this.exportConfig.target === 'categories') {
         if (!this.structuredCategories || this.structuredCategories.length === 0) return alert('Tidak ada data kategori!');
-        formattedData = this.structuredCategories.map(c => ({ "Nama Kategori": c.name || '-', "Tingkat Level": (c.treeLevel !== undefined ? c.treeLevel + 1 : 1) }));
+        let getCatParentName = (c) => {
+            if (!c.parentId) return '-';
+            let allCats = this.categories || this.structuredCategories || [];
+            let p = allCats.find(x => x.id === c.parentId);
+            return p ? p.name : '-';
+        };
+        formattedData = this.structuredCategories.map(c => ({ "Nama Kategori": c.name || '-', "Kategori Induk": getCatParentName(c) }));
     } else if (this.exportConfig.target === 'customers') {
         if (!this.filteredCustomers || this.filteredCustomers.length === 0) return alert('Tidak ada data pelanggan!');
         formattedData = this.filteredCustomers.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
@@ -12746,11 +12758,12 @@ downloadTemplate() {
 
     // 🌟 PENAMBAHAN CONTOH (SAMPLE DATA) PADA TEMPLATE
     if (this.importConfig.target === 'categories') {
-        headers = ['Nama Kategori'];
+        headers = ['Nama Kategori', 'Kategori Induk'];
         sampleData = [
-            ['Makanan'],
-            ['Minuman'],
-            ['Snack']
+            ['Makanan', ''],
+            ['Snack', 'Makanan'],
+            ['Minuman', ''],
+            ['Kopi', 'Minuman']
         ];
     } else if (this.importConfig.target === 'customers') {
         headers = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
@@ -12818,7 +12831,7 @@ handleFileUpload(event) {
                 
                 let expectedHeaders = [];
                 if (this.importConfig.target === 'categories') {
-                    expectedHeaders = ['Nama Kategori'];
+                    expectedHeaders = ['Nama Kategori', 'Kategori Induk'];
                 } else if (this.importConfig.target === 'customers') {
                     expectedHeaders = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
                 } else if (this.importConfig.target === 'suppliers') {
@@ -13138,11 +13151,32 @@ async processImport() {
             }
             
         } else if (this.importConfig.target === 'categories') {
+            // 🌟 LOGIKA CERDAS IMPORT KATEGORI & SUB-KATEGORI SECARA BERSAMAAN
+            let categoryIdMap = new Map();
+            
+            // 1. Petakan kategori yang sudah ada di database
+            existingDocs.forEach(docSnap => {
+                categoryIdMap.set(docSnap.data().name.toLowerCase().trim(), docSnap.id);
+            });
+
+            // 2. Siapkan ID untuk kategori baru di file agar bisa direferensikan sebagai Induk
+            dataRows.forEach(row => {
+                if (!row[0]) return;
+                let name = row[0].toString().trim();
+                let nameLower = name.toLowerCase();
+                if (!categoryIdMap.has(nameLower)) {
+                    categoryIdMap.set(nameLower, doc(collection(db, collectionName)).id);
+                }
+            });
+
             const BATCH_LIMIT = 400; 
             const chunks = [];
             for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) {
                 chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
             }
+
+            let existingNamesSet = new Set();
+            existingDocs.forEach(docSnap => existingNamesSet.add(docSnap.data().name.toLowerCase().trim()));
 
             for (const chunk of chunks) {
                 const batch = writeBatch(db); 
@@ -13150,30 +13184,33 @@ async processImport() {
                 chunk.forEach((row) => {
                     if (!row[0]) return; 
 
-                    let existingDocId = null;
                     const name = row[0].toString().trim();
+                    const parentName = row[1] ? row[1].toString().trim() : '';
+                    const nameLower = name.toLowerCase();
+                    const parentNameLower = parentName.toLowerCase();
+                    
+                    let docId = categoryIdMap.get(nameLower);
+                    let parentId = parentName ? (categoryIdMap.get(parentNameLower) || null) : null;
 
-                    if (existingNames.has(name.toLowerCase())) {
-                        existingDocId = existingNames.get(name.toLowerCase());
-                    }
+                    const docRef = doc(db, collectionName, docId);
 
-                    if (existingDocId && existingDocId !== "pending_insert") {
-                        const docRef = doc(db, collectionName, existingDocId);
+                    if (existingNamesSet.has(nameLower)) {
                         batch.update(docRef, {
                             name: name,
+                            parentId: parentId,
                             updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin",
                             updatedAt: new Date()
                         });
                         updateCount++;
-                    } else if (!existingDocId) {
-                        existingNames.set(name.toLowerCase(), "pending_insert");
-                        batch.set(doc(collection(db, collectionName)), {
+                    } else {
+                        batch.set(docRef, {
                             companyId: compId, 
                             name: name,
-                            parentId: null, // Default kategori root
+                            parentId: parentId,
                             createdAt: new Date(),
                             createdBy: this.userProfile?.name || this.currentUser?.name || "Admin"
                         });
+                        existingNamesSet.add(nameLower); 
                         insertCount++;
                     }
                 });
