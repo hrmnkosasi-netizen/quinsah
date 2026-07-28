@@ -13421,18 +13421,17 @@ async processImport() {
             return leftText + ' '.repeat(spaceLength) + rightText + '\n';
         },
 
-                async printReceiptBluetooth(trx) {
+                        async printReceiptBluetooth(trx) {
             if (!this.printerCharacteristic) {
                 alert("Printer belum terhubung! Silakan hubungkan di menu Setelan.");
                 return;
             }
 
-            // 🌟 PENCEGAH DOUBLE KLIK: Jika sedang nge-print, abaikan klik selanjutnya
             if (this._isPrinting) {
                 console.warn("Sedang memproses cetakan, harap tunggu...");
                 return; 
             }
-            this._isPrinting = true; // Kunci proses print
+            this._isPrinting = true; 
 
             try {
                 const ESC = '\x1B';
@@ -13505,8 +13504,11 @@ async processImport() {
                 text += 'Barang yg sdh dibeli tdk dpt ditukar\n';
                 text += '\n\n\n\n\n\n'; 
 
-                let encoder = new TextEncoder();
-                let uint8array = encoder.encode(text);
+                // 🌟 PERBAIKAN ENCODING BERDASARKAN (ASCII/ISO-8859-1)
+                let uint8array = new Uint8Array(text.length);
+                for (let i = 0; i < text.length; i++) {
+                    uint8array[i] = text.charCodeAt(i) & 0xFF;
+                }
                 
                 let CHUNK_SIZE = 64; 
                 let canWriteWithoutResponse = this.printerCharacteristic.properties.writeWithoutResponse;
@@ -13514,7 +13516,6 @@ async processImport() {
                 for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
                     let chunk = uint8array.slice(i, i + CHUNK_SIZE);
                     
-                    // 🌟 SISTEM RETRY OTOMATIS: Jika macet, coba lagi pelan-pelan
                     let success = false;
                     let retries = 5;
                     
@@ -13525,14 +13526,14 @@ async processImport() {
                             } else {
                                 await this.printerCharacteristic.writeValue(chunk);
                             }
-                            success = true; // Berhasil
+                            success = true; 
                         } catch (err) {
                             if (err.message.toLowerCase().includes('in progress')) {
                                 console.warn("Lalu lintas Bluetooth padat, mencoba ulang...");
                                 retries--;
-                                await new Promise(resolve => setTimeout(resolve, 100)); // Tunggu sejenak agar printer napas
+                                await new Promise(resolve => setTimeout(resolve, 150)); 
                             } else {
-                                throw err; // Jika error lain, langsung hentikan
+                                throw err; 
                             }
                         }
                     }
@@ -13541,7 +13542,8 @@ async processImport() {
                         throw new Error("Gagal mengirim data ke printer, antrean penuh.");
                     }
                     
-                    await new Promise(resolve => setTimeout(resolve, 40)); 
+                    // 🌟 PERBAIKAN JEDA WAKTU (Mencegah Buffer Overflow)
+                    await new Promise(resolve => setTimeout(resolve, 80)); 
                 }
                 
                 console.log("Struk berhasil dikirim ke mesin printer!");
@@ -13550,7 +13552,6 @@ async processImport() {
                 console.error("Gagal mengirim teks print:", err);
                 alert("Proses cetak gagal: " + err.message);
             } finally {
-                // 🌟 BUKA KEMBALI PENGUNCI TOMBOL SETELAH SELESAI ATAU ERROR
                 this._isPrinting = false;
             }
         },
