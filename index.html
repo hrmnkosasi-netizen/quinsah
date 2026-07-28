@@ -13421,102 +13421,126 @@ async processImport() {
             return leftText + ' '.repeat(spaceLength) + rightText + '\n';
         },
 
-        async printReceiptBluetooth(trx) {
+                async printReceiptBluetooth(trx) {
             if (!this.printerCharacteristic) {
                 alert("Printer belum terhubung! Silakan hubungkan di menu Setelan.");
                 return;
             }
 
-            const ESC = '\x1B';
-            const INIT = ESC + '@';
-            const ALIGN_CENTER = ESC + 'a' + '\x01';
-            const ALIGN_LEFT = ESC + 'a' + '\x00';
-            const BOLD_ON = ESC + 'E' + '\x01';
-            const BOLD_OFF = ESC + 'E' + '\x00';
-            
-            let garis = '-'.repeat(this.printerPaperSize || 32) + '\n';
-            let garisGanda = '='.repeat(this.printerPaperSize || 32) + '\n';
-
-            let text = INIT;
-            
-            // Header Toko
-            text += ALIGN_CENTER + BOLD_ON;
-            text += (this.appSettings?.storeName || 'QUINSAH COLLECTION') + '\n';
-            text += BOLD_OFF;
-            text += (this.appSettings?.storeAddress || 'Cabang: ' + this.getOutletName(trx.outletId)) + '\n';
-            text += (this.appSettings?.storePhone ? 'Telp: ' + this.appSettings.storePhone + '\n' : '');
-            text += garis;
-
-            // Info Transaksi
-            text += ALIGN_LEFT;
-            text += `No   : ${trx.id}\n`;
-            text += `Tgl  : ${trx.dateStr}\n`;
-            text += `Kasir: ${trx.cashierName || 'Admin'}\n`;
-            text += `Plg  : ${trx.customer || 'Umum'}\n`;
-            text += garis;
-
-            // Rincian Barang
-            if (trx.items && trx.items.length > 0) {
-                trx.items.forEach(item => {
-                    let itemName = item.productId === 'EXCHANGE' ? '[TUKAR] ' + item.name : item.name;
-                    text += `${itemName}\n`;
-                    let qtyPrice = `${item.qty} x ${this.formatNumber(item.finalPrice || item.sellPrice)}`;
-                    let subTotal = this.formatNumber(item.qty * (item.finalPrice || item.sellPrice));
-                    
-                    if (item.productId === 'EXCHANGE') subTotal = '-' + subTotal;
-                    text += this.formatPrintLine(qtyPrice, subTotal);
-                });
+            // 🌟 PENCEGAH DOUBLE KLIK: Jika sedang nge-print, abaikan klik selanjutnya
+            if (this._isPrinting) {
+                console.warn("Sedang memproses cetakan, harap tunggu...");
+                return; 
             }
-            text += garis;
+            this._isPrinting = true; // Kunci proses print
 
-            // Total & Pembayaran
-            text += this.formatPrintLine('Subtotal', this.formatNumber(trx.total));
-            if (trx.discountAmt > 0 || trx.globalDiscountAmt > 0) {
-                let totalDiskon = Number(trx.discountAmt || 0) + Number(trx.globalDiscountAmt || 0);
-                text += this.formatPrintLine('Diskon', '-' + this.formatNumber(totalDiskon));
-            }
-            if (trx.taxAmt > 0) {
-                text += this.formatPrintLine('Pajak (PPN)', this.formatNumber(trx.taxAmt));
-            }
-
-            text += BOLD_ON;
-            text += this.formatPrintLine('TOTAL AKHIR', 'Rp ' + this.formatNumber(trx.total));
-            text += BOLD_OFF;
-            
-            text += garisGanda;
-            text += this.formatPrintLine('Metode Bayar', trx.paymentMethod || 'TUNAI');
-            text += this.formatPrintLine('Total Dibayar', 'Rp ' + this.formatNumber(trx.amountReceived || trx.total));
-            
-            let kembalian = (trx.amountReceived || 0) - (trx.total || 0);
-            if (kembalian > 0) {
-                text += this.formatPrintLine('KEMBALIAN', 'Rp ' + this.formatNumber(kembalian));
-            }
-
-            text += '\n' + ALIGN_CENTER;
-            text += 'Terima kasih atas kunjungan Anda\n';
-            text += 'Barang yg sdh dibeli tdk dpt ditukar\n';
-            text += '\n\n\n\n\n\n'; 
-
-            let encoder = new TextEncoder();
-            let uint8array = encoder.encode(text);
-            
             try {
-                // 🌟 PERBAIKAN UTAMA MPT-III: Ukuran chunk diatur ke 50 byte
-                let CHUNK_SIZE = 50; 
+                const ESC = '\x1B';
+                const INIT = ESC + '@';
+                const ALIGN_CENTER = ESC + 'a' + '\x01';
+                const ALIGN_LEFT = ESC + 'a' + '\x00';
+                const BOLD_ON = ESC + 'E' + '\x01';
+                const BOLD_OFF = ESC + 'E' + '\x00';
                 
-                // 🌟 KUNCI: Kita MENGHARUSKAN pakai metode WithoutResponse jika tersedia
+                let garis = '-'.repeat(this.printerPaperSize || 32) + '\n';
+                let garisGanda = '='.repeat(this.printerPaperSize || 32) + '\n';
+
+                let text = INIT;
+                
+                // Header Toko
+                text += ALIGN_CENTER + BOLD_ON;
+                text += (this.appSettings?.storeName || 'QUINSAH COLLECTION') + '\n';
+                text += BOLD_OFF;
+                text += (this.appSettings?.storeAddress || 'Cabang: ' + this.getOutletName(trx.outletId)) + '\n';
+                text += (this.appSettings?.storePhone ? 'Telp: ' + this.appSettings.storePhone + '\n' : '');
+                text += garis;
+
+                // Info Transaksi
+                text += ALIGN_LEFT;
+                text += `No   : ${trx.id}\n`;
+                text += `Tgl  : ${trx.dateStr}\n`;
+                text += `Kasir: ${trx.cashierName || 'Admin'}\n`;
+                text += `Plg  : ${trx.customer || 'Umum'}\n`;
+                text += garis;
+
+                // Rincian Barang
+                if (trx.items && trx.items.length > 0) {
+                    trx.items.forEach(item => {
+                        let itemName = item.productId === 'EXCHANGE' ? '[TUKAR] ' + item.name : item.name;
+                        text += `${itemName}\n`;
+                        let qtyPrice = `${item.qty} x ${this.formatNumber(item.finalPrice || item.sellPrice)}`;
+                        let subTotal = this.formatNumber(item.qty * (item.finalPrice || item.sellPrice));
+                        
+                        if (item.productId === 'EXCHANGE') subTotal = '-' + subTotal;
+                        text += this.formatPrintLine(qtyPrice, subTotal);
+                    });
+                }
+                text += garis;
+
+                // Total & Pembayaran
+                text += this.formatPrintLine('Subtotal', this.formatNumber(trx.total));
+                if (trx.discountAmt > 0 || trx.globalDiscountAmt > 0) {
+                    let totalDiskon = Number(trx.discountAmt || 0) + Number(trx.globalDiscountAmt || 0);
+                    text += this.formatPrintLine('Diskon', '-' + this.formatNumber(totalDiskon));
+                }
+                if (trx.taxAmt > 0) {
+                    text += this.formatPrintLine('Pajak (PPN)', this.formatNumber(trx.taxAmt));
+                }
+
+                text += BOLD_ON;
+                text += this.formatPrintLine('TOTAL AKHIR', 'Rp ' + this.formatNumber(trx.total));
+                text += BOLD_OFF;
+                
+                text += garisGanda;
+                text += this.formatPrintLine('Metode Bayar', trx.paymentMethod || 'TUNAI');
+                text += this.formatPrintLine('Total Dibayar', 'Rp ' + this.formatNumber(trx.amountReceived || trx.total));
+                
+                let kembalian = (trx.amountReceived || 0) - (trx.total || 0);
+                if (kembalian > 0) {
+                    text += this.formatPrintLine('KEMBALIAN', 'Rp ' + this.formatNumber(kembalian));
+                }
+
+                text += '\n' + ALIGN_CENTER;
+                text += 'Terima kasih atas kunjungan Anda\n';
+                text += 'Barang yg sdh dibeli tdk dpt ditukar\n';
+                text += '\n\n\n\n\n\n'; 
+
+                let encoder = new TextEncoder();
+                let uint8array = encoder.encode(text);
+                
+                let CHUNK_SIZE = 64; 
                 let canWriteWithoutResponse = this.printerCharacteristic.properties.writeWithoutResponse;
                 
                 for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
                     let chunk = uint8array.slice(i, i + CHUNK_SIZE);
                     
-                    if (canWriteWithoutResponse) {
-                        await this.printerCharacteristic.writeValueWithoutResponse(chunk);
-                    } else {
-                        await this.printerCharacteristic.writeValue(chunk);
+                    // 🌟 SISTEM RETRY OTOMATIS: Jika macet, coba lagi pelan-pelan
+                    let success = false;
+                    let retries = 5;
+                    
+                    while (!success && retries > 0) {
+                        try {
+                            if (canWriteWithoutResponse) {
+                                await this.printerCharacteristic.writeValueWithoutResponse(chunk);
+                            } else {
+                                await this.printerCharacteristic.writeValue(chunk);
+                            }
+                            success = true; // Berhasil
+                        } catch (err) {
+                            if (err.message.toLowerCase().includes('in progress')) {
+                                console.warn("Lalu lintas Bluetooth padat, mencoba ulang...");
+                                retries--;
+                                await new Promise(resolve => setTimeout(resolve, 100)); // Tunggu sejenak agar printer napas
+                            } else {
+                                throw err; // Jika error lain, langsung hentikan
+                            }
+                        }
+                    }
+
+                    if (!success) {
+                        throw new Error("Gagal mengirim data ke printer, antrean penuh.");
                     }
                     
-                    // Jeda napas mesin printer 40ms per potongan teks
                     await new Promise(resolve => setTimeout(resolve, 40)); 
                 }
                 
@@ -13525,6 +13549,9 @@ async processImport() {
             } catch (err) {
                 console.error("Gagal mengirim teks print:", err);
                 alert("Proses cetak gagal: " + err.message);
+            } finally {
+                // 🌟 BUKA KEMBALI PENGUNCI TOMBOL SETELAH SELESAI ATAU ERROR
+                this._isPrinting = false;
             }
         },
 
