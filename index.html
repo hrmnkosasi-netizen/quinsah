@@ -3488,31 +3488,45 @@ body.sidebar-open {
     </div>
 
                 <div v-if="catalogTab==='categories'" class="dashboard-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0">Struktur Pohon Kategori</h6>
-                        <button class="btn btn-sm btn-primary-custom" @click="openModal('addCategoryModal')"><i class="bi bi-plus-lg me-1"></i> Tambah Kategori</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-custom align-middle">
-                            <thead><tr><th style="width: 70%">Kategori</th><th>Level</th><th>Aksi</th></tr></thead>
-                            <tbody>
-                                <tr v-for="cat in structuredCategories" :key="cat.id">
-                                    <td class="fw-bold small" :style="{ paddingLeft: (cat.treeLevel * 20 + 5) + 'px' }">
-                                        <i v-if="cat.treeLevel === 0" class="bi bi-folder-fill text-warning me-2 fs-6"></i>
-                                        <i v-else class="bi bi-arrow-return-right text-muted me-2 fs-6"></i>
-                                        {{ cat.name }}
-                                    </td>
-                                    <td><span class="badge bg-light text-dark border">Level {{ cat.treeLevel + 1 }}</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-light border text-primary me-1 py-1 px-2" @click="editData('categories', cat, 'formCategory', 'addCategoryModal')"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-light border text-danger py-1 px-2" @click="removeData('categories', cat.id)"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr v-if="structuredCategories.length === 0"><td colspan="3" class="text-center py-3 text-muted small">Data kosong.</td></tr>
-                            </tbody>
-                        </table>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0">Struktur Pohon Kategori</h6>
+                    
+                    <!-- 🌟 TAMBAHAN: Grup Tombol Import, Export, & Tambah Kategori -->
+                    <div class="d-flex gap-2">
+                        <div class="btn-group shadow-sm" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="importConfig.showModal = true; importConfig.target = 'categories'; importConfig.step = 1">
+                                <i class="bi bi-download text-primary me-1"></i> Import Kategori
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="exportConfig.showModal = true; exportConfig.target = 'categories'; exportConfig.showPreview = false">
+                                <i class="bi bi-upload text-primary me-1"></i> Export Kategori
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-primary-custom" @click="openModal('addCategoryModal')">
+                            <i class="bi bi-plus-lg me-1"></i> Tambah Kategori
+                        </button>
                     </div>
                 </div>
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead><tr><th style="width: 70%">Kategori</th><th>Level</th><th>Aksi</th></tr></thead>
+                        <tbody>
+                            <tr v-for="cat in structuredCategories" :key="cat.id">
+                                <td class="fw-bold small" :style="{ paddingLeft: (cat.treeLevel * 20 + 5) + 'px' }">
+                                    <i v-if="cat.treeLevel === 0" class="bi bi-folder-fill text-warning me-2 fs-6"></i>
+                                    <i v-else class="bi bi-arrow-return-right text-muted me-2 fs-6"></i>
+                                    {{ cat.name }}
+                                </td>
+                                <td><span class="badge bg-light text-dark border">Level {{ cat.treeLevel + 1 }}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-light border text-primary me-1 py-1 px-2" @click="editData('categories', cat, 'formCategory', 'addCategoryModal')"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-light border text-danger py-1 px-2" @click="removeData('categories', cat.id)"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr v-if="structuredCategories.length === 0"><td colspan="3" class="text-center py-3 text-muted small">Data kosong.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             </div>
 
            <div v-if="currentView === 'barcode'" class="fade-in w-100">
@@ -12293,7 +12307,8 @@ async fetchAllRatings() {
 
 getExportDataCount() {
     let count = 0;
-    if (this.exportConfig.target === 'customers') count = this.filteredCustomers ? this.filteredCustomers.length : 0;
+    if (this.exportConfig.target === 'categories') count = this.structuredCategories ? this.structuredCategories.length : 0;
+    else if (this.exportConfig.target === 'customers') count = this.filteredCustomers ? this.filteredCustomers.length : 0;
     else if (this.exportConfig.target === 'suppliers') count = this.filteredSuppliers ? this.filteredSuppliers.length : 0;
     else if (this.exportConfig.target === 'ratings') count = this.filteredAllRatings ? this.filteredAllRatings.length : 0;
     else if (this.exportConfig.target === 'sales') count = this.filteredTransactions ? this.filteredTransactions.length : 0;
@@ -12327,7 +12342,10 @@ previewExportData() {
     let formattedData = [];
 
     // 🌟 LOGIKA PREVIEW DISAMAKAN 100% DENGAN LOGIKA EXPORT
-    if (this.exportConfig.target === 'customers') {
+    if (this.exportConfig.target === 'categories') {
+        let dataSumber = (this.structuredCategories || []).slice(0, 5);
+        formattedData = dataSumber.map(c => ({ "Nama Kategori": c.name || '-', "Tingkat Level": (c.treeLevel !== undefined ? c.treeLevel + 1 : 1) }));
+    } else if (this.exportConfig.target === 'customers') {
         let dataSumber = (this.filteredCustomers || []).slice(0, 5);
         formattedData = dataSumber.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
     } else if (this.exportConfig.target === 'suppliers') {
@@ -12518,7 +12536,10 @@ processExport() {
     const today = new Date().toISOString().split('T')[0];
     let fileName = `Data_${this.exportConfig.target}_${today}`;
 
-    if (this.exportConfig.target === 'customers') {
+    if (this.exportConfig.target === 'categories') {
+        if (!this.structuredCategories || this.structuredCategories.length === 0) return alert('Tidak ada data kategori!');
+        formattedData = this.structuredCategories.map(c => ({ "Nama Kategori": c.name || '-', "Tingkat Level": (c.treeLevel !== undefined ? c.treeLevel + 1 : 1) }));
+    } else if (this.exportConfig.target === 'customers') {
         if (!this.filteredCustomers || this.filteredCustomers.length === 0) return alert('Tidak ada data pelanggan!');
         formattedData = this.filteredCustomers.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
     } else if (this.exportConfig.target === 'suppliers') {
@@ -12724,7 +12745,14 @@ downloadTemplate() {
     let fileName = `Template_${this.importConfig.target}.xlsx`;
 
     // 🌟 PENAMBAHAN CONTOH (SAMPLE DATA) PADA TEMPLATE
-    if (this.importConfig.target === 'customers') {
+    if (this.importConfig.target === 'categories') {
+        headers = ['Nama Kategori'];
+        sampleData = [
+            ['Makanan'],
+            ['Minuman'],
+            ['Snack']
+        ];
+    } else if (this.importConfig.target === 'customers') {
         headers = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
         sampleData = [
             ['Budi Santoso', '081234567890', 'Jl. Sudirman No 1, Jakarta', 'Gold'],
@@ -12789,7 +12817,9 @@ handleFileUpload(event) {
                 const uploadedHeaders = jsonData[0]; 
                 
                 let expectedHeaders = [];
-                if (this.importConfig.target === 'customers') {
+                if (this.importConfig.target === 'categories') {
+                    expectedHeaders = ['Nama Kategori'];
+                } else if (this.importConfig.target === 'customers') {
                     expectedHeaders = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
                 } else if (this.importConfig.target === 'suppliers') {
                     expectedHeaders = ['Nama Supplier', 'No. Telepon', 'Alamat'];
@@ -12852,6 +12882,7 @@ async processImport() {
     
     try {
         let collectionName = "customers";
+        if (this.importConfig.target === 'categories') collectionName = "categories";
         if (this.importConfig.target === 'suppliers') collectionName = "suppliers";
         if (this.importConfig.target === 'sales') collectionName = "transactions"; 
         if (this.importConfig.target === 'po') collectionName = "purchases";
@@ -13106,6 +13137,48 @@ async processImport() {
                 await batch.commit();
             }
             
+        } else if (this.importConfig.target === 'categories') {
+            const BATCH_LIMIT = 400; 
+            const chunks = [];
+            for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) {
+                chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
+            }
+
+            for (const chunk of chunks) {
+                const batch = writeBatch(db); 
+                
+                chunk.forEach((row) => {
+                    if (!row[0]) return; 
+
+                    let existingDocId = null;
+                    const name = row[0].toString().trim();
+
+                    if (existingNames.has(name.toLowerCase())) {
+                        existingDocId = existingNames.get(name.toLowerCase());
+                    }
+
+                    if (existingDocId && existingDocId !== "pending_insert") {
+                        const docRef = doc(db, collectionName, existingDocId);
+                        batch.update(docRef, {
+                            name: name,
+                            updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin",
+                            updatedAt: new Date()
+                        });
+                        updateCount++;
+                    } else if (!existingDocId) {
+                        existingNames.set(name.toLowerCase(), "pending_insert");
+                        batch.set(doc(collection(db, collectionName)), {
+                            companyId: compId, 
+                            name: name,
+                            parentId: null, // Default kategori root
+                            createdAt: new Date(),
+                            createdBy: this.userProfile?.name || this.currentUser?.name || "Admin"
+                        });
+                        insertCount++;
+                    }
+                });
+                await batch.commit(); 
+            }
         } else {
             const BATCH_LIMIT = 400; 
             const chunks = [];
@@ -13172,7 +13245,8 @@ async processImport() {
 
         this.importConfig.step = 3; 
         
-        if (this.importConfig.target === 'customers' && typeof this.fetchCustomers === 'function') await this.fetchCustomers();
+        if (this.importConfig.target === 'categories' && typeof this.fetchCategories === 'function') await this.fetchCategories();
+        else if (this.importConfig.target === 'customers' && typeof this.fetchCustomers === 'function') await this.fetchCustomers();
         else if (this.importConfig.target === 'suppliers' && typeof this.fetchSuppliers === 'function') await this.fetchSuppliers();
         else if (this.importConfig.target === 'sales' && typeof this.fetchTransactions === 'function') await this.fetchTransactions();
         else if (this.importConfig.target === 'po' && typeof this.fetchPurchases === 'function') await this.fetchPurchases();
