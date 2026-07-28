@@ -4103,7 +4103,7 @@ body.sidebar-open {
                         </div>
                         <div class="col-md-3 d-flex align-items-end gap-1">
                             <button class="btn btn-sm btn-outline-danger py-1 bg-white" title="Reset Filter" @click="invSearchQuery=''; invCategoryFilter=''; invProductFilter=''; invOutletFilter=''"><i class="bi bi-arrow-counterclockwise"></i></button>
-                            <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.target = 'inv_stocks'; previewExportData()">
+                            <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.showModal = true; exportConfig.target = 'inv_stocks'; exportConfig.showPreview = false">
                                 <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Stok</b>
                             </button>
                         </div>
@@ -4246,7 +4246,7 @@ body.sidebar-open {
                     </div>
                     <div class="col-md-4 d-flex align-items-end gap-1">
                         <button class="btn btn-sm btn-outline-danger py-1 bg-white" title="Reset Filter" @click="invSearchQuery=''; invOutletFilter=''"><i class="bi bi-arrow-counterclockwise"></i></button>
-                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.target = 'inv_allocation'; previewExportData()">
+                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.showModal = true; exportConfig.target = 'inv_allocation'; exportConfig.showPreview = false">
                             <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Alokasi</b>
                         </button>
                     </div>
@@ -4333,7 +4333,7 @@ body.sidebar-open {
                     </div>
                     <div class="col-md-4 d-flex align-items-end gap-1">
                         <button class="btn btn-sm btn-outline-danger py-1 bg-white" title="Reset Filter" @click="logStartDate=''; logEndDate=''"><i class="bi bi-arrow-counterclockwise"></i></button>
-                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.target = 'inv_logs'; previewExportData()">
+                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.showModal = true; exportConfig.target = 'inv_logs'; exportConfig.showPreview = false">
                             <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Mutasi</b>
                         </button>
                     </div>
@@ -4413,7 +4413,7 @@ body.sidebar-open {
                     </div>
                     <div class="col-md-3 d-flex align-items-end gap-1">
                         <button class="btn btn-sm btn-outline-danger bg-white py-1" title="Reset Filter" @click="resetStockFilter"><i class="bi bi-arrow-counterclockwise"></i></button>
-                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.target = 'inv_stockcard'; previewExportData()">
+                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.showModal = true; exportConfig.target = 'inv_stockcard'; exportConfig.showPreview = false">
                             <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Kartu</b>
                         </button>
                     </div>
