@@ -13346,56 +13346,57 @@ async processImport() {
             
                 async connectBluetoothPrinter() {
             try {
+                // 1. Meminta akses ke perangkat printer dengan mendaftarkan Service UUID yang diizinkan
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: [
-                        '000018f0-0000-1000-8000-00805f9b34fb', 
-                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2', 
-                        '0000fee7-0000-1000-8000-00805f9b34fb',
-                        '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Jalur MPT-III
-                        '0000180a-0000-1000-8000-00805f9b34fb',
-                        '0000ffe0-0000-1000-8000-00805f9b34fb'
+                        '000018f0-0000-1000-8000-00805f9b34fb', // Standard ESC/POS
+                        '0000ffe0-0000-1000-8000-00805f9b34fb', // Standard SPP
+                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2'  // Khusus Panda/Eppos
                     ]
                 });
                 
                 const server = await device.gatt.connect();
-                const services = await server.getPrimaryServices();
-                let validCharacteristic = null;
+                let service = null;
+                let characteristic = null;
 
-                // 1. Ambil characteristic apa saja yang penting BISA DITULIS
-                for (const service of services) {
+                // 🌟 TARGET 1: Mencoba jalur standar seperti saran Anda (18F0 -> 2AF1)
+                try {
+                    service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                    characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                    console.log("Berhasil masuk via jalur Standard ESC/POS (18F0)");
+                } catch (e1) {
+                    
+                    // 🌟 TARGET 2: Jika gagal, coba jalur SPP (FFE0 -> FFE1)
                     try {
-                        const characteristics = await service.getCharacteristics();
-                        for (const char of characteristics) {
-                            if (char.properties.writeWithoutResponse || char.properties.write) {
-                                validCharacteristic = char;
-                                // Jika ketemu jalur andalan MPT, langsung hentikan pencarian (Prioritas)
-                                if (char.uuid.includes('49535343') || char.uuid.includes('ffe1')) {
-                                    break; 
-                                }
-                            }
+                        service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
+                        characteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
+                        console.log("Berhasil masuk via jalur SPP (FFE0)");
+                    } catch (e2) {
+                        
+                        // 🌟 TARGET 3: Jika gagal juga, coba jalur khas Panda/Eppos
+                        try {
+                            service = await server.getPrimaryService('e7810a71-73ae-499d-8c15-faa9aef0c3f2');
+                            characteristic = await service.getCharacteristic('be4f16b2-6c70-4f81-801a-8ce44056d812');
+                            console.log("Berhasil masuk via jalur Panda/Eppos");
+                        } catch (e3) {
+                            throw new Error("Tidak satupun UUID Service Struk (18F0/FFE0/E781) ditemukan di printer ini. Pastikan printer dalam Mode ESC/POS.");
                         }
-                    } catch (e) {
-                        continue;
                     }
-                    if (validCharacteristic && (validCharacteristic.uuid.includes('49535343') || validCharacteristic.uuid.includes('ffe1'))) break;
                 }
 
-                if (validCharacteristic) {
-                    this.printerCharacteristic = validCharacteristic;
+                if (characteristic) {
+                    this.printerCharacteristic = characteristic;
                     this.printerServer = server;
                     this.printerDevice = device;
 
                     this.printerDevice.addEventListener('gattserverdisconnected', this.onPrinterDisconnected);
-                    alert(`SEMPURNA!\nPrinter terhubung (Jalur: ${validCharacteristic.uuid.split('-')[0]}).\nSekarang coba lakukan Print!`);
-                } else {
-                    alert("Koneksi gagal: Printer tidak memiliki jalur untuk menerima teks.");
-                    this.printerCharacteristic = null;
-                    this.printerDevice = null; 
+                    alert(`SEMPURNA!\nPrinter terhubung melalui Service yang tepat.\nJalur Data: ${characteristic.uuid.split('-')[0]}`);
                 }
             } catch (error) {
                 console.error("Koneksi Printer Gagal:", error);
                 alert("Koneksi dibatalkan / gagal: " + error.message);
+                
                 this.printerCharacteristic = null;
                 this.printerDevice = null;
             }
