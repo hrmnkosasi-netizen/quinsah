@@ -3440,9 +3440,15 @@ body.sidebar-open {
 
     <div v-if="catalogTab==='variants'" class="dashboard-card">
         <div class="row g-2 mb-3 bg-light p-2 rounded border align-items-center">
-            <div class="col-md-4">
+            <!-- Kolom Judul & Tombol Export -->
+            <div class="col-md-4 d-flex justify-content-between align-items-center">
                 <h6 class="fw-bold mb-0">Database SKU Varian</h6>
+                
+                <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="exportConfig.showModal = true; exportConfig.target = 'variants'; exportConfig.showPreview = false">
+                    <i class="bi bi-upload text-primary me-1"></i> Export Varian
+                </button>
             </div>
+            
             <div class="col-md-4">
                 <input type="text" class="form-control form-control-sm" v-model="catalogVariantSearch" placeholder="Cari Varian / SKU / Induk...">
             </div>
@@ -12308,6 +12314,8 @@ async fetchAllRatings() {
 getExportDataCount() {
     let count = 0;
     if (this.exportConfig.target === 'categories') count = this.structuredCategories ? this.structuredCategories.length : 0;
+    // 🌟 HITUNGAN DATA EXPORT VARIAN
+    else if (this.exportConfig.target === 'variants') count = this.filteredAllVariantsList ? this.filteredAllVariantsList.length : 0;
     else if (this.exportConfig.target === 'customers') count = this.filteredCustomers ? this.filteredCustomers.length : 0;
     else if (this.exportConfig.target === 'suppliers') count = this.filteredSuppliers ? this.filteredSuppliers.length : 0;
     else if (this.exportConfig.target === 'ratings') count = this.filteredAllRatings ? this.filteredAllRatings.length : 0;
@@ -12351,6 +12359,19 @@ previewExportData() {
             return p ? p.name : '-';
         };
         formattedData = dataSumber.map(c => ({ "Nama Kategori": c.name || '-', "Kategori Induk": getCatParentName(c) }));
+    } 
+    // 🌟 PREVIEW EXPORT VARIAN
+    else if (this.exportConfig.target === 'variants') {
+        let dataSumber = (this.filteredAllVariantsList || []).slice(0, 5);
+        formattedData = dataSumber.map(v => ({
+            "Produk Induk": v.parentName || '-',
+            "Kategori": v.categoryPath || '-',
+            "Nama Varian": v.name || '-',
+            "SKU / Barcode": v.sku || '-',
+            "HPP (Modal)": v.hpp || 0,
+            "Harga Jual": v.sell || 0,
+            "Stok": typeof this.getDisplayVariantStock === 'function' ? this.getDisplayVariantStock(v) : 0
+        }));
     } else if (this.exportConfig.target === 'customers') {
         let dataSumber = (this.filteredCustomers || []).slice(0, 5);
         formattedData = dataSumber.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
@@ -12551,7 +12572,21 @@ processExport() {
             return p ? p.name : '-';
         };
         formattedData = this.structuredCategories.map(c => ({ "Nama Kategori": c.name || '-', "Kategori Induk": getCatParentName(c) }));
-    } else if (this.exportConfig.target === 'customers') {
+    } 
+    // 🌟 LOGIKA EXPORT VARIAN DITAMBAHKAN DI SINI
+    else if (this.exportConfig.target === 'variants') {
+        if (!this.filteredAllVariantsList || this.filteredAllVariantsList.length === 0) return alert('Tidak ada data varian!');
+        formattedData = this.filteredAllVariantsList.map(v => ({
+            "Produk Induk": v.parentName || '-',
+            "Kategori": v.categoryPath || '-',
+            "Nama Varian": v.name || '-',
+            "SKU / Barcode": v.sku || '-',
+            "HPP (Modal)": v.hpp || 0,
+            "Harga Jual": v.sell || 0,
+            "Stok": typeof this.getDisplayVariantStock === 'function' ? this.getDisplayVariantStock(v) : 0
+        }));
+    } 
+    else if (this.exportConfig.target === 'customers') {
         if (!this.filteredCustomers || this.filteredCustomers.length === 0) return alert('Tidak ada data pelanggan!');
         formattedData = this.filteredCustomers.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
     } else if (this.exportConfig.target === 'suppliers') {
