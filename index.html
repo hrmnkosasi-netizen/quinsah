@@ -3961,19 +3961,24 @@ body.sidebar-open {
                 
                 <!-- 🌟 TAMBAHAN: FILTER & SEARCH KHUSUS STOCK ALERT -->
                 <div class="row g-2 mb-3 bg-light p-3 rounded border border-danger border-opacity-25 shadow-sm">
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <label class="form-label small fw-bold text-danger">Cari Produk Alert</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
                             <input type="text" class="form-control border-start-0" v-model="alertSearchQuery" placeholder="Ketik nama produk atau SKU...">
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label small fw-bold text-danger">Filter Cabang (Outlet)</label>
                         <select class="form-select form-select-sm border-danger fw-semibold" v-model="alertOutletFilter">
-                            <option value="">-- Semua Cabang (Tampilkan Global) --</option>
+                            <option value="">-- Semua Cabang (Global) --</option>
                             <option v-for="o in outlets" :key="o.id" :value="o.id">{{ o.name }}</option>
                         </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-sm bg-white border text-dark w-100 py-1" @click="exportConfig.target = 'inv_alerts'; previewExportData()">
+                            <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Alert</b>
+                        </button>
                     </div>
                 </div>
 
@@ -4075,7 +4080,7 @@ body.sidebar-open {
                             <label class="form-label small fw-bold">Pencarian</label>
                             <input type="text" class="form-control form-control-sm" v-model="invSearchQuery" placeholder="Cari nama, SKU, Varian...">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label small fw-bold">Kategori</label>
                             <select class="form-select form-select-sm" v-model="invCategoryFilter">
                                 <option value="">-- Semua Kategori --</option>
@@ -4096,8 +4101,11 @@ body.sidebar-open {
                                 <option v-for="o in outlets" :key="o.id" :value="o.id">{{ o.name }}</option>
                             </select>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-1 bg-white" @click="invSearchQuery=''; invCategoryFilter=''; invProductFilter=''; invOutletFilter=''"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+                        <div class="col-md-3 d-flex align-items-end gap-1">
+                            <button class="btn btn-sm btn-outline-danger py-1 bg-white" title="Reset Filter" @click="invSearchQuery=''; invCategoryFilter=''; invProductFilter=''; invOutletFilter=''"><i class="bi bi-arrow-counterclockwise"></i></button>
+                            <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.target = 'inv_stocks'; previewExportData()">
+                                <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Stok</b>
+                            </button>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -4225,19 +4233,22 @@ body.sidebar-open {
             <!-- ========================================== -->
             <div v-if="invTab==='allocation'" class="dashboard-card">
                 <div class="row g-2 mb-3 bg-light p-3 rounded border">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label class="form-label small fw-bold">Pencarian Nama / SKU</label>
                         <input type="text" class="form-control form-control-sm" v-model="invSearchQuery" placeholder="Cari nama produk, SKU, atau varian...">
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label class="form-label small fw-bold text-primary"><i class="bi bi-shop me-1"></i>Pilih Cabang (Wajib)</label>
                         <select class="form-select form-select-sm border-primary" v-model="invOutletFilter">
                             <option value="">-- Silakan Pilih Cabang / Outlet --</option>
                             <option v-for="o in outlets" :key="o.id" :value="o.id">{{ o.name }}</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-1 bg-white" @click="invSearchQuery=''; invOutletFilter=''"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+                    <div class="col-md-4 d-flex align-items-end gap-1">
+                        <button class="btn btn-sm btn-outline-danger py-1 bg-white" title="Reset Filter" @click="invSearchQuery=''; invOutletFilter=''"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.target = 'inv_allocation'; previewExportData()">
+                            <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Alokasi</b>
+                        </button>
                     </div>
                 </div>
 
@@ -4309,168 +4320,174 @@ body.sidebar-open {
                 </div>
             </div>
 
-                <div v-if="invTab==='logs'" class="dashboard-card">
-                    
-                    <div class="row g-2 mb-3 bg-light p-3 rounded border">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Mulai Tanggal</label>
-                            <input type="date" class="form-control form-control-sm" v-model="logStartDate">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Sampai Tanggal</label>
-                            <input type="date" class="form-control form-control-sm" v-model="logEndDate">
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-1 bg-white" @click="logStartDate=''; logEndDate=''"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filter</button>
-                        </div>
+            <div v-if="invTab==='logs'" class="dashboard-card">
+                
+                <div class="row g-2 mb-3 bg-light p-3 rounded border">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Mulai Tanggal</label>
+                        <input type="date" class="form-control form-control-sm" v-model="logStartDate">
                     </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-custom align-middle text-nowrap">
-                            <thead>
-                                <tr>
-                                    <th>Waktu</th>
-                                    <th>Ref. Transaksi</th>
-                                    <th>Cabang (Outlet)</th> <th>Nama Item (SKU)</th>
-                                    <th>Qty</th>
-                                    <th>Status</th>
-                                    <th>User / PIC</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="log in filteredStockLogs" :key="log.id">
-                                    <td class="text-muted" style="font-size: 0.7rem;">{{ log.dateStr }}</td>
-                                    <td class="fw-bold small">{{ log.refId }}</td>
-                                    
-                                    <td>
-                                        <span class="badge bg-secondary bg-opacity-10 text-dark border" style="font-size:0.65rem;">
-                                            <i class="bi bi-shop me-1"></i>{{ log.outletName || 'Gudang Pusat' }}
-                                        </span>
-                                    </td>
-                                    
-                                    <td>
-                                        <div class="fw-bold small">
-                                            {{ log.productName }} 
-                                            <span class="sku-badge ms-1" v-if="!log.variantName || log.variantName === '-'">{{ log.sku }}</span>
-                                        </div>
-                                        <div style="font-size:0.65rem;" class="text-muted mt-1" v-if="log.variantName && log.variantName !== '-'">
-                                            <i class="bi bi-tag-fill me-1"></i>{{ log.variantName }} 
-                                            <span class="sku-badge bg-dark text-white ms-1">{{ log.sku }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="fw-bold" :class="log.qtyChange > 0 ? 'text-success' : 'text-danger'">
-                                        {{ log.qtyChange > 0 ? '+'+log.qtyChange : log.qtyChange }}
-                                    </td>
-                                    <td>
-                                        <span class="badge px-2 py-1" style="font-size:0.6rem;" :class="log.type === 'OUT' ? 'badge-out' : (log.type === 'ADJUST' ? 'bg-warning text-dark' : 'badge-in')">
-                                            {{ log.type === 'OUT' ? 'KELUAR' : (log.type === 'ADJUST' ? 'SESUAI' : 'MASUK') }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-dark border" style="font-size:0.65rem;">
-                                            <i class="bi bi-person me-1"></i>{{ log.userName || log.cashierName || 'Sistem' }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr v-if="filteredStockLogs.length === 0">
-                                    <td colspan="7" class="text-center py-4 text-muted small">Belum ada riwayat mutasi / Sesuai filter.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Sampai Tanggal</label>
+                        <input type="date" class="form-control form-control-sm" v-model="logEndDate">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-1">
+                        <button class="btn btn-sm btn-outline-danger py-1 bg-white" title="Reset Filter" @click="logStartDate=''; logEndDate=''"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.target = 'inv_logs'; previewExportData()">
+                            <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Mutasi</b>
+                        </button>
                     </div>
                 </div>
-
-                <div v-if="invTab==='stockcard'" class="dashboard-card">
-                    <div class="row g-2 mb-3 bg-light p-3 rounded border">
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold"><i class="bi bi-calendar-event me-1"></i>Mulai Tanggal</label>
-                            <input type="date" class="form-control form-control-sm" v-model="stockCardStartDate">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold"><i class="bi bi-calendar-event me-1"></i>Sampai Tanggal</label>
-                            <input type="date" class="form-control form-control-sm" v-model="stockCardEndDate">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold"><i class="bi bi-shop me-1"></i>Filter Outlet / Cabang</label>
-                            <select class="form-select form-select-sm fw-semibold" v-model="stockCardOutlet">
-                                <option value="">-- Semua Outlet (Global) --</option>
-                                <option v-for="o in outlets" :key="o.id" :value="o.id">{{ o.name }}</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-sm btn-outline-danger bg-white w-100 fw-bold py-1" @click="resetStockFilter"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</button>
-                        </div>
-                        
-                        <div class="col-md-4 mt-2">
-                            <label class="form-label small fw-bold">Pencarian</label>
-                            <input type="text" class="form-control form-control-sm" v-model="stockCardSearchQuery" placeholder="Cari nama, SKU, Varian...">
-                        </div>
-                        <div class="col-md-4 mt-2">
-                            <label class="form-label small fw-bold">Kategori</label>
-                            <select class="form-select form-select-sm" v-model="stockCardCategoryFilter">
-                                <option value="">-- Semua Kategori --</option>
-                                <option v-for="cat in structuredCategories" :key="cat.id" :value="cat.id">{{ getCategoryLabel(cat) }}</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 mt-2">
-                            <label class="form-label small fw-bold">Pilih Produk</label>
-                            <select class="form-select form-select-sm" v-model="stockCardProductFilter">
-                                <option value="">-- Semua Produk --</option>
-                                <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }} ({{ p.sku }})</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-custom table-hover align-middle text-nowrap">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Nama Produk & Varian</th>
-                                    <th>SKU</th>
-                                    <th class="text-center text-secondary">Tanggal</th>
-                                    <!-- 🌟 TAMBAHAN: KOLOM LOKASI/CABANG -->
-                                    <th class="text-center text-info">Lokasi (Cabang)</th>
-                                    <th class="text-center text-primary">Stok Awal</th>
-                                    <th class="text-center text-success">Masuk (In)</th>
-                                    <th class="text-center text-danger">Keluar (Out)</th>
-                                    <th class="text-center bg-light fw-bold text-dark">Stok Akhir</th>
-                                    <th class="text-center">Aksi / Rincian</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="log in stockCardSummary" :key="log.id">
-                                    <td>
-                                        <div class="fw-bold small">{{ log.name }}</div>
-                                        <div class="text-muted" style="font-size:0.65rem;" v-if="log.variantName && log.variantName !== '-'">{{ log.variantName }}</div>
-                                    </td>
-                                    <td><span class="sku-badge">{{ log.sku }}</span></td>
-                                    <td class="text-center text-muted fw-semibold" style="font-size: 0.7rem;">{{ log.displayDate }}</td>
-                                    
-                                    <!-- 🌟 DATA KOLOM LOKASI (Menyesuaikan dengan filter yang aktif) -->
-                                    <td class="text-center">
-                                        <span class="badge bg-secondary bg-opacity-10 text-dark border" style="font-size: 0.65rem;">
-                                            <i class="bi bi-shop me-1"></i>
-                                            {{ stockCardOutlet ? (outlets.find(o => o.id === stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)' }}
-                                        </span>
-                                    </td>
-                                    
-                                    <td class="text-center text-primary fw-bold">{{ log.stokAwal }}</td>
-                                    <td class="text-center text-success fw-bold">{{ log.masuk }}</td>
-                                    <td class="text-center text-danger fw-bold">{{ log.keluar }}</td>
-                                    <td class="text-center bg-light fw-bold fs-6">{{ log.stokAkhir }}</td>
-                                    <td class="text-center align-middle">
-                                        <button v-if="log.inRangeLogs.length > 0" class="btn btn-sm btn-light border text-primary py-0 px-2 fw-semibold" @click="openStockDetail(log)" title="Lihat Detail Histori Transaksi Mutasi">
-                                            <i class="bi bi-info-circle me-1"></i> Rincian
-                                        </button>
-                                        <span v-else class="text-muted small">-</span>
-                                    </td>
-                                </tr>
-                                <tr v-if="stockCardSummary.length === 0"><td colspan="9" class="text-center py-4 text-muted small">Tidak ada data produk/kartu stok sesuai filter.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Waktu</th>
+                                <th>Ref. Transaksi</th>
+                                <th>Cabang (Outlet)</th> <th>Nama Item (SKU)</th>
+                                <th>Qty</th>
+                                <th>Status</th>
+                                <th>User / PIC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="log in filteredStockLogs" :key="log.id">
+                                <td class="text-muted" style="font-size: 0.7rem;">{{ log.dateStr }}</td>
+                                <td class="fw-bold small">{{ log.refId }}</td>
+                                
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-10 text-dark border" style="font-size:0.65rem;">
+                                        <i class="bi bi-shop me-1"></i>{{ log.outletName || 'Gudang Pusat' }}
+                                    </span>
+                                </td>
+                                
+                                <td>
+                                    <div class="fw-bold small">
+                                        {{ log.productName }} 
+                                        <span class="sku-badge ms-1" v-if="!log.variantName || log.variantName === '-'">{{ log.sku }}</span>
+                                    </div>
+                                    <div style="font-size:0.65rem;" class="text-muted mt-1" v-if="log.variantName && log.variantName !== '-'">
+                                        <i class="bi bi-tag-fill me-1"></i>{{ log.variantName }} 
+                                        <span class="sku-badge bg-dark text-white ms-1">{{ log.sku }}</span>
+                                    </div>
+                                </td>
+                                <td class="fw-bold" :class="log.qtyChange > 0 ? 'text-success' : 'text-danger'">
+                                    {{ log.qtyChange > 0 ? '+'+log.qtyChange : log.qtyChange }}
+                                </td>
+                                <td>
+                                    <span class="badge px-2 py-1" style="font-size:0.6rem;" :class="log.type === 'OUT' ? 'badge-out' : (log.type === 'ADJUST' ? 'bg-warning text-dark' : 'badge-in')">
+                                        {{ log.type === 'OUT' ? 'KELUAR' : (log.type === 'ADJUST' ? 'SESUAI' : 'MASUK') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border" style="font-size:0.65rem;">
+                                        <i class="bi bi-person me-1"></i>{{ log.userName || log.cashierName || 'Sistem' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr v-if="filteredStockLogs.length === 0">
+                                <td colspan="7" class="text-center py-4 text-muted small">Belum ada riwayat mutasi / Sesuai filter.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+
+            <div v-if="invTab==='stockcard'" class="dashboard-card">
+                <div class="row g-2 mb-3 bg-light p-3 rounded border">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold"><i class="bi bi-calendar-event me-1"></i>Mulai Tanggal</label>
+                        <input type="date" class="form-control form-control-sm" v-model="stockCardStartDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold"><i class="bi bi-calendar-event me-1"></i>Sampai Tanggal</label>
+                        <input type="date" class="form-control form-control-sm" v-model="stockCardEndDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold"><i class="bi bi-shop me-1"></i>Filter Outlet / Cabang</label>
+                        <select class="form-select form-select-sm fw-semibold" v-model="stockCardOutlet">
+                            <option value="">-- Semua Outlet (Global) --</option>
+                            <option v-for="o in outlets" :key="o.id" :value="o.id">{{ o.name }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end gap-1">
+                        <button class="btn btn-sm btn-outline-danger bg-white py-1" title="Reset Filter" @click="resetStockFilter"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        <button class="btn btn-sm bg-white border text-dark py-1 flex-grow-1" @click="exportConfig.target = 'inv_stockcard'; previewExportData()">
+                            <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Laporan <b>Kartu</b>
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-4 mt-2">
+                        <label class="form-label small fw-bold">Pencarian</label>
+                        <input type="text" class="form-control form-control-sm" v-model="stockCardSearchQuery" placeholder="Cari nama, SKU, Varian...">
+                    </div>
+                    <div class="col-md-4 mt-2">
+                        <label class="form-label small fw-bold">Kategori</label>
+                        <select class="form-select form-select-sm" v-model="stockCardCategoryFilter">
+                            <option value="">-- Semua Kategori --</option>
+                            <option v-for="cat in structuredCategories" :key="cat.id" :value="cat.id">{{ getCategoryLabel(cat) }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mt-2">
+                        <label class="form-label small fw-bold">Pilih Produk</label>
+                        <select class="form-select form-select-sm" v-model="stockCardProductFilter">
+                            <option value="">-- Semua Produk --</option>
+                            <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }} ({{ p.sku }})</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle text-nowrap">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nama Produk & Varian</th>
+                                <th>SKU</th>
+                                <th class="text-center text-secondary">Tanggal</th>
+                                <!-- 🌟 TAMBAHAN: KOLOM LOKASI/CABANG -->
+                                <th class="text-center text-info">Lokasi (Cabang)</th>
+                                <th class="text-center text-primary">Stok Awal</th>
+                                <th class="text-center text-success">Masuk (In)</th>
+                                <th class="text-center text-danger">Keluar (Out)</th>
+                                <th class="text-center bg-light fw-bold text-dark">Stok Akhir</th>
+                                <th class="text-center">Aksi / Rincian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="log in stockCardSummary" :key="log.id">
+                                <td>
+                                    <div class="fw-bold small">{{ log.name }}</div>
+                                    <div class="text-muted" style="font-size:0.65rem;" v-if="log.variantName && log.variantName !== '-'">{{ log.variantName }}</div>
+                                </td>
+                                <td><span class="sku-badge">{{ log.sku }}</span></td>
+                                <td class="text-center text-muted fw-semibold" style="font-size: 0.7rem;">{{ log.displayDate }}</td>
+                                
+                                <!-- 🌟 DATA KOLOM LOKASI (Menyesuaikan dengan filter yang aktif) -->
+                                <td class="text-center">
+                                    <span class="badge bg-secondary bg-opacity-10 text-dark border" style="font-size: 0.65rem;">
+                                        <i class="bi bi-shop me-1"></i>
+                                        {{ stockCardOutlet ? (outlets.find(o => o.id === stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)' }}
+                                    </span>
+                                </td>
+                                
+                                <td class="text-center text-primary fw-bold">{{ log.stokAwal }}</td>
+                                <td class="text-center text-success fw-bold">{{ log.masuk }}</td>
+                                <td class="text-center text-danger fw-bold">{{ log.keluar }}</td>
+                                <td class="text-center bg-light fw-bold fs-6">{{ log.stokAkhir }}</td>
+                                <td class="text-center align-middle">
+                                    <button v-if="log.inRangeLogs.length > 0" class="btn btn-sm btn-light border text-primary py-0 px-2 fw-semibold" @click="openStockDetail(log)" title="Lihat Detail Histori Transaksi Mutasi">
+                                        <i class="bi bi-info-circle me-1"></i> Rincian
+                                    </button>
+                                    <span v-else class="text-muted small">-</span>
+                                </td>
+                            </tr>
+                            <tr v-if="stockCardSummary.length === 0"><td colspan="9" class="text-center py-4 text-muted small">Tidak ada data produk/kartu stok sesuai filter.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
             <!-- CRM VIEW -->
 <div v-if="currentView === 'crm'">
@@ -12273,10 +12290,22 @@ getExportDataCount() {
     else if (this.exportConfig.target === 'purchase_payment') count = this.financePurchasePayments ? this.financePurchasePayments.reduce((sum, g) => sum + g.items.length, 0) : 0;
     else if (this.exportConfig.target === 'ar_data') count = this.financeARList ? this.financeARList.length : 0;
     else if (this.exportConfig.target === 'ap_data') count = this.financeAPList ? this.financeAPList.length : 0;
+    
+    // 🌟 HITUNGAN DATA EXPORT INVENTORI
+    else if (this.exportConfig.target === 'inv_stocks') count = this.filteredInventoryProducts ? this.filteredInventoryProducts.reduce((sum, p) => sum + 1 + (p.variants ? p.variants.length : 0), 0) : 0;
+    else if (this.exportConfig.target === 'inv_alerts') count = this.lowStockItems ? this.lowStockItems.length : 0;
+    else if (this.exportConfig.target === 'inv_allocation') count = (this.filteredInventoryProducts && this.invOutletFilter) ? this.filteredInventoryProducts.reduce((sum, p) => sum + 1 + (p.variants ? p.variants.length : 0), 0) : 0;
+    else if (this.exportConfig.target === 'inv_logs') count = this.filteredStockLogs ? this.filteredStockLogs.length : 0;
+    else if (this.exportConfig.target === 'inv_stockcard') count = this.stockCardSummary ? this.stockCardSummary.length : 0;
+    
     return count;
 },
 
 previewExportData() {
+    if (this.exportConfig.target === 'inv_allocation' && !this.invOutletFilter) {
+        return alert("Silakan pilih Cabang (Outlet) terlebih dahulu untuk melihat/export Alokasi Stok.");
+    }
+
     this.exportConfig.showPreview = true;
     this.exportConfig.previewData = [];
     this.exportConfig.previewHeaders = [];
@@ -12369,6 +12398,87 @@ previewExportData() {
             let rincian = (this.getPaymentBreakdown(ap) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
             return { "No. PO": ap.id, "Tgl PO": (ap.dateStr || '').split(',')[0], "Outlet": this.getOutletName(ap.outletId) || '-', "Supplier": this.getSupplierName(ap.supplierId) || '-', "Jatuh Tempo": ap.dueDate || 'Belum Diatur', "Total Tagihan": ap.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ap) || 0, "Sisa Hutang": this.getSisaTagihan(ap) || 0 };
         });
+    } 
+    // 🌟 1. EXPORT PREVIEW INVENTORI - INFORMASI STOK
+    else if (this.exportConfig.target === 'inv_stocks') {
+        let dataSumber = (this.filteredInventoryProducts || []).slice(0, 5);
+        dataSumber.forEach(p => {
+            let hppMode = this.appSettings?.hppMethod || 'STANDARD';
+            let hpp = (hppMode === 'AVERAGE') ? (p.averageCost || p.hppPrice || 0) : (p.hppPrice || 0);
+            
+            let rowP = { "Nama Produk / Varian": p.name, "SKU": p.sku || '-', "HPP (Rp)": hpp, "Jual (Rp)": typeof this.getEffectiveBasePrice === 'function' ? this.getEffectiveBasePrice(p) : 0 };
+            (this.displayOutlets || []).forEach(out => rowP[`Stok Fisik: ${out.name}`] = typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, out.id) : 0);
+            rowP[this.invOutletFilter ? 'Total Outlet Ini' : 'Total Keseluruhan'] = this.invOutletFilter ? (typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0) : (typeof this.getBaseTotalStock === 'function' ? this.getBaseTotalStock(p) : 0);
+            
+            formattedData.push(rowP);
+            if (p.variants && p.variants.length > 0) {
+                p.variants.forEach((v, idx) => {
+                    let vHpp = (hppMode === 'AVERAGE') ? (v.averageCost || v.hppPrice || 0) : (v.hppPrice || 0);
+                    let rowV = { "Nama Produk / Varian": ` - ${v.name || v.attributes || 'Varian '+(idx+1)}`, "SKU": v.variantSku || '-', "HPP (Rp)": vHpp, "Jual (Rp)": typeof this.getEffectiveVariantPrice === 'function' ? this.getEffectiveVariantPrice(p, v) : 0 };
+                    (this.displayOutlets || []).forEach(out => rowV[`Stok Fisik: ${out.name}`] = (v.outletStocks && v.outletStocks[out.id]) ? v.outletStocks[out.id] : 0);
+                    rowV[this.invOutletFilter ? 'Total Outlet Ini' : 'Total Keseluruhan'] = this.invOutletFilter ? ((v.outletStocks && v.outletStocks[this.invOutletFilter]) ? v.outletStocks[this.invOutletFilter] : 0) : (typeof this.getVariantTotalStock === 'function' ? this.getVariantTotalStock(v) : 0);
+                    formattedData.push(rowV);
+                });
+            }
+        });
+    } 
+    // 🌟 2. EXPORT PREVIEW INVENTORI - STOCK ALERT
+    else if (this.exportConfig.target === 'inv_alerts') {
+        let dataSumber = (this.lowStockItems || []).slice(0, 5);
+        dataSumber.forEach(alert => {
+            let row = {
+                "Produk / Varian": alert.name, "SKU": alert.sku || '-',
+                [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0,
+                "Batas Minimum": alert.minStock || 0,
+                "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS')
+            };
+            formattedData.push(row);
+        });
+    } 
+    // 🌟 3. EXPORT PREVIEW INVENTORI - ALOKASI STOK
+    else if (this.exportConfig.target === 'inv_allocation') {
+        let dataSumber = (this.filteredInventoryProducts || []).slice(0, 5);
+        let outletName = this.outlets.find(o => o.id === this.invOutletFilter)?.name || 'Cabang';
+        dataSumber.forEach(p => {
+            formattedData.push({
+                "Produk / Varian": p.name, "SKU": p.sku || '-',
+                [`Stok Fisik (${outletName})`]: typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0,
+                "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(p.sku, this.invOutletFilter) : 0,
+                "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, null, this.invOutletFilter) : 0
+            });
+            if (p.variants && p.variants.length > 0) {
+                p.variants.forEach((v, idx) => {
+                    formattedData.push({
+                        "Produk / Varian": ` - ${v.name || v.attributes || 'Varian '+(idx+1)}`, "SKU": v.variantSku || '-',
+                        [`Stok Fisik (${outletName})`]: (v.outletStocks && v.outletStocks[this.invOutletFilter]) ? v.outletStocks[this.invOutletFilter] : 0,
+                        "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(v.variantSku, this.invOutletFilter) : 0,
+                        "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, v, this.invOutletFilter) : 0
+                    });
+                });
+            }
+        });
+    } 
+    // 🌟 4. EXPORT PREVIEW INVENTORI - LOG MUTASI STOK
+    else if (this.exportConfig.target === 'inv_logs') {
+        let dataSumber = (this.filteredStockLogs || []).slice(0, 5);
+        dataSumber.forEach(log => {
+            formattedData.push({
+                "Waktu": log.dateStr, "Ref. Transaksi": log.refId || '-', "Cabang (Outlet)": log.outletName || 'Gudang Pusat',
+                "Nama Item": log.productName + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-',
+                "Qty": log.qtyChange, "Status": log.type === 'OUT' ? 'KELUAR' : (log.type === 'ADJUST' ? 'SESUAI' : 'MASUK'), "User / PIC": log.userName || log.cashierName || 'Sistem'
+            });
+        });
+    } 
+    // 🌟 5. EXPORT PREVIEW INVENTORI - KARTU STOK (LEDGER)
+    else if (this.exportConfig.target === 'inv_stockcard') {
+        let dataSumber = (this.stockCardSummary || []).slice(0, 5);
+        dataSumber.forEach(log => {
+            formattedData.push({
+                "Nama Produk & Varian": log.name + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-', "Tanggal": log.displayDate || '-',
+                "Lokasi (Cabang)": this.stockCardOutlet ? (this.outlets.find(o => o.id === this.stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)',
+                "Stok Awal": log.stokAwal || 0, "Masuk (In)": log.masuk || 0, "Keluar (Out)": log.keluar || 0, "Stok Akhir": log.stokAkhir || 0
+            });
+        });
     }
 
     // 🌟 MAPPING DATA KE FORMAT COL1, COL2, DST (Otomatis)
@@ -12396,7 +12506,6 @@ processExport() {
 
     if (this.exportConfig.target === 'customers') {
         if (!this.filteredCustomers || this.filteredCustomers.length === 0) return alert('Tidak ada data pelanggan!');
-        // 🌟 PERBAIKAN: Header EXPORT harus SAMA PERSIS dengan HEADER TEMPLATE IMPORT
         formattedData = this.filteredCustomers.map(c => ({ "Nama": c.name || '-', "No. Telepon": c.phone || '-', "Alamat": c.address || '-', "Membership": (c.membershipId && typeof this.getMembershipTierName === 'function' ? this.getMembershipTierName(c.membershipId) : '-') }));
     } else if (this.exportConfig.target === 'suppliers') {
         if (!this.filteredSuppliers || this.filteredSuppliers.length === 0) return alert('Tidak ada data supplier!');
@@ -12429,7 +12538,6 @@ processExport() {
             }
         });
     } else if (this.exportConfig.target === 'po') {
-        // 🌟 EXPORT PO DIPERBARUI (Urutan Rapi seperti Sales)
         if (!this.filteredPurchases || this.filteredPurchases.length === 0) return alert('Tidak ada data PO!');
         this.filteredPurchases.forEach(po => {
             let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-';
@@ -12439,33 +12547,22 @@ processExport() {
             let statusBayar = po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang';
             let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
 
-            let rowBase = {
-                "No. PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-', "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem'
-            };
-            
-            let rowFinance = {
-                "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0, "TOTAL AKHIR": po.total || 0,
-                "DP / Dibayar": dp, "Sisa Hutang": Math.max(0, (po.total || 0) - dp), "Metode Bayar": po.paymentMethod || 'CASH', 
-                "Jatuh Tempo": po.dueDate || '', "Status Bayar": statusBayar, "Status Barang": statusBarang
-            };
+            let rowBase = { "No. PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-', "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem' };
+            let rowFinance = { "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0, "TOTAL AKHIR": po.total || 0, "DP / Dibayar": dp, "Sisa Hutang": Math.max(0, (po.total || 0) - dp), "Metode Bayar": po.paymentMethod || 'CASH', "Jatuh Tempo": po.dueDate || '', "Status Bayar": statusBayar, "Status Barang": statusBarang };
 
             if (po.items && po.items.length > 0) {
                 po.items.forEach(item => formattedData.push({
                     ...rowBase,
-                    "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '-', "No. Batch": item.batchNo || 'AUTO', 
-                    "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0,
-                    "Subtotal Barang": (item.qty || 0) * (item.price || 0),
-                    ...rowFinance
+                    "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '-', "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0,
+                    "Subtotal Barang": (item.qty || 0) * (item.price || 0), ...rowFinance
                 }));
             } else {
                 formattedData.push({
                     ...rowBase,
-                    "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0, "Subtotal Barang": 0,
-                    ...rowFinance
+                    "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0, "Subtotal Barang": 0, ...rowFinance
                 });
             }
         });
-        
     } else if (this.exportConfig.target === 'sales_payment') {
         if (!this.financeSalesPayments || this.financeSalesPayments.length === 0) return alert('Tidak ada data pembayaran masuk!');
         (this.financeSalesPayments || []).forEach(group => {
@@ -12491,6 +12588,89 @@ processExport() {
         formattedData = (this.financeAPList || []).map(ap => {
             let rincian = (this.getPaymentBreakdown(ap) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
             return { "No. PO": ap.id, "Tgl PO": (ap.dateStr || '').split(',')[0], "Outlet": this.getOutletName(ap.outletId) || '-', "Supplier": this.getSupplierName(ap.supplierId) || '-', "Jatuh Tempo": ap.dueDate || 'Belum Diatur', "Total Tagihan": ap.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ap) || 0, "Sisa Hutang": this.getSisaTagihan(ap) || 0 };
+        });
+    } 
+    // 🌟 1. EXPORT INVENTORI - INFORMASI STOK
+    else if (this.exportConfig.target === 'inv_stocks') {
+        if (!this.filteredInventoryProducts || this.filteredInventoryProducts.length === 0) return alert('Tidak ada data stok yang sesuai dengan filter!');
+        this.filteredInventoryProducts.forEach(p => {
+            let hppMode = this.appSettings?.hppMethod || 'STANDARD';
+            let hpp = (hppMode === 'AVERAGE') ? (p.averageCost || p.hppPrice || 0) : (p.hppPrice || 0);
+            
+            let rowP = { "Nama Produk / Varian": p.name, "SKU": p.sku || '-', "HPP (Rp)": hpp, "Jual (Rp)": typeof this.getEffectiveBasePrice === 'function' ? this.getEffectiveBasePrice(p) : 0 };
+            (this.displayOutlets || []).forEach(out => rowP[`Stok Fisik: ${out.name}`] = typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, out.id) : 0);
+            rowP[this.invOutletFilter ? 'Total Outlet Ini' : 'Total Keseluruhan'] = this.invOutletFilter ? (typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0) : (typeof this.getBaseTotalStock === 'function' ? this.getBaseTotalStock(p) : 0);
+            
+            formattedData.push(rowP);
+            if (p.variants && p.variants.length > 0) {
+                p.variants.forEach((v, idx) => {
+                    let vHpp = (hppMode === 'AVERAGE') ? (v.averageCost || v.hppPrice || 0) : (v.hppPrice || 0);
+                    let rowV = { "Nama Produk / Varian": ` - ${v.name || v.attributes || 'Varian '+(idx+1)}`, "SKU": v.variantSku || '-', "HPP (Rp)": vHpp, "Jual (Rp)": typeof this.getEffectiveVariantPrice === 'function' ? this.getEffectiveVariantPrice(p, v) : 0 };
+                    (this.displayOutlets || []).forEach(out => rowV[`Stok Fisik: ${out.name}`] = (v.outletStocks && v.outletStocks[out.id]) ? v.outletStocks[out.id] : 0);
+                    rowV[this.invOutletFilter ? 'Total Outlet Ini' : 'Total Keseluruhan'] = this.invOutletFilter ? ((v.outletStocks && v.outletStocks[this.invOutletFilter]) ? v.outletStocks[this.invOutletFilter] : 0) : (typeof this.getVariantTotalStock === 'function' ? this.getVariantTotalStock(v) : 0);
+                    formattedData.push(rowV);
+                });
+            }
+        });
+    } 
+    // 🌟 2. EXPORT INVENTORI - STOCK ALERT
+    else if (this.exportConfig.target === 'inv_alerts') {
+        if (!this.lowStockItems || this.lowStockItems.length === 0) return alert('Tidak ada data stock alert!');
+        this.lowStockItems.forEach(alert => {
+            let row = {
+                "Produk / Varian": alert.name, "SKU": alert.sku || '-',
+                [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0,
+                "Batas Minimum": alert.minStock || 0,
+                "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS')
+            };
+            formattedData.push(row);
+        });
+    } 
+    // 🌟 3. EXPORT INVENTORI - ALOKASI STOK
+    else if (this.exportConfig.target === 'inv_allocation') {
+        if (!this.invOutletFilter) return alert("Silakan pilih Cabang (Outlet) terlebih dahulu untuk memproses Alokasi Stok.");
+        if (!this.filteredInventoryProducts || this.filteredInventoryProducts.length === 0) return alert('Tidak ada data alokasi stok!');
+        let outletName = this.outlets.find(o => o.id === this.invOutletFilter)?.name || 'Cabang';
+        
+        this.filteredInventoryProducts.forEach(p => {
+            formattedData.push({
+                "Produk / Varian": p.name, "SKU": p.sku || '-',
+                [`Stok Fisik (${outletName})`]: typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0,
+                "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(p.sku, this.invOutletFilter) : 0,
+                "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, null, this.invOutletFilter) : 0
+            });
+            if (p.variants && p.variants.length > 0) {
+                p.variants.forEach((v, idx) => {
+                    formattedData.push({
+                        "Produk / Varian": ` - ${v.name || v.attributes || 'Varian '+(idx+1)}`, "SKU": v.variantSku || '-',
+                        [`Stok Fisik (${outletName})`]: (v.outletStocks && v.outletStocks[this.invOutletFilter]) ? v.outletStocks[this.invOutletFilter] : 0,
+                        "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(v.variantSku, this.invOutletFilter) : 0,
+                        "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, v, this.invOutletFilter) : 0
+                    });
+                });
+            }
+        });
+    } 
+    // 🌟 4. EXPORT INVENTORI - LOG MUTASI STOK
+    else if (this.exportConfig.target === 'inv_logs') {
+        if (!this.filteredStockLogs || this.filteredStockLogs.length === 0) return alert('Tidak ada log mutasi stok!');
+        this.filteredStockLogs.forEach(log => {
+            formattedData.push({
+                "Waktu": log.dateStr, "Ref. Transaksi": log.refId || '-', "Cabang (Outlet)": log.outletName || 'Gudang Pusat',
+                "Nama Item": log.productName + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-',
+                "Qty": log.qtyChange, "Status": log.type === 'OUT' ? 'KELUAR' : (log.type === 'ADJUST' ? 'SESUAI' : 'MASUK'), "User / PIC": log.userName || log.cashierName || 'Sistem'
+            });
+        });
+    } 
+    // 🌟 5. EXPORT INVENTORI - KARTU STOK (LEDGER)
+    else if (this.exportConfig.target === 'inv_stockcard') {
+        if (!this.stockCardSummary || this.stockCardSummary.length === 0) return alert('Tidak ada riwayat kartu stok!');
+        this.stockCardSummary.forEach(log => {
+            formattedData.push({
+                "Nama Produk & Varian": log.name + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-', "Tanggal": log.displayDate || '-',
+                "Lokasi (Cabang)": this.stockCardOutlet ? (this.outlets.find(o => o.id === this.stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)',
+                "Stok Awal": log.stokAwal || 0, "Masuk (In)": log.masuk || 0, "Keluar (Out)": log.keluar || 0, "Stok Akhir": log.stokAkhir || 0
+            });
         });
     } else {
         return alert("Error: Target export tidak dikenali.");
