@@ -11772,6 +11772,16 @@ financeAPList() {
             if (isReady && typeof this.fetchDashboardData === 'function') {
                 setTimeout(() => { this.fetchDashboardData(); }, 100);
             }
+        } 
+        // 🌟 TAMBAHAN BARU: Memaksa Laporan ke "Hari Ini" saat menu Laporan dibuka
+        else if (newView === 'reports') {
+            const d = new Date();
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            const hariIni = d.toISOString().slice(0, 10);
+            
+            this.reportStartDate = hariIni;
+            this.reportEndDate = hariIni;
+            this.reportOutletFilter = ''; // Reset pilihan cabang
         }
         },
 
