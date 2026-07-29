@@ -1004,7 +1004,7 @@ body.sidebar-open {
             <div class="text-muted small mt-1">Pantau performa toko Anda secara real-time.</div>
         </div>
         <div>
-            <button class="btn btn-sm btn-outline-secondary" @click="fetchDashboardData" :disabled="isLoadingDashboard">
+            <button class="btn btn-sm btn-outline-danger w-100 shadow-sm text-nowrap" @click="fetchDashboardData" :disabled="isLoadingDashboard">
                 <i class="bi bi-arrow-clockwise me-1" :class="{'spinner-border spinner-border-sm': isLoadingDashboard}"></i> Refresh
             </button>
         </div>
