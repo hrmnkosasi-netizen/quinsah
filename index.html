@@ -9819,6 +9819,9 @@ body.sidebar-open {
                 paymentStartDate: '', 
                 paymentEndDate: '',
 
+                transactionStartDate: getLocalToday(),
+                transactionEndDate: getLocalToday(),
+                
                 posCourier: '',        // Untuk menyimpan nama kurir
                 posShippingCost: 0,    // Untuk menyimpan nilai ongkir
                 posIsCOD: false,        // Untuk status COD atau Lunas
@@ -11773,7 +11776,7 @@ financeAPList() {
                 setTimeout(() => { this.fetchDashboardData(); }, 100);
             }
         } 
-        // 🌟 TAMBAHAN BARU: Memaksa Laporan ke "Hari Ini" saat menu Laporan dibuka
+        // [TETAP] Laporan "Hari Ini"
         else if (newView === 'reports') {
             const d = new Date();
             d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -11781,9 +11784,24 @@ financeAPList() {
             
             this.reportStartDate = hariIni;
             this.reportEndDate = hariIni;
-            this.reportOutletFilter = ''; // Reset pilihan cabang
+            this.reportOutletFilter = ''; 
         }
-        },
+        // 🌟 TAMBAHAN BARU: Memaksa Penjualan (Sales) ke "Hari Ini"
+        else if (newView === 'sales') {
+            const d = new Date();
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            const hariIni = d.toISOString().slice(0, 10);
+            
+            this.transactionStartDate = hariIni;
+            this.transactionEndDate = hariIni;
+            
+            // Opsional: Mereset filter lain agar tampilan rapi saat pindah menu
+            this.salesOutletFilter = '';
+            this.salesStatusFilter = '';
+            this.salesOrderTypeFilter = '';
+            this.reportSearchQuery = ''; 
+        }
+    },
 
     'paymentData.method': function(newMethod) {
         if (newMethod) {
