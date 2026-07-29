@@ -12490,96 +12490,96 @@ resetOpnameFilter() {
         },
 
         printOpnameDetail(id) {
-            let opname = this.opnameHistory.find(o => o.id === id);
-            if (!opname) return;
+    let opname = this.opnameHistory.find(o => o.id === id);
+    if (!opname) return;
 
-            let namaCabang = this.getOutletName(opname.outletId) || 'Global/Pusat';
-            let printWin = window.open('', '', 'width=800,height=600');
-            
-            let tableRows = opname.items.map(item => {
-                let diffText = item.diff > 0 ? `+${item.diff}` : `${item.diff}`;
-                return `
+    let namaCabang = this.getOutletName(opname.outletId) || 'Global/Pusat';
+    let printWin = window.open('', '', 'width=800,height=600');
+    
+    let tableRows = opname.items.map(item => {
+        let diffText = item.diff > 0 ? `+${item.diff}` : `${item.diff}`;
+        return `
+            <tr>
+                <td style="padding: 5px; border: 1px solid #ddd;">${item.name} ${item.variantName !== '-' ? ' - ' + item.variantName : ''}</td>
+                <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${item.sku || '-'}</td>
+                <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${item.stokSistem}</td>
+                <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${item.stokFisik}</td>
+                <td style="padding: 5px; border: 1px solid #ddd; text-align: center;"><b>${diffText}</b></td>
+                <td style="padding: 5px; border: 1px solid #ddd;">${item.note || '-'}</td>
+            </tr>
+        `;
+    }).join('');
+
+    let htmlContent = `
+        <html>
+        <head>
+            <title>Print Dokumen Opname - ${opname.id}</title>
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
+                h2 { text-align: center; margin-bottom: 5px; }
+                .info-table { width: 100%; margin-bottom: 20px; }
+                .info-table td { padding: 4px; }
+                .data-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                .data-table th { background-color: #f2f2f2; padding: 6px; border: 1px solid #ddd; }
+                .text-center { text-align: center; }
+                .signature-area { margin-top: 40px; display: flex; justify-content: space-around; text-align: center;}
+            </style>
+        </head>
+        <body>
+            <h2>DOKUMEN STOK OPNAME</h2>
+            <hr/>
+            <table class="info-table">
+                <tr>
+                    <td><b>No. Dokumen</b></td><td>: ${opname.id}</td>
+                    <td><b>Petugas (PIC)</b></td><td>: ${opname.pic}</td>
+                </tr>
+                <tr>
+                    <td><b>Tanggal / Waktu</b></td><td>: ${opname.dateStr}</td>
+                    <td><b>Cabang / Outlet</b></td><td>: ${namaCabang}</td>
+                </tr>
+                <tr>
+                    <td><b>Status Dokumen</b></td><td>: ${opname.status}</td>
+                    <td><b>Catatan</b></td><td>: ${opname.note || '-'}</td>
+                </tr>
+            </table>
+
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td style="padding: 5px; border: 1px solid #ddd;">${item.name} ${item.variantName !== '-' ? ' - ' + item.variantName : ''}</td>
-                        <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${item.sku || '-'}</td>
-                        <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${item.stokSistem}</td>
-                        <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${item.stokFisik}</td>
-                        <td style="padding: 5px; border: 1px solid #ddd; text-align: center;"><b>${diffText}</b></td>
-                        <td style="padding: 5px; border: 1px solid #ddd;">${item.note || '-'}</td>
+                        <th>Produk / Varian</th>
+                        <th>SKU</th>
+                        <th>Stok Sistem</th>
+                        <th>Stok Fisik</th>
+                        <th>Selisih</th>
+                        <th>Catatan Item</th>
                     </tr>
-                `;
-            }).join('');
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
 
-            let htmlContent = `
-                <html>
-                <head>
-                    <title>Print Dokumen Opname - ${opname.id}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
-                        h2 { text-align: center; margin-bottom: 5px; }
-                        .info-table { width: 100%; margin-bottom: 20px; }
-                        .info-table td { padding: 4px; }
-                        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                        .data-table th { background-color: #f2f2f2; padding: 6px; border: 1px solid #ddd; }
-                        .text-center { text-align: center; }
-                        .signature-area { margin-top: 40px; display: flex; justify-content: space-around; text-align: center;}
-                    </style>
-                </head>
-                <body>
-                    <h2>DOKUMEN STOK OPNAME</h2>
-                    <hr/>
-                    <table class="info-table">
-                        <tr>
-                            <td><b>No. Dokumen</b></td><td>: ${opname.id}</td>
-                            <td><b>Petugas (PIC)</b></td><td>: ${opname.pic}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Tanggal / Waktu</b></td><td>: ${opname.dateStr}</td>
-                            <td><b>Cabang / Outlet</b></td><td>: ${namaCabang}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Status Dokumen</b></td><td>: ${opname.status}</td>
-                            <td><b>Catatan</b></td><td>: ${opname.note || '-'}</td>
-                        </tr>
-                    </table>
+            <div class="signature-area">
+                <div>
+                    <p>Dibuat Oleh,</p><br><br><br>
+                    <p><b>(${opname.pic})</b></p>
+                </div>
+                <div>
+                    <p>Disetujui Oleh,</p><br><br><br>
+                    <p><b>(_________________________)</b></p>
+                </div>
+            </div>
+            
+            <script>
+                window.onload = function() { window.print(); window.close(); }
+            <\/script>
+        </body>
+        </html>
+    `; // 🌟 Ditutup dengan backtick (`) dan semicolon (;)
 
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Produk / Varian</th>
-                                <th>SKU</th>
-                                <th>Stok Sistem</th>
-                                <th>Stok Fisik</th>
-                                <th>Selisih</th>
-                                <th>Catatan Item</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows}
-                        </tbody>
-                    </table>
-
-                    <div class="signature-area">
-                        <div>
-                            <p>Dibuat Oleh,</p><br><br><br>
-                            <p><b>(${opname.pic})</b></p>
-                        </div>
-                        <div>
-                            <p>Disetujui Oleh,</p><br><br><br>
-                            <p><b>(_________________________)</b></p>
-                        </div>
-                    </div>
-                    
-                    <script>
-                        window.onload = function() { window.print(); window.close(); }
-                    </script>
-                </body>
-                </html>
-            `;
-
-            printWin.document.write(htmlContent);
-            printWin.document.close();
-        },
+    printWin.document.write(htmlContent);
+    printWin.document.close();
+},
             
 // ==============================================
 // 🌟 FUNGSI EXPORT & IMPORT FULL (SEMUA MODUL) 🌟
