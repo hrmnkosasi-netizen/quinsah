@@ -11948,19 +11948,44 @@ financeAPList() {
             });
         }
     },
-        // ==========================================
-        // TAMBAHAN BARU: Pantau Input Pencarian Pelanggan
-        // ==========================================
-        customerSearchQuery(newVal) {
-            if (this.selectedCustomer) {
-                const expectedText = `${this.selectedCustomer.name} - ${this.selectedCustomer.phone}`;
-                // Jika kasir menghapus atau mengubah teks yang sudah terpilih, batalkan pilihan (set ke null)
-                if (newVal !== expectedText) {
-                    this.selectedCustomer = null; 
-                }
+
+    // ==========================================
+    // TAMBAHAN BARU: Pantau Input Pencarian Pelanggan
+    // ==========================================
+    customerSearchQuery(newVal) {
+        if (this.selectedCustomer) {
+            const expectedText = `${this.selectedCustomer.name} - ${this.selectedCustomer.phone}`;
+            // Jika kasir menghapus atau mengubah teks yang sudah terpilih, batalkan pilihan (set ke null)
+            if (newVal !== expectedText) {
+                this.selectedCustomer = null; 
             }
         }
-        },
+    },
+
+    // ==========================================
+    // 🌟 CCTV PEMBERSIH OTOMATIS MODAL IMPORT & EXPORT
+    // ==========================================
+    'importConfig.showModal': function(isOpen) {
+        if (isOpen) {
+            this.importConfig.errorMessage = null;
+        } else {
+            this.importConfig.errorMessage = null;
+            this.importConfig.fileName = null;
+            this.importConfig.step = 1;
+            this.importConfig.fullImportData = [];
+            this.importConfig.previewData = [];
+            this.importConfig.previewHeaders = [];
+        }
+    },
+
+    'exportConfig.showModal': function(isOpen) {
+        if (!isOpen) {
+            this.exportConfig.showPreview = false;
+            this.exportConfig.previewData = [];
+            this.exportConfig.previewHeaders = [];
+        }
+    }
+},
         
         methods: {
             getSubdomainName() {
