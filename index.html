@@ -6370,70 +6370,99 @@ body.sidebar-open {
 </div>
       
 <div class="modal fade" id="eReceiptModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- Diubah ke modal-lg -->
-        <div class="modal-content border-0 shadow-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             
-            <div class="modal-header bg-success text-white p-3">
-                <h6 class="modal-title fw-bold mb-0"><i class="bi bi-phone-vibrate me-2"></i>Bagikan E-Receipt</h6>
+            <!-- HEADER MODAL -->
+            <div class="modal-header bg-success text-white p-3 px-4">
+                <h6 class="modal-title fw-bold mb-0 d-flex align-items-center">
+                    <i class="bi bi-phone-vibrate me-2 fs-5"></i> Bagikan E-Receipt
+                </h6>
                 <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"></button>
             </div>
             
             <div class="modal-body p-0 bg-white" v-if="activeEReceipt">
                 <div class="row g-0">
                     
-                    <!-- BAGIAN KIRI: PREVIEW STRUK (Lebih besar di PC) -->
-                    <div class="col-md-7 bg-light border-end border-light-subtle p-3 p-md-4 d-flex flex-column align-items-center">
-                        <div class="text-muted fw-bold small mb-3 text-uppercase w-100 text-center" style="letter-spacing: 1px;">Pratinjau Struk Digital</div>
-                        
-                        <!-- Container Iframe (pointer-events dihapus agar bisa scroll) -->
-                        <div class="w-100 shadow-sm custom-scrollbar" style="max-width: 400px; height: 60vh; min-height: 450px; border-radius: 12px; overflow: hidden; border: 2px solid #dee2e6; background: #fff;">
-                            <iframe :src="getReceiptUrl(activeEReceipt.id)" frameborder="0" width="100%" height="100%" style="overflow-y: auto;"></iframe>
+                    <!-- BAGIAN KIRI: PREVIEW STRUK (SCROLLABLE & NON-CLICKABLE) -->
+                    <div class="col-md-7 bg-light border-end border-light-subtle p-4 d-flex flex-column align-items-center justify-content-center">
+                        <div class="d-flex justify-content-between align-items-center w-100 mb-3" style="max-width: 380px;">
+                            <span class="text-muted fw-bold small text-uppercase" style="letter-spacing: 0.5px;">Pratinjau Struk</span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-2 py-1 small">
+                                <i class="bi bi-lock-fill me-1"></i> Mode Baca
+                            </span>
                         </div>
                         
-                        <div class="small text-muted mt-3 text-center"><i class="bi bi-hand-index-thumb me-1"></i> Area struk dapat di-scroll ke bawah</div>
+                        <!-- Container Scroll Utas (Iframe Non-Clickable Inside) -->
+                        <div class="w-100 shadow-sm position-relative rounded-3 bg-white border" 
+                             style="max-width: 380px; height: 58vh; min-height: 420px; overflow-y: auto;">
+                            
+                            <!-- Overlay transparan tambahan untuk proteksi ekstra -->
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;"></div>
+
+                            <!-- Iframe dengan pointer-events: none dan height yang cukup panjang agar memicu scroll -->
+                            <iframe :src="getReceiptUrl(activeEReceipt.id)" 
+                                    frameborder="0" 
+                                    width="100%" 
+                                    style="height: 1000px; pointer-events: none; border: none; display: block;">
+                            </iframe>
+                        </div>
+                        
+                        <div class="small text-muted mt-3 text-center">
+                            <i class="bi bi-mouse me-1"></i> Gulir / scroll area di atas untuk melihat isi struk
+                        </div>
                     </div>
 
                     <!-- BAGIAN KANAN: INFORMASI & TOMBOL AKSI -->
-                    <div class="col-md-5 p-4 d-flex flex-column justify-content-center">
+                    <div class="col-md-5 p-4 d-flex flex-column justify-content-center bg-white">
                         
                         <!-- Informasi Customer & Invoice -->
-                        <div class="text-center mb-4 pb-4 border-bottom">
-                            <div class="badge bg-danger text-white mb-3 fs-6 px-3 py-2 shadow-sm rounded-pill">{{ activeEReceipt.id }}</div>
+                        <div class="text-center mb-4 pb-3 border-bottom">
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 mb-3 fs-6 px-3 py-2 rounded-pill fw-bold">
+                                {{ activeEReceipt.id }}
+                            </span>
                             
-                            <h5 class="fw-bold text-dark mb-1"><i class="bi bi-person-fill me-1 text-muted"></i> {{ activeEReceipt.customer || 'Pelanggan Umum' }}</h5>
+                            <h5 class="fw-bold text-dark mb-1">
+                                <i class="bi bi-person-circle me-1 text-secondary"></i> {{ activeEReceipt.customer || 'Pelanggan Umum' }}
+                            </h5>
                             
-                            <div class="fw-semibold text-secondary mb-2">
-                                <i class="bi bi-telephone-fill me-1 text-muted"></i> {{ getEreceiptPhone(activeEReceipt) }}
+                            <div class="fw-semibold text-muted small mb-3">
+                                <i class="bi bi-telephone me-1"></i> {{ getEreceiptPhone(activeEReceipt) }}
                             </div>
                             
-                            <div class="fs-5 fw-bold text-success mt-3 bg-success bg-opacity-10 py-2 rounded-3">
-                                Total: Rp {{ formatNumber(activeEReceipt.total) }}
+                            <div class="p-3 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
+                                <div class="text-uppercase text-success fw-bold small" style="font-size: 0.75rem;">Total Tagihan</div>
+                                <div class="fs-4 fw-bolder text-success">
+                                    Rp {{ formatNumber(activeEReceipt.total) }}
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Tombol Aksi -->
-                        <div class="d-grid gap-3">
-                            <button class="btn btn-success fw-bold d-flex justify-content-between align-items-center shadow-sm py-2" @click="sendEReceiptWA(activeEReceipt)">
+                        <div class="d-grid gap-2.5">
+                            <button class="btn btn-success fw-bold d-flex justify-content-between align-items-center shadow-sm py-2.5 px-3 rounded-3" @click="sendEReceiptWA(activeEReceipt)">
                                 <span><i class="bi bi-whatsapp me-2 fs-5"></i> Kirim via WhatsApp</span>
-                                <i class="bi bi-chevron-right small"></i>
+                                <i class="bi bi-arrow-right-short fs-4"></i>
                             </button>
                             
-                            <button class="btn btn-primary fw-bold d-flex justify-content-between align-items-center shadow-sm py-2" @click="sendEReceiptEmail(activeEReceipt)">
+                            <button class="btn btn-primary fw-bold d-flex justify-content-between align-items-center shadow-sm py-2.5 px-3 rounded-3" @click="sendEReceiptEmail(activeEReceipt)">
                                 <span><i class="bi bi-envelope-at me-2 fs-5"></i> Kirim via Email</span>
-                                <i class="bi bi-chevron-right small"></i>
+                                <i class="bi bi-arrow-right-short fs-4"></i>
                             </button>
 
-                            <button class="btn btn-outline-secondary fw-bold d-flex justify-content-between align-items-center py-2" @click="copyEReceiptLinkOnly(activeEReceipt)">
-                                <span><i class="bi bi-link-45deg me-2 fs-5"></i> Salin URL Struk</span>
-                                <i class="bi bi-clipboard text-muted small"></i>
+                            <button class="btn btn-outline-secondary fw-bold d-flex justify-content-between align-items-center py-2.5 px-3 rounded-3 mt-1" @click="copyEReceiptLinkOnly(activeEReceipt)">
+                                <span><i class="bi bi-link-45deg me-2 fs-5"></i> Salin Link Struk</span>
+                                <i class="bi bi-clipboard small"></i>
                             </button>
                         </div>                 
                     </div> 
+                    
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="batchDetailModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl"> 
         <div class="modal-content border-0 shadow-lg">
