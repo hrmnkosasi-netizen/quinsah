@@ -6393,23 +6393,18 @@ body.sidebar-open {
                             </span>
                         </div>
                         
-                        <!-- BINGKAI UTAMA PREVIEW (Menggunakan sistem scroll fleksibel dari skrip lama Anda) -->
+                        <!-- BINGKAI UTAMA PREVIEW -->
                         <div class="w-100 shadow-sm position-relative rounded-4 border overflow-hidden bg-white" style="max-width: 360px; height: 60vh; min-height: 450px;">
                             
-                            <!-- Area Scrollable -->
-                            <div style="width: 100%; height: 100%; overflow-y: auto;">
-                                
-                                <!-- Overlay Transparan Proteksi Klik -->
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;"></div>
-
-                                <!-- Iframe menyesuaikan 100% dengan kontainer scroll -->
-                                <iframe :src="getReceiptUrl(activeEReceipt.id)" 
-                                        frameborder="0" 
-                                        width="100%" 
-                                        height="100%" 
-                                        style="border: none; display: block;">
-                                </iframe>
-                            </div>
+                            <!-- Iframe menyesuaikan 100% kontainer. Scroll otomatis aktif dari dalam iframe -->
+                            <iframe :src="getReceiptUrl(activeEReceipt.id)" 
+                                    sandbox="allow-same-origin allow-scripts"
+                                    frameborder="0" 
+                                    width="100%" 
+                                    height="100%" 
+                                    style="border: none; display: block;">
+                            </iframe>
+                            
                         </div>
                         
                         <div class="small text-muted mt-3 text-center">
