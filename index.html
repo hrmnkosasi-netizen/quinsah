@@ -8787,8 +8787,7 @@ body.sidebar-open {
             <!-- List Item dengan Garis Tipis Antar Item -->
             <div v-for="(i, index) in activePrintData.items.filter(item => item.productId !== 'EXCHANGE')" :key="i.cartId" style="margin-bottom: 8px;">
                 
-                <!-- Garis abu-abu antar item diperhalus menjadi 0.5px -->
-                <div v-if="index > 0" style="border-top: 0.5px solid #ccc; margin: 6px 0 8px;"></div>
+                <div v-if="index > 0" style="border-top: 1px solid #666; margin: 6px 0 8px;"></div>
                 
                 <div style="font-weight: bold; font-size: 1.05em;">{{ i.name }}</div>
                 
