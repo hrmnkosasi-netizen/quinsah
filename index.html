@@ -8820,10 +8820,10 @@ body.sidebar-open {
             
             <div style="border-top: 1px dashed #000; margin: 10px 0;"></div>
             
-            <div style="display: flex; justify-content: flex-end;">
-                <table style="width: 90%; font-size: 0.95em;">
+            <div style="width: 100%;">
+                <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
                     <tr>
-                        <td style="padding-bottom:3px;">Subtotal Baru</td>
+                        <td style="padding-bottom:3px;">Subtotal</td>
                         <td style="text-align: right; padding-bottom:3px;">{{ formatNumber(activePrintData.items.filter(item => item.productId !== 'EXCHANGE').reduce((sum, item) => sum + (item.qty * (item.finalPrice || item.sellPrice)), 0)) }}</td>
                     </tr>
                     
