@@ -8755,7 +8755,8 @@ body.sidebar-open {
                 <div v-if="appSettings && appSettings.storePhone" style="font-size: 0.9em; color: #444; margin-top: 2px;">Telp: {{ appSettings.storePhone }}</div>
             </div>
             
-            <div style="border-top: 1px dashed #000; margin: 10px 0;"></div>
+            <!-- Garis pemisah utama (Lurus) -->
+            <div style="border-top: 1px solid #000; margin: 10px 0;"></div>
             
             <table style="width: 100%; font-size: 0.9em; line-height: 1.4; border-collapse: collapse; margin-bottom: 5px;">
                 <tr>
@@ -8779,31 +8780,37 @@ body.sidebar-open {
                     <td style="vertical-align: top; padding-bottom: 2px;">{{ activePrintData.customer }}</td>
                 </tr>
             </table>
-            <div style="border-top: 1px dashed #000; margin: 10px 0;"></div>
             
-            <div v-for="i in activePrintData.items.filter(item => item.productId !== 'EXCHANGE')" :key="i.cartId" style="margin-bottom: 8px;">
-    
-    <div style="font-weight: bold; font-size: 1.05em;">{{ i.name }}</div>
-    
-    <div v-if="i.variantName" style="font-size: 0.85em; color: #555; margin-bottom: 2px;">
-        Varian: {{ i.variantName }}
-    </div>
+            <!-- Garis pemisah utama (Lurus) -->
+            <div style="border-top: 1px solid #000; margin: 10px 0;"></div>
+            
+            <!-- List Item dengan Garis Tipis Antar Item -->
+            <div v-for="(i, index) in activePrintData.items.filter(item => item.productId !== 'EXCHANGE')" :key="i.cartId" style="margin-bottom: 8px;">
+                
+                <!-- Munculkan garis tipis ini HANYA jika item bukan urutan pertama -->
+                <div v-if="index > 0" style="border-top: 1px solid #ccc; margin: 6px 0 8px;"></div>
+                
+                <div style="font-weight: bold; font-size: 1.05em;">{{ i.name }}</div>
+                
+                <div v-if="i.variantName" style="font-size: 0.85em; color: #555; margin-bottom: 2px;">
+                    Varian: {{ i.variantName }}
+                </div>
 
-    <div v-if="i.note">
-        <div v-for="(catatan, index) in i.note.split(',')" :key="index" style="font-size: 0.85em; color: #555; margin-bottom: 2px; font-style: italic; padding-left: 8px;">
-            - {{ catatan.trim() }}
-        </div>
-    </div>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span>{{ i.qty }} {{ i.uom || 'Pcs' }} x {{ formatNumber(i.finalPrice || i.sellPrice) }}</span>
-        <span style="font-weight: bold;">{{ formatNumber(i.qty * (i.finalPrice || i.sellPrice)) }}</span>
-    </div>
-    
-</div>
+                <div v-if="i.note">
+                    <div v-for="(catatan, index) in i.note.split(',')" :key="index" style="font-size: 0.85em; color: #555; margin-bottom: 2px; font-style: italic; padding-left: 8px;">
+                        - {{ catatan.trim() }}
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ i.qty }} {{ i.uom || 'Pcs' }} x {{ formatNumber(i.finalPrice || i.sellPrice) }}</span>
+                    <span style="font-weight: bold;">{{ formatNumber(i.qty * (i.finalPrice || i.sellPrice)) }}</span>
+                </div>
+            </div>
 
-            <div v-if="activePrintData.items.some(item => item.productId === 'EXCHANGE')" style="margin-top: 8px; padding: 6px; border: 1px dashed #333; border-radius: 4px; background-color: #f4f4f5;">
-                <div style="font-weight: bold; font-size: 0.85em; text-align: center; border-bottom: 1px dashed #ccc; padding-bottom: 4px; margin-bottom: 4px;">
+            <!-- Potongan Tukar Tambah -->
+            <div v-if="activePrintData.items.some(item => item.productId === 'EXCHANGE')" style="margin-top: 8px; padding: 6px; border: 1px solid #333; border-radius: 4px; background-color: #f4f4f5;">
+                <div style="font-weight: bold; font-size: 0.85em; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 4px;">
                     POTONGAN TUKAR TAMBAH
                 </div>
                 <div v-for="i in activePrintData.items.filter(item => item.productId === 'EXCHANGE')" :key="i.cartId" style="font-size: 0.85em; margin-bottom: 4px;">
@@ -8818,7 +8825,8 @@ body.sidebar-open {
                 </div>
             </div>
             
-            <div style="border-top: 1px dashed #000; margin: 10px 0;"></div>
+            <!-- Garis pemisah utama (Lurus) -->
+            <div style="border-top: 1px solid #000; margin: 10px 0;"></div>
             
             <div style="width: 100%;">
                 <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
@@ -8856,27 +8864,22 @@ body.sidebar-open {
     </tr>
     <tr v-for="(split, idx) in activePrintData.splitPayments" :key="idx">
         <td style="padding-top:2px; font-size:0.9em; padding-left: 5px;">- {{ split.method }}</td>
-        <!-- Ubah split.amount jadi split.cashReceived || split.amount -->
         <td style="text-align: right; padding-top:2px; font-size:0.9em;">{{ formatNumber(split.cashReceived || split.amount) }}</td>
     </tr>
     
-    <!-- Total Keseluruhan yang Diterima -->
     <tr>
         <td style="padding-top:3px; font-weight:bold;">TOTAL DIBAYAR</td>
         <td style="text-align: right; padding-top:3px; font-weight:bold;">{{ formatNumber(activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}</td>
     </tr>
 
-    <!-- Kembalian jika Split melebihi Total -->
     <tr v-if="activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) > activePrintData.total">
         <td style="padding-top:2px; font-weight:bold; color:green;">KEMBALI</td>
         <td style="text-align: right; padding-top:2px; font-weight:bold; color:green;">{{ formatNumber(activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) - activePrintData.total) }}</td>
     </tr>
-    <!-- Sisa Hutang jika kurang -->
     <tr v-else-if="(activePrintData.total - activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) > 0">
         <td style="padding-top:2px; font-weight:bold; color:red;">SISA HUTANG</td>
         <td style="text-align: right; padding-top:2px; font-weight:bold; color:red;">{{ formatNumber(activePrintData.total - activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}</td>
     </tr>
-    <!-- Status Lunas jika pas -->
     <tr v-else>
         <td style="padding-top:2px; font-weight:bold; color:green;">STATUS</td>
         <td style="text-align: right; padding-top:2px; font-weight:bold; color:green;">LUNAS</td>
@@ -8899,7 +8902,7 @@ body.sidebar-open {
                 </table>
             </div>
             
-            <div v-if="activePrintData && activePrintData.paymentHistory && activePrintData.paymentHistory.length > 0" style="margin-top: 10px; border-top: 2px dashed #333; padding-top: 10px; margin-bottom: 10px;">
+            <div v-if="activePrintData && activePrintData.paymentHistory && activePrintData.paymentHistory.length > 0" style="margin-top: 10px; border-top: 1px solid #000; padding-top: 10px; margin-bottom: 10px;">
                 <div style="background-color: #111; color: #fff; text-align: center; font-weight: bold; font-size: 12px; padding: 4px; border-radius: 4px; margin-bottom: 8px;">
                     HISTORI PEMBAYARAN
                 </div>
@@ -8925,7 +8928,7 @@ body.sidebar-open {
                 </div>
             </div>
 
-            <div v-if="activePrintData && activePrintData.returHistory && activePrintData.returHistory.length > 0" style="margin-top: 10px; border-top: 2px dashed #333; padding-top: 10px; margin-bottom: 10px;">
+            <div v-if="activePrintData && activePrintData.returHistory && activePrintData.returHistory.length > 0" style="margin-top: 10px; border-top: 1px solid #000; padding-top: 10px; margin-bottom: 10px;">
                 <div style="background-color: #111; color: #fff; text-align: center; font-weight: bold; font-size: 12px; padding: 4px; border-radius: 4px; margin-bottom: 8px;">
                     INFO RETUR / REFUND
                 </div>
@@ -8945,19 +8948,18 @@ body.sidebar-open {
                 </div>
             </div>
 
-            <div v-if="appSettings && appSettings.termsAndConditions" style="border-top: 1px dashed #000; margin: 15px 0 10px; padding-top: 10px;">
+            <div v-if="appSettings && appSettings.termsAndConditions" style="border-top: 1px solid #000; margin: 15px 0 10px; padding-top: 10px;">
                 <div style="font-weight:bold; margin-bottom:3px; font-size:0.9em; text-transform:uppercase;">Syarat & Ketentuan:</div>
                 <div style="white-space: pre-wrap; line-height: 1.3; font-size: 0.85em;">{{ appSettings.termsAndConditions }}</div>
             </div>
 
-            <div style="border-top: 1px dashed #000; margin: 15px 0 10px;"></div>
+            <div style="border-top: 1px solid #000; margin: 15px 0 10px;"></div>
 
             <div v-if="appSettings && appSettings.showQrCode" style="text-align: center; margin-bottom: 15px;">
-    <!-- QR e-Receipt 1 -->
-    <img :src="'https://quickchart.io/qr?size=120&text=' + encodeURIComponent('https://queenpos.id/receipt.html?inv=' + activePrintData.id)" 
-         style="width: 80px; height: 80px; margin-bottom: 4px;">
-    <div style="font-size: 0.85em; font-weight: bold;">Scan untuk e-Receipt</div>
-</div>
+                <img :src="'https://quickchart.io/qr?size=120&text=' + encodeURIComponent('https://queenpos.id/receipt.html?inv=' + activePrintData.id)" 
+                     style="width: 80px; height: 80px; margin-bottom: 4px;">
+                <div style="font-size: 0.85em; font-weight: bold;">Scan untuk e-Receipt</div>
+            </div>
 
             <div style="text-align: center;">
                 <div style="font-weight: bold; margin-bottom: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; font-size:0.85em; font-family: sans-serif;">
