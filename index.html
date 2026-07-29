@@ -5102,8 +5102,10 @@ body.sidebar-open {
                     <input type="date" class="form-control form-control-sm text-dark shadow-none border-secondary-subtle" v-model="reportEndDate">
                 </div>
                 <div class="col-12 col-md-2 d-flex align-items-end">
-                    <button class="btn btn-sm btn-light border border-secondary-subtle w-100 shadow-none" @click="reportStartDate=''; reportEndDate=''; reportOutletFilter='';">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    <!-- TOMBOL RESET DIMODIFIKASI AGAR KEMBALI KE HARI INI -->
+                    <button class="btn btn-sm btn-light border border-secondary-subtle w-100 shadow-none" 
+                            @click="const d = new Date(); const tdy = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); reportStartDate = tdy; reportEndDate = tdy; reportOutletFilter = '';">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset (Hari Ini)
                     </button>
                 </div>
             </div>
@@ -5580,9 +5582,8 @@ body.sidebar-open {
             </div>
         </div>
     </div>
-
 </div>
-            <!-- SALES VIEW -->
+           
             <!-- SALES VIEW -->
 <div v-if="currentView === 'sales'" class="dashboard-card mb-4 fade-in">
     <h6 class="fw-bold mb-3 pb-2 border-bottom">Riwayat Transaksi Penjualan (POS)</h6>
@@ -9838,6 +9839,10 @@ body.sidebar-open {
                 },
 
                 paymentOutletId: '',
+
+                reportStartDate: getLocalToday(),
+                reportEndDate: getLocalToday(),
+                reportOutletFilter: '',
                 
                 // Konfigurasi Modal Export Terpusat
         exportConfig: {
