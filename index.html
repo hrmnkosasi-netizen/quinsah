@@ -8755,8 +8755,8 @@ body.sidebar-open {
                 <div v-if="appSettings && appSettings.storePhone" style="font-size: 0.9em; color: #444; margin-top: 2px;">Telp: {{ appSettings.storePhone }}</div>
             </div>
             
-            <!-- Garis pemisah utama (Diperhalus menjadi 0.5px) -->
-            <div style="border-top: 0.5px solid #000; margin: 10px 0;"></div>
+            <!-- Garis pemisah utama (0.25px) -->
+            <div style="border-top: 0.25px solid #000; margin: 10px 0;"></div>
             
             <table style="width: 100%; font-size: 0.9em; line-height: 1.4; border-collapse: collapse; margin-bottom: 5px;">
                 <tr>
@@ -8781,13 +8781,14 @@ body.sidebar-open {
                 </tr>
             </table>
             
-            <!-- Garis pemisah utama (Diperhalus menjadi 0.5px) -->
-            <div style="border-top: 0.5px solid #000; margin: 10px 0;"></div>
+            <!-- Garis pemisah utama (0.25px) -->
+            <div style="border-top: 0.25px solid #000; margin: 10px 0;"></div>
             
-            <!-- List Item dengan Garis Tipis Antar Item -->
+            <!-- List Item dengan Garis Super Tipis Antar Item -->
             <div v-for="(i, index) in activePrintData.items.filter(item => item.productId !== 'EXCHANGE')" :key="i.cartId" style="margin-bottom: 8px;">
                 
-                <div v-if="index > 0" style="border-top: 0.5px solid #666; margin: 6px 0 8px;"></div>
+                <!-- Garis pemisah antar item (0.25px) -->
+                <div v-if="index > 0" style="border-top: 0.25px solid #666; margin: 6px 0 8px;"></div>
                 
                 <div style="font-weight: bold; font-size: 1.05em;">{{ i.name }}</div>
                 
@@ -8808,8 +8809,8 @@ body.sidebar-open {
             </div>
 
             <!-- Potongan Tukar Tambah -->
-            <div v-if="activePrintData.items.some(item => item.productId === 'EXCHANGE')" style="margin-top: 8px; padding: 6px; border: 0.5px solid #999; border-radius: 4px; background-color: #f4f4f5;">
-                <div style="font-weight: bold; font-size: 0.85em; text-align: center; border-bottom: 0.5px solid #ccc; padding-bottom: 4px; margin-bottom: 4px;">
+            <div v-if="activePrintData.items.some(item => item.productId === 'EXCHANGE')" style="margin-top: 8px; padding: 6px; border: 0.25px solid #999; border-radius: 4px; background-color: #f4f4f5;">
+                <div style="font-weight: bold; font-size: 0.85em; text-align: center; border-bottom: 0.25px solid #ccc; padding-bottom: 4px; margin-bottom: 4px;">
                     POTONGAN TUKAR TAMBAH
                 </div>
                 <div v-for="i in activePrintData.items.filter(item => item.productId === 'EXCHANGE')" :key="i.cartId" style="font-size: 0.85em; margin-bottom: 4px;">
@@ -8824,13 +8825,13 @@ body.sidebar-open {
                 </div>
             </div>
             
-            <!-- Garis pemisah utama -->
-            <div style="border-top: 0.5px solid #000; margin: 10px 0;"></div>
+            <!-- Garis pemisah utama (0.25px) -->
+            <div style="border-top: 0.25px solid #000; margin: 10px 0;"></div>
             
             <div style="width: 100%;">
                 <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
                     <tr>
-                        <td style="padding-bottom:3px;">Subtotal Baru</td>
+                        <td style="padding-bottom:3px;">Subtotal</td>
                         <td style="text-align: right; padding-bottom:3px;">{{ formatNumber(activePrintData.items.filter(item => item.productId !== 'EXCHANGE').reduce((sum, item) => sum + (item.qty * (item.finalPrice || item.sellPrice)), 0)) }}</td>
                     </tr>
                     
@@ -8901,7 +8902,7 @@ body.sidebar-open {
                 </table>
             </div>
             
-            <div v-if="activePrintData && activePrintData.paymentHistory && activePrintData.paymentHistory.length > 0" style="margin-top: 10px; border-top: 0.5px solid #000; padding-top: 10px; margin-bottom: 10px;">
+            <div v-if="activePrintData && activePrintData.paymentHistory && activePrintData.paymentHistory.length > 0" style="margin-top: 10px; border-top: 0.25px solid #000; padding-top: 10px; margin-bottom: 10px;">
                 <div style="background-color: #111; color: #fff; text-align: center; font-weight: bold; font-size: 12px; padding: 4px; border-radius: 4px; margin-bottom: 8px;">
                     HISTORI PEMBAYARAN
                 </div>
@@ -8927,7 +8928,7 @@ body.sidebar-open {
                 </div>
             </div>
 
-            <div v-if="activePrintData && activePrintData.returHistory && activePrintData.returHistory.length > 0" style="margin-top: 10px; border-top: 0.5px solid #000; padding-top: 10px; margin-bottom: 10px;">
+            <div v-if="activePrintData && activePrintData.returHistory && activePrintData.returHistory.length > 0" style="margin-top: 10px; border-top: 0.25px solid #000; padding-top: 10px; margin-bottom: 10px;">
                 <div style="background-color: #111; color: #fff; text-align: center; font-weight: bold; font-size: 12px; padding: 4px; border-radius: 4px; margin-bottom: 8px;">
                     INFO RETUR / REFUND
                 </div>
@@ -8942,22 +8943,23 @@ body.sidebar-open {
                     </span>
                 </div>
     
-                <div style="text-align: right; margin-top: 8px; border-top: 0.5px solid #ccc; padding-top: 5px; font-weight: bold; font-size: 1em;">
+                <div style="text-align: right; margin-top: 8px; border-top: 0.25px solid #ccc; padding-top: 5px; font-weight: bold; font-size: 1em;">
                     TOTAL REFUND: <span style="color: #dc3545;">- Rp {{ formatNumber(activePrintData.returHistory.reduce((a, b) => a + b.refundAmount, 0)) }}</span>
                 </div>
             </div>
 
-            <div v-if="appSettings && appSettings.termsAndConditions" style="border-top: 0.5px solid #000; margin: 15px 0 10px; padding-top: 10px;">
+            <div v-if="appSettings && appSettings.termsAndConditions" style="border-top: 0.25px solid #000; margin: 15px 0 10px; padding-top: 10px;">
                 <div style="font-weight:bold; margin-bottom:3px; font-size:0.9em; text-transform:uppercase;">Syarat & Ketentuan:</div>
                 <div style="white-space: pre-wrap; line-height: 1.3; font-size: 0.85em;">{{ appSettings.termsAndConditions }}</div>
             </div>
 
-            <!-- Garis pemisah paling bawah -->
-            <div style="border-top: 0.5px solid #000; margin: 15px 0 10px;"></div>
+            <!-- Garis pemisah paling bawah (0.25px) -->
+            <div style="border-top: 0.25px solid #000; margin: 15px 0 10px;"></div>
 
+            <!-- QR Code Diperbesar dari 80px ke 95px -->
             <div v-if="appSettings && appSettings.showQrCode" style="text-align: center; margin-bottom: 15px;">
-                <img :src="'https://quickchart.io/qr?size=120&text=' + encodeURIComponent('https://queenpos.id/receipt.html?inv=' + activePrintData.id)" 
-                     style="width: 80px; height: 80px; margin-bottom: 4px;">
+                <img :src="'https://quickchart.io/qr?size=150&text=' + encodeURIComponent('https://queenpos.id/receipt.html?inv=' + activePrintData.id)" 
+                     style="width: 95px; height: 95px; margin-bottom: 4px;">
                 <div style="font-size: 0.85em; font-weight: bold;">Scan untuk e-Receipt</div>
             </div>
 
@@ -8972,7 +8974,8 @@ body.sidebar-open {
                     <div v-if="appSettings && appSettings.socialLazada">Lazada: {{ appSettings.socialLazada }}</div>
                     <div v-if="appSettings && appSettings.socialBlibli">Blibli: {{ appSettings.socialBlibli }}</div>
                 </div>
-                <div style="font-style: italic; font-size: 0.85em; white-space: pre-wrap;">{{ (appSettings && appSettings.receiptFooter) ? appSettings.receiptFooter : 'Dokumen ini dicetak otomatis oleh Sistem ERP Quinsah. Terima Kasih atas kepercayaan Anda.' }}</div>
+                <!-- Menambahkan margin-top: 10px agar kalimat footer tidak terlalu dekat dengan shopee -->
+                <div style="font-style: italic; font-size: 0.85em; white-space: pre-wrap; margin-top: 10px;">{{ (appSettings && appSettings.receiptFooter) ? appSettings.receiptFooter : 'Dokumen ini dicetak otomatis oleh Sistem ERP Quinsah. Terima Kasih atas kepercayaan Anda.' }}</div>
             </div>
         </div>
 
