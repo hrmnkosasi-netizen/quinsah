@@ -6402,11 +6402,12 @@ body.sidebar-open {
                                 <!-- Overlay Transparan Proteksi Klik -->
                                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;"></div>
 
-                                <!-- PERBAIKAN FINAL: Base height dinaikkan menjadi 2100 agar mencakup Kotak Rating & Tombol Download -->
+                                <!-- SOLUSI OTOMATIS: Sistem membaca tinggi asli konten secara otomatis tanpa rumus -->
                                 <iframe :src="getReceiptUrl(activeEReceipt.id)" 
                                         frameborder="0" 
                                         width="100%" 
-                                        :style="'height: ' + (2100 + ((activeEReceipt.items ? activeEReceipt.items.length : 1) * 95) + ((activeEReceipt.splitPayments && activeEReceipt.splitPayments.length > 0) ? 280 : 0)) + 'px; pointer-events: none; border: none; display: block;'">
+                                        @load="$event.target.style.height = ($event.target.contentWindow.document.body.scrollHeight + 30) + 'px'"
+                                        style="pointer-events: none; border: none; display: block; transition: height 0.3s ease;">
                                 </iframe>
                             </div>
                         </div>
