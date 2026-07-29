@@ -10732,8 +10732,30 @@ filteredOpnameHistory() {
 
                 return matchSearch && matchOutlet && matchStatus && matchDate;
             }).sort((a, b) => {
-                // Urutkan dari yang terbaru
-                return b.id.localeCompare(a.id);
+                // Fungsi bantuan untuk mengubah string "DD/MM/YYYY, HH.mm.ss" menjadi Timestamp
+                const parseDateStr = (dateStr) => {
+                    if (!dateStr) return 0;
+                    try {
+                        let parts = dateStr.split(',');
+                        let datePart = parts[0] ? parts[0].trim() : '';
+                        let timePart = parts[1] ? parts[1].trim() : '00.00.00';
+                        
+                        let [day, month, year] = datePart.split('/');
+                        let [hour, minute, second] = timePart.split('.');
+                        
+                        // Buat objek Date: new Date(year, monthIndex, day, hours, minutes, seconds)
+                        // Perhatian: Index bulan di Javascript dimulai dari 0 (Januari = 0), maka month - 1
+                        return new Date(year, month - 1, day, hour, minute, second).getTime();
+                    } catch (e) {
+                        return 0; // Jika format kacau, taruh di urutan paling bawah
+                    }
+                };
+
+                const waktuA = parseDateStr(a.dateStr);
+                const waktuB = parseDateStr(b.dateStr);
+
+                // Urutkan dari yang terbaru ke terlama (Descending)
+                return waktuB - waktuA; 
             });
         },
             
