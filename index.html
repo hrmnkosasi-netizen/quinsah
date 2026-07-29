@@ -13867,8 +13867,16 @@ updateDynamicManifest(namaToko, logoUrl) {
 },
             
     resetSalesFilter() {
-                this.transactionStartDate = '';
-                this.transactionEndDate = '';
+                // 1. Dapatkan tanggal hari ini (Lokal)
+                const d = new Date();
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                const hariIni = d.toISOString().slice(0, 10);
+
+                // 2. Kembalikan filter tanggal ke HARI INI, jangan dikosongkan
+                this.transactionStartDate = hariIni;
+                this.transactionEndDate = hariIni;
+                
+                // 3. Reset sisa filter lainnya menjadi kosong (semua/default)
                 this.reportSearchQuery = '';
                 this.salesOutletFilter = '';
                 this.salesStatusFilter = '';
