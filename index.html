@@ -6393,20 +6393,20 @@ body.sidebar-open {
                             </span>
                         </div>
                         
-                        <!-- BINGKAI UTAMA PREVIEW (Mengunci Garis Melengkung Atas & Bawah) -->
+                        <!-- BINGKAI UTAMA PREVIEW -->
                         <div class="w-100 shadow-sm position-relative rounded-4 border overflow-hidden bg-white" style="max-width: 360px;">
                             
-                            <!-- AREA SCROLLABLE (Di dalam bingkai lengkung) -->
-                            <div style="height: 48vh; min-height: 360px; overflow-y: auto; padding-bottom: 12px;">
+                            <!-- AREA SCROLLABLE (max-height diubah agar dinamis) -->
+                            <div style="max-height: 55vh; overflow-y: auto;">
                                 
                                 <!-- Overlay Transparan Proteksi Klik -->
                                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;"></div>
 
-                                <!-- Iframe dengan tinggi presisi agar mentok pas di Social Media -->
+                                <!-- Iframe dengan tinggi dinamis (Rumus: 580px basenya + 60px per item) -->
                                 <iframe :src="getReceiptUrl(activeEReceipt.id)" 
                                         frameborder="0" 
                                         width="100%" 
-                                        style="height: 580px; pointer-events: none; border: none; display: block;">
+                                        :style="'height: ' + (580 + ((activeEReceipt.items ? activeEReceipt.items.length : 1) * 60)) + 'px; pointer-events: none; border: none; display: block;'">
                                 </iframe>
                             </div>
                         </div>
