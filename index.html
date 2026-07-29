@@ -4715,7 +4715,9 @@ body.sidebar-open {
                 <input type="text" class="form-control form-control-sm" v-model="supplierSearchQuery" placeholder="Ketik Nama Supplier, No. Telp, atau Alamat...">
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-sm btn-outline-danger w-100 fw-bold py-1 bg-white" @click="supplierSearchQuery=''"><i class="bi bi-arrow-counterclockwise me-1"></i> Reset</button>
+                <button class="btn btn-sm btn-outline-danger w-100 shadow-sm text-nowrap" @click="supplierSearchQuery=''" title="Reset Filter">
+                <i class="bi bi-arrow-clockwise me-1"></i> Reset
+                </button>
             </div>
         </div>
 
@@ -4816,8 +4818,8 @@ body.sidebar-open {
                 </select>
             </div>
             <div class="col-12 col-md-2">
-                <button type="button" class="btn btn-sm btn-danger w-100 fw-bold py-1" @click.prevent="resetRatingFilter()">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                <button class="btn btn-sm btn-outline-danger w-100 shadow-sm text-nowrap" @click="resetRatingFilter()" title="Reset Filter">
+                <i class="bi bi-arrow-clockwise me-1"></i> Reset
                 </button>
             </div>
 
@@ -5165,9 +5167,8 @@ body.sidebar-open {
                 </div>
                 <div class="col-12 col-md-2 d-flex align-items-end">
                     <!-- TOMBOL RESET DIMODIFIKASI AGAR KEMBALI KE HARI INI -->
-                    <button class="btn btn-sm btn-light border border-secondary-subtle w-100 shadow-none" 
-                            @click="const d = new Date(); const tdy = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); reportStartDate = tdy; reportEndDate = tdy; reportOutletFilter = '';">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset (Hari Ini)
+                    <button class="btn btn-sm btn-outline-danger w-100 shadow-sm text-nowrap" @click="const d = new Date(); const tdy = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); reportStartDate = tdy; reportEndDate = tdy; reportOutletFilter = '';" title="Reset Filter">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Reset
                     </button>
                 </div>
             </div>
@@ -5842,8 +5843,8 @@ body.sidebar-open {
                 <option value="">-- Semua Cabang --</option>
                 <option v-for="ot in outlets" :key="ot.id" :value="ot.id">{{ ot.name }}</option>
             </select>
-            <button class="btn btn-sm btn-outline-secondary fw-bold" @click="loadFulfillmentData">
-                <i class="bi bi-arrow-clockwise"></i> Segarkan
+            <button class="btn btn-sm btn-outline-danger w-100 shadow-sm text-nowrap" @click="loadFulfillmentData" title="Refresh">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
             </button>
         </div>
     </div>
