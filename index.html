@@ -12959,7 +12959,7 @@ getExportDataCount() {
     else if (this.exportConfig.target === 'inv_logs') count = this.filteredStockLogs ? this.filteredStockLogs.length : 0;
     else if (this.exportConfig.target === 'inv_stockcard') count = this.stockCardSummary ? this.stockCardSummary.length : 0;
     else if (this.exportConfig.target === 'opname') count = this.filteredOpnameHistory ? this.filteredOpnameHistory.length : 0;
-    else if (this.exportConfig.target === 'transfers') count = this.transferHistory ? this.transferHistory.length : 0; // 🌟 TAMBAHAN TRANSFER
+    else if (this.exportConfig.target === 'transfers') count = this.filteredTransferHistory ? this.filteredTransferHistory.length : 0;
     
     return count;
 },
@@ -13085,9 +13085,11 @@ previewExportData() {
         let dataSumber = (this.filteredOpnameHistory || []).slice(0, 5);
         dataSumber.forEach(op => { let namaCabang = this.getOutletName(op.outletId) || 'Global/Pusat'; formattedData.push({ "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-', "Total Item Varian": op.items ? op.items.length : 0 }); });
     }
-    // 🌟 PREVIEW EXPORT TRANSFER
+    // 🌟 PREVIEW EXPORT TRANSFER (UPDATE)
     else if (this.exportConfig.target === 'transfers') {
-        let dataSumber = (this.transferHistory || []).slice(0, 5);
+        // GANTI transferHistory menjadi filteredTransferHistory
+        let dataSumber = (this.filteredTransferHistory || []).slice(0, 5); 
+        
         dataSumber.forEach(tf => {
             let fromName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.fromOutlet) : tf.fromOutlet;
             let toName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.toOutlet) : tf.toOutlet;
@@ -13236,10 +13238,12 @@ processExport() {
             } else { formattedData.push({ "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-', "Nama Produk / Varian": '-', "SKU / Varian": '-', "Stok Sistem": 0, "Stok Fisik": 0, "Selisih": 0, "Catatan Item": '-' }); }
         });
     }
-    // 🌟 FULL EXPORT TRANSFER
+    // 🌟 FULL EXPORT TRANSFER (UPDATE)
     else if (this.exportConfig.target === 'transfers') {
-        if (!this.transferHistory || this.transferHistory.length === 0) return alert('Tidak ada riwayat transfer!');
-        this.transferHistory.forEach(tf => {
+        // GANTI transferHistory menjadi filteredTransferHistory
+        if (!this.filteredTransferHistory || this.filteredTransferHistory.length === 0) return alert('Tidak ada riwayat transfer sesuai filter!');
+        
+        this.filteredTransferHistory.forEach(tf => {
             let fromName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.fromOutlet) : tf.fromOutlet;
             let toName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.toOutlet) : tf.toOutlet;
             let rowBase = { "No. Dokumen": tf.id || '-', "Tanggal Buat": tf.dateStr || '-', "Cabang Asal": fromName || '-', "Cabang Tujuan": toName || '-', "PIC": tf.pic || '-', "Status": tf.status || 'PENDING', "Catatan Dokumen": tf.note || '-' };
