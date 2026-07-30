@@ -12791,7 +12791,7 @@ resetOpnameFilter() {
 },
             
 // ==============================================
-// 🌟 FUNGSI EXPORT & IMPORT FULL (SEMUA MODUL) 🌟
+// 🌟 FUNGSI EXPORT & IMPORT FULL (TERMASUK TRANSFER) 🌟
 // ==============================================
 
 getExportDataCount() {
@@ -12810,13 +12810,14 @@ getExportDataCount() {
     else if (this.exportConfig.target === 'ar_data') count = this.financeARList ? this.financeARList.length : 0;
     else if (this.exportConfig.target === 'ap_data') count = this.financeAPList ? this.financeAPList.length : 0;
     
-    // 🌟 HITUNGAN DATA EXPORT INVENTORI & OPNAME
+    // 🌟 HITUNGAN DATA EXPORT INVENTORI & OPNAME & TRANSFER
     else if (this.exportConfig.target === 'inv_stocks') count = this.filteredInventoryProducts ? this.filteredInventoryProducts.reduce((sum, p) => sum + 1 + (p.variants ? p.variants.length : 0), 0) : 0;
     else if (this.exportConfig.target === 'inv_alerts') count = this.lowStockItems ? this.lowStockItems.length : 0;
     else if (this.exportConfig.target === 'inv_allocation') count = (this.filteredInventoryProducts && this.invOutletFilter) ? this.filteredInventoryProducts.reduce((sum, p) => sum + 1 + (p.variants ? p.variants.length : 0), 0) : 0;
     else if (this.exportConfig.target === 'inv_logs') count = this.filteredStockLogs ? this.filteredStockLogs.length : 0;
     else if (this.exportConfig.target === 'inv_stockcard') count = this.stockCardSummary ? this.stockCardSummary.length : 0;
     else if (this.exportConfig.target === 'opname') count = this.filteredOpnameHistory ? this.filteredOpnameHistory.length : 0;
+    else if (this.exportConfig.target === 'transfers') count = this.transferHistory ? this.transferHistory.length : 0; // 🌟 TAMBAHAN TRANSFER
     
     return count;
 },
@@ -12832,7 +12833,6 @@ previewExportData() {
 
     let formattedData = [];
 
-    // 🌟 LOGIKA PREVIEW DISAMAKAN 100% DENGAN LOGIKA EXPORT
     if (this.exportConfig.target === 'categories') {
         let dataSumber = (this.structuredCategories || []).slice(0, 5);
         let getCatParentName = (c) => {
@@ -12843,17 +12843,10 @@ previewExportData() {
         };
         formattedData = dataSumber.map(c => ({ "Nama Kategori": c.name || '-', "Kategori Induk": getCatParentName(c) }));
     } 
-    // 🌟 PREVIEW EXPORT VARIAN
     else if (this.exportConfig.target === 'variants') {
         let dataSumber = (this.filteredAllVariantsList || []).slice(0, 5);
         formattedData = dataSumber.map(v => ({
-            "Produk Induk": v.parentName || '-',
-            "Kategori": v.categoryPath || '-',
-            "Nama Varian": v.name || '-',
-            "SKU / Barcode": v.sku || '-',
-            "HPP (Modal)": v.hpp || 0,
-            "Harga Jual": v.sell || 0,
-            "Stok": typeof this.getDisplayVariantStock === 'function' ? this.getDisplayVariantStock(v) : 0
+            "Produk Induk": v.parentName || '-', "Kategori": v.categoryPath || '-', "Nama Varian": v.name || '-', "SKU / Barcode": v.sku || '-', "HPP (Modal)": v.hpp || 0, "Harga Jual": v.sell || 0, "Stok": typeof this.getDisplayVariantStock === 'function' ? this.getDisplayVariantStock(v) : 0
         }));
     } else if (this.exportConfig.target === 'customers') {
         let dataSumber = (this.filteredCustomers || []).slice(0, 5);
@@ -12868,10 +12861,7 @@ previewExportData() {
         let dataSumber = (this.filteredTransactions || []).slice(0, 5);
         dataSumber.forEach(t => {
             let namaCabang = typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global/Pusat';
-            let subtotal = t.subtotal || 0; let diskon = t.discountAmt || 0; let ppn = t.taxAmt || 0;
-            let biayaLayanan = (t.serviceAmt || 0) + (t.surchargeFee || 0); let ongkir = t.shippingCost || 0;
-            let totalAkhir = t.total || 0; let dibayar = t.amountReceived || totalAkhir; let kembalian = t.changeAmount || 0;
-
+            let subtotal = t.subtotal || 0; let diskon = t.discountAmt || 0; let ppn = t.taxAmt || 0; let biayaLayanan = (t.serviceAmt || 0) + (t.surchargeFee || 0); let ongkir = t.shippingCost || 0; let totalAkhir = t.total || 0; let dibayar = t.amountReceived || totalAkhir; let kembalian = t.changeAmount || 0;
             if (t.items && t.items.length > 0) {
                 t.items.forEach(item => formattedData.push({
                     "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', 
@@ -12880,78 +12870,41 @@ previewExportData() {
                     "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS'
                 }));
             } else {
-                formattedData.push({
-                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', 
-                    "Nama Produk": '-', "SKU / Varian": '-', "Qty": 0, "Harga Satuan": 0,
-                    "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, 
-                    "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS'
-                });
+                formattedData.push({ "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Nama Produk": '-', "SKU / Varian": '-', "Qty": 0, "Harga Satuan": 0, "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS' });
             }
         });
     } else if (this.exportConfig.target === 'po') {
         let dataSumber = (this.filteredPurchases || []).slice(0, 5);
         dataSumber.forEach(po => {
-            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-';
-            let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
-            let statusBarang = po.poStatus || 'PENDING';
-            if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
-            let statusBayar = po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang';
-            let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
-
+            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-'; let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
+            let statusBarang = po.poStatus || 'PENDING'; if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
+            let statusBayar = po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang'; let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
             let rowBase = { "No. PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-', "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem' };
             let rowFinance = { "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0, "TOTAL AKHIR": po.total || 0, "DP / Dibayar": dp, "Sisa Hutang": Math.max(0, (po.total || 0) - dp), "Metode Bayar": po.paymentMethod || 'CASH', "Jatuh Tempo": po.dueDate || '', "Status Bayar": statusBayar, "Status Barang": statusBarang };
-
             if (po.items && po.items.length > 0) {
-                po.items.forEach(item => formattedData.push({
-                    ...rowBase,
-                    "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '-', "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0,
-                    "Subtotal Barang": (item.qty || 0) * (item.price || 0),
-                    ...rowFinance
-                }));
+                po.items.forEach(item => formattedData.push({ ...rowBase, "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '-', "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0, "Subtotal Barang": (item.qty || 0) * (item.price || 0), ...rowFinance }));
             } else {
-                formattedData.push({
-                    ...rowBase,
-                    "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0, "Subtotal Barang": 0,
-                    ...rowFinance
-                });
+                formattedData.push({ ...rowBase, "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0, "Subtotal Barang": 0, ...rowFinance });
             }
         });
     } else if (this.exportConfig.target === 'sales_payment') {
-        (this.financeSalesPayments || []).slice(0, 5).forEach(group => {
-            (group.items || []).forEach(item => {
-                formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. Invoice": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Pelanggan": item.name, "Nominal Masuk": item.amount });
-            });
-        });
+        (this.financeSalesPayments || []).slice(0, 5).forEach(group => { (group.items || []).forEach(item => { formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. Invoice": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Pelanggan": item.name, "Nominal Masuk": item.amount }); }); });
     } else if (this.exportConfig.target === 'purchase_payment') {
-        (this.financePurchasePayments || []).slice(0, 5).forEach(group => {
-            (group.items || []).forEach(item => {
-                formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. PO": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Supplier": item.name, "Nominal Keluar": item.amount });
-            });
-        });
+        (this.financePurchasePayments || []).slice(0, 5).forEach(group => { (group.items || []).forEach(item => { formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. PO": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Supplier": item.name, "Nominal Keluar": item.amount }); }); });
     } else if (this.exportConfig.target === 'ar_data') {
         let dataSumber = (this.financeARList || []).slice(0, 5);
-        formattedData = dataSumber.map(ar => {
-            let rincian = (this.getPaymentBreakdown(ar) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
-            return { "No. Invoice": ar.id, "Tgl Invoice": ar.dateStr || '-', "Outlet": this.getOutletName(ar.outletId) || '-', "Pelanggan": this.getCustomerName(ar.customerId) || 'Umum', "Total Tagihan": ar.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ar) || 0, "Sisa Piutang": this.getSisaTagihan(ar) || 0 };
-        });
+        formattedData = dataSumber.map(ar => { let rincian = (this.getPaymentBreakdown(ar) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | '); return { "No. Invoice": ar.id, "Tgl Invoice": ar.dateStr || '-', "Outlet": this.getOutletName(ar.outletId) || '-', "Pelanggan": this.getCustomerName(ar.customerId) || 'Umum', "Total Tagihan": ar.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ar) || 0, "Sisa Piutang": this.getSisaTagihan(ar) || 0 }; });
     } else if (this.exportConfig.target === 'ap_data') {
         let dataSumber = (this.financeAPList || []).slice(0, 5);
-        formattedData = dataSumber.map(ap => {
-            let rincian = (this.getPaymentBreakdown(ap) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
-            return { "No. PO": ap.id, "Tgl PO": (ap.dateStr || '').split(',')[0], "Outlet": this.getOutletName(ap.outletId) || '-', "Supplier": this.getSupplierName(ap.supplierId) || '-', "Jatuh Tempo": ap.dueDate || 'Belum Diatur', "Total Tagihan": ap.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ap) || 0, "Sisa Hutang": this.getSisaTagihan(ap) || 0 };
-        });
+        formattedData = dataSumber.map(ap => { let rincian = (this.getPaymentBreakdown(ap) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | '); return { "No. PO": ap.id, "Tgl PO": (ap.dateStr || '').split(',')[0], "Outlet": this.getOutletName(ap.outletId) || '-', "Supplier": this.getSupplierName(ap.supplierId) || '-', "Jatuh Tempo": ap.dueDate || 'Belum Diatur', "Total Tagihan": ap.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ap) || 0, "Sisa Hutang": this.getSisaTagihan(ap) || 0 }; });
     } 
-    // 🌟 1. EXPORT PREVIEW INVENTORI - INFORMASI STOK
     else if (this.exportConfig.target === 'inv_stocks') {
         let dataSumber = (this.filteredInventoryProducts || []).slice(0, 5);
         dataSumber.forEach(p => {
-            let hppMode = this.appSettings?.hppMethod || 'STANDARD';
-            let hpp = (hppMode === 'AVERAGE') ? (p.averageCost || p.hppPrice || 0) : (p.hppPrice || 0);
-            
+            let hppMode = this.appSettings?.hppMethod || 'STANDARD'; let hpp = (hppMode === 'AVERAGE') ? (p.averageCost || p.hppPrice || 0) : (p.hppPrice || 0);
             let rowP = { "Nama Produk / Varian": p.name, "SKU": p.sku || '-', "HPP (Rp)": hpp, "Jual (Rp)": typeof this.getEffectiveBasePrice === 'function' ? this.getEffectiveBasePrice(p) : 0 };
             (this.displayOutlets || []).forEach(out => rowP[`Stok Fisik: ${out.name}`] = typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, out.id) : 0);
             rowP[this.invOutletFilter ? 'Total Outlet Ini' : 'Total Keseluruhan'] = this.invOutletFilter ? (typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0) : (typeof this.getBaseTotalStock === 'function' ? this.getBaseTotalStock(p) : 0);
-            
             formattedData.push(rowP);
             if (p.variants && p.variants.length > 0) {
                 p.variants.forEach((v, idx) => {
@@ -12964,91 +12917,65 @@ previewExportData() {
             }
         });
     } 
-    // 🌟 2. EXPORT PREVIEW INVENTORI - STOCK ALERT
     else if (this.exportConfig.target === 'inv_alerts') {
         let dataSumber = (this.lowStockItems || []).slice(0, 5);
-        dataSumber.forEach(alert => {
-            let row = {
-                "Produk / Varian": alert.name, "SKU": alert.sku || '-',
-                [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0,
-                "Batas Minimum": alert.minStock || 0,
-                "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS')
-            };
-            formattedData.push(row);
-        });
+        dataSumber.forEach(alert => { formattedData.push({ "Produk / Varian": alert.name, "SKU": alert.sku || '-', [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, "Batas Minimum": alert.minStock || 0, "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') }); });
     } 
-    // 🌟 3. EXPORT PREVIEW INVENTORI - ALOKASI STOK
     else if (this.exportConfig.target === 'inv_allocation') {
         let dataSumber = (this.filteredInventoryProducts || []).slice(0, 5);
         let outletName = this.outlets.find(o => o.id === this.invOutletFilter)?.name || 'Cabang';
         dataSumber.forEach(p => {
-            formattedData.push({
-                "Produk / Varian": p.name, "SKU": p.sku || '-',
-                [`Stok Fisik (${outletName})`]: typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0,
-                "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(p.sku, this.invOutletFilter) : 0,
-                "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, null, this.invOutletFilter) : 0
-            });
+            formattedData.push({ "Produk / Varian": p.name, "SKU": p.sku || '-', [`Stok Fisik (${outletName})`]: typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0, "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(p.sku, this.invOutletFilter) : 0, "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, null, this.invOutletFilter) : 0 });
             if (p.variants && p.variants.length > 0) {
-                p.variants.forEach((v, idx) => {
-                    formattedData.push({
-                        "Produk / Varian": ` - ${v.name || v.attributes || 'Varian '+(idx+1)}`, "SKU": v.variantSku || '-',
-                        [`Stok Fisik (${outletName})`]: (v.outletStocks && v.outletStocks[this.invOutletFilter]) ? v.outletStocks[this.invOutletFilter] : 0,
-                        "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(v.variantSku, this.invOutletFilter) : 0,
-                        "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, v, this.invOutletFilter) : 0
-                    });
-                });
+                p.variants.forEach((v, idx) => { formattedData.push({ "Produk / Varian": ` - ${v.name || v.attributes || 'Varian '+(idx+1)}`, "SKU": v.variantSku || '-', [`Stok Fisik (${outletName})`]: (v.outletStocks && v.outletStocks[this.invOutletFilter]) ? v.outletStocks[this.invOutletFilter] : 0, "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(v.variantSku, this.invOutletFilter) : 0, "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, v, this.invOutletFilter) : 0 }); });
             }
         });
     } 
-    // 🌟 4. EXPORT PREVIEW INVENTORI - LOG MUTASI STOK
     else if (this.exportConfig.target === 'inv_logs') {
         let dataSumber = (this.filteredStockLogs || []).slice(0, 5);
-        dataSumber.forEach(log => {
-            formattedData.push({
-                "Waktu": log.dateStr, "Ref. Transaksi": log.refId || '-', "Cabang (Outlet)": log.outletName || 'Gudang Pusat',
-                "Nama Item": log.productName + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-',
-                "Qty": log.qtyChange, "Status": log.type === 'OUT' ? 'KELUAR' : (log.type === 'ADJUST' ? 'SESUAI' : 'MASUK'), "User / PIC": log.userName || log.cashierName || 'Sistem'
-            });
-        });
+        dataSumber.forEach(log => { formattedData.push({ "Waktu": log.dateStr, "Ref. Transaksi": log.refId || '-', "Cabang (Outlet)": log.outletName || 'Gudang Pusat', "Nama Item": log.productName + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-', "Qty": log.qtyChange, "Status": log.type === 'OUT' ? 'KELUAR' : (log.type === 'ADJUST' ? 'SESUAI' : 'MASUK'), "User / PIC": log.userName || log.cashierName || 'Sistem' }); });
     } 
-    // 🌟 5. EXPORT PREVIEW INVENTORI - KARTU STOK (LEDGER)
     else if (this.exportConfig.target === 'inv_stockcard') {
         let dataSumber = (this.stockCardSummary || []).slice(0, 5);
-        dataSumber.forEach(log => {
-            formattedData.push({
-                "Nama Produk & Varian": log.name + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-', "Tanggal": log.displayDate || '-',
-                "Lokasi (Cabang)": this.stockCardOutlet ? (this.outlets.find(o => o.id === this.stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)',
-                "Stok Awal": log.stokAwal || 0, "Masuk (In)": log.masuk || 0, "Keluar (Out)": log.keluar || 0, "Stok Akhir": log.stokAkhir || 0
-            });
-        });
+        dataSumber.forEach(log => { formattedData.push({ "Nama Produk & Varian": log.name + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-', "Tanggal": log.displayDate || '-', "Lokasi (Cabang)": this.stockCardOutlet ? (this.outlets.find(o => o.id === this.stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)', "Stok Awal": log.stokAwal || 0, "Masuk (In)": log.masuk || 0, "Keluar (Out)": log.keluar || 0, "Stok Akhir": log.stokAkhir || 0 }); });
     }
-    // 🌟 PREVIEW EXPORT STOK OPNAME
     else if (this.exportConfig.target === 'opname') {
         let dataSumber = (this.filteredOpnameHistory || []).slice(0, 5);
-        dataSumber.forEach(op => {
-            let namaCabang = this.getOutletName(op.outletId) || 'Global/Pusat';
-            formattedData.push({
-                "ID Dokumen": op.id || '-',
-                "Waktu": op.dateStr || '-',
-                "Cabang": namaCabang,
-                "PIC": op.pic || '-',
-                "Status": op.status || '-',
-                "Catatan Dokumen": op.note || '-',
-                "Total Item Varian": op.items ? op.items.length : 0
-            });
+        dataSumber.forEach(op => { let namaCabang = this.getOutletName(op.outletId) || 'Global/Pusat'; formattedData.push({ "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-', "Total Item Varian": op.items ? op.items.length : 0 }); });
+    }
+    // 🌟 PREVIEW EXPORT TRANSFER
+    else if (this.exportConfig.target === 'transfers') {
+        let dataSumber = (this.transferHistory || []).slice(0, 5);
+        dataSumber.forEach(tf => {
+            let fromName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.fromOutlet) : tf.fromOutlet;
+            let toName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.toOutlet) : tf.toOutlet;
+            
+            let rowBase = {
+                "No. Dokumen": tf.id || '-', "Tanggal Buat": tf.dateStr || '-', "Cabang Asal": fromName || '-', "Cabang Tujuan": toName || '-', 
+                "PIC": tf.pic || '-', "Status": tf.status || 'PENDING', "Catatan Dokumen": tf.note || '-'
+            };
+
+            if (tf.items && tf.items.length > 0) {
+                tf.items.forEach(item => {
+                    formattedData.push({
+                        ...rowBase,
+                        "Nama Produk": item.name || '-',
+                        "SKU / Varian": item.sku || item.variantSku || '-',
+                        "Qty Transfer": item.qty || 0
+                    });
+                });
+            } else {
+                formattedData.push({ ...rowBase, "Nama Produk": '-', "SKU / Varian": '-', "Qty Transfer": 0 });
+            }
         });
     }
 
-    // 🌟 MAPPING DATA KE FORMAT COL1, COL2, DST (Otomatis)
     let finalPreview = formattedData.slice(0, 5);
-
     if (finalPreview.length > 0) {
         this.exportConfig.previewHeaders = Object.keys(finalPreview[0]);
         this.exportConfig.previewData = finalPreview.map(row => {
             let obj = {};
-            this.exportConfig.previewHeaders.forEach((head, idx) => {
-                obj['col' + (idx + 1)] = row[head] !== undefined && row[head] !== null ? row[head] : '-';
-            });
+            this.exportConfig.previewHeaders.forEach((head, idx) => { obj['col' + (idx + 1)] = row[head] !== undefined && row[head] !== null ? row[head] : '-'; });
             return obj;
         });
     } else {
@@ -13064,26 +12991,12 @@ processExport() {
 
     if (this.exportConfig.target === 'categories') {
         if (!this.structuredCategories || this.structuredCategories.length === 0) return alert('Tidak ada data kategori!');
-        let getCatParentName = (c) => {
-            if (!c.parentId) return '-';
-            let allCats = this.categories || this.structuredCategories || [];
-            let p = allCats.find(x => x.id === c.parentId);
-            return p ? p.name : '-';
-        };
+        let getCatParentName = (c) => { if (!c.parentId) return '-'; let p = (this.categories || this.structuredCategories || []).find(x => x.id === c.parentId); return p ? p.name : '-'; };
         formattedData = this.structuredCategories.map(c => ({ "Nama Kategori": c.name || '-', "Kategori Induk": getCatParentName(c) }));
     } 
-    // 🌟 LOGIKA EXPORT VARIAN DITAMBAHKAN DI SINI
     else if (this.exportConfig.target === 'variants') {
         if (!this.filteredAllVariantsList || this.filteredAllVariantsList.length === 0) return alert('Tidak ada data varian!');
-        formattedData = this.filteredAllVariantsList.map(v => ({
-            "Produk Induk": v.parentName || '-',
-            "Kategori": v.categoryPath || '-',
-            "Nama Varian": v.name || '-',
-            "SKU / Barcode": v.sku || '-',
-            "HPP (Modal)": v.hpp || 0,
-            "Harga Jual": v.sell || 0,
-            "Stok": typeof this.getDisplayVariantStock === 'function' ? this.getDisplayVariantStock(v) : 0
-        }));
+        formattedData = this.filteredAllVariantsList.map(v => ({ "Produk Induk": v.parentName || '-', "Kategori": v.categoryPath || '-', "Nama Varian": v.name || '-', "SKU / Barcode": v.sku || '-', "HPP (Modal)": v.hpp || 0, "Harga Jual": v.sell || 0, "Stok": typeof this.getDisplayVariantStock === 'function' ? this.getDisplayVariantStock(v) : 0 }));
     } 
     else if (this.exportConfig.target === 'customers') {
         if (!this.filteredCustomers || this.filteredCustomers.length === 0) return alert('Tidak ada data pelanggan!');
@@ -13098,90 +13011,45 @@ processExport() {
         if (!this.filteredTransactions || this.filteredTransactions.length === 0) return alert('Tidak ada data penjualan!');
         this.filteredTransactions.forEach(t => {
             let namaCabang = typeof this.getOutletName === 'function' && t.outletId ? this.getOutletName(t.outletId) : 'Global/Pusat';
-            let subtotal = t.subtotal || 0; let diskon = t.discountAmt || 0; let ppn = t.taxAmt || 0;
-            let biayaLayanan = (t.serviceAmt || 0) + (t.surchargeFee || 0); let ongkir = t.shippingCost || 0;
-            let totalAkhir = t.total || 0; let dibayar = t.amountReceived || totalAkhir; let kembalian = t.changeAmount || 0;
-
+            let subtotal = t.subtotal || 0; let diskon = t.discountAmt || 0; let ppn = t.taxAmt || 0; let biayaLayanan = (t.serviceAmt || 0) + (t.surchargeFee || 0); let ongkir = t.shippingCost || 0; let totalAkhir = t.total || 0; let dibayar = t.amountReceived || totalAkhir; let kembalian = t.changeAmount || 0;
             if (t.items && t.items.length > 0) {
-                t.items.forEach(item => formattedData.push({
-                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', 
-                    "Nama Produk": item.productName || item.name || '-', "SKU / Varian": item.variantSku || item.sku || '-', "Qty": item.qty || 0, "Harga Satuan": item.price || item.finalPrice || item.sellPrice || 0,
-                    "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, 
-                    "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS'
-                }));
+                t.items.forEach(item => formattedData.push({ "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Nama Produk": item.productName || item.name || '-', "SKU / Varian": item.variantSku || item.sku || '-', "Qty": item.qty || 0, "Harga Satuan": item.price || item.finalPrice || item.sellPrice || 0, "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS' }));
             } else {
-                formattedData.push({
-                    "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', 
-                    "Nama Produk": '-', "SKU / Varian": '-', "Qty": 0, "Harga Satuan": 0,
-                    "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, 
-                    "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS'
-                });
+                formattedData.push({ "No. Invoice": t.id || '-', "Waktu": t.dateStr || '-', "Cabang": namaCabang, "Kasir / PIC": t.cashierName || t.cashier || '-', "Pelanggan": t.customer || '-', "Tipe Pesanan": t.orderType || '-', "Nama Produk": '-', "SKU / Varian": '-', "Qty": 0, "Harga Satuan": 0, "Subtotal Barang": subtotal, "Total Diskon": diskon, "Pajak (PPN)": ppn, "Biaya Layanan": biayaLayanan, "Ongkir": ongkir, "TOTAL AKHIR": totalAkhir, "Sudah Dibayar": dibayar, "Kembalian": kembalian, "Metode Pembayaran": t.paymentMethod || '-', "Status Bayar": t.paymentStatus || 'LUNAS' });
             }
         });
     } else if (this.exportConfig.target === 'po') {
         if (!this.filteredPurchases || this.filteredPurchases.length === 0) return alert('Tidak ada data PO!');
         this.filteredPurchases.forEach(po => {
-            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-';
-            let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
-            let statusBarang = po.poStatus || 'PENDING';
-            if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
-            let statusBayar = po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang';
-            let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
-
+            let namaCabang = typeof this.getOutletName === 'function' && po.outletId ? this.getOutletName(po.outletId) : '-'; let namaSupplier = typeof this.getSupplierName === 'function' && po.supplierId ? this.getSupplierName(po.supplierId) : '-';
+            let statusBarang = po.poStatus || 'PENDING'; if (statusBarang === 'PENDING') statusBarang = 'Menunggu Kedatangan';
+            let statusBayar = po.paymentStatus === 'LUNAS' ? 'Lunas' : 'Hutang'; let dp = po.paidAmount || (statusBayar === 'Lunas' ? po.total : 0);
             let rowBase = { "No. PO": po.id || po.invoiceNo || '-', "Tanggal": po.dateStr || '-', "Cabang": namaCabang, "Supplier": namaSupplier, "PIC": po.pic || po.userName || 'Sistem' };
             let rowFinance = { "Pajak (%)": po.taxPercent || 0, "Pajak (Rp)": po.taxAmount || 0, "TOTAL AKHIR": po.total || 0, "DP / Dibayar": dp, "Sisa Hutang": Math.max(0, (po.total || 0) - dp), "Metode Bayar": po.paymentMethod || 'CASH', "Jatuh Tempo": po.dueDate || '', "Status Bayar": statusBayar, "Status Barang": statusBarang };
-
             if (po.items && po.items.length > 0) {
-                po.items.forEach(item => formattedData.push({
-                    ...rowBase,
-                    "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '-', "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0,
-                    "Subtotal Barang": (item.qty || 0) * (item.price || 0), ...rowFinance
-                }));
-            } else {
-                formattedData.push({
-                    ...rowBase,
-                    "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0, "Subtotal Barang": 0, ...rowFinance
-                });
-            }
+                po.items.forEach(item => formattedData.push({ ...rowBase, "Nama Produk": item.productName || '-', "SKU / Varian": item.variantSku || item.sku || '-', "No. Batch": item.batchNo || 'AUTO', "Tgl Expired": item.expiredDate || '', "Qty Beli": item.qty || 0, "Harga Satuan": item.price || 0, "Subtotal Barang": (item.qty || 0) * (item.price || 0), ...rowFinance }));
+            } else { formattedData.push({ ...rowBase, "Nama Produk": '-', "SKU / Varian": '-', "No. Batch": '-', "Tgl Expired": '-', "Qty Beli": 0, "Harga Satuan": 0, "Subtotal Barang": 0, ...rowFinance }); }
         });
     } else if (this.exportConfig.target === 'sales_payment') {
         if (!this.financeSalesPayments || this.financeSalesPayments.length === 0) return alert('Tidak ada data pembayaran masuk!');
-        (this.financeSalesPayments || []).forEach(group => {
-            (group.items || []).forEach(item => {
-                formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. Invoice": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Pelanggan": item.name, "Nominal Masuk": item.amount });
-            });
-        });
+        (this.financeSalesPayments || []).forEach(group => { (group.items || []).forEach(item => { formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. Invoice": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Pelanggan": item.name, "Nominal Masuk": item.amount }); }); });
     } else if (this.exportConfig.target === 'purchase_payment') {
         if (!this.financePurchasePayments || this.financePurchasePayments.length === 0) return alert('Tidak ada data pembayaran keluar!');
-        (this.financePurchasePayments || []).forEach(group => {
-            (group.items || []).forEach(item => {
-                formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. PO": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Supplier": item.name, "Nominal Keluar": item.amount });
-            });
-        });
+        (this.financePurchasePayments || []).forEach(group => { (group.items || []).forEach(item => { formattedData.push({ "Waktu Pembayaran": `${item.date} (${item.type})`, "Metode": group.method, "No. PO": item.id, "Outlet": this.getOutletName(item.outletId) || '-', "Supplier": item.name, "Nominal Keluar": item.amount }); }); });
     } else if (this.exportConfig.target === 'ar_data') {
         if (!this.financeARList || this.financeARList.length === 0) return alert('Tidak ada data Piutang!');
-        formattedData = (this.financeARList || []).map(ar => {
-            let rincian = (this.getPaymentBreakdown(ar) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
-            return { "No. Invoice": ar.id, "Tgl Invoice": ar.dateStr || '-', "Outlet": this.getOutletName(ar.outletId) || '-', "Pelanggan": this.getCustomerName(ar.customerId) || 'Umum', "Total Tagihan": ar.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ar) || 0, "Sisa Piutang": this.getSisaTagihan(ar) || 0 };
-        });
+        formattedData = (this.financeARList || []).map(ar => { let rincian = (this.getPaymentBreakdown(ar) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | '); return { "No. Invoice": ar.id, "Tgl Invoice": ar.dateStr || '-', "Outlet": this.getOutletName(ar.outletId) || '-', "Pelanggan": this.getCustomerName(ar.customerId) || 'Umum', "Total Tagihan": ar.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ar) || 0, "Sisa Piutang": this.getSisaTagihan(ar) || 0 }; });
     } else if (this.exportConfig.target === 'ap_data') {
         if (!this.financeAPList || this.financeAPList.length === 0) return alert('Tidak ada data Hutang!');
-        formattedData = (this.financeAPList || []).map(ap => {
-            let rincian = (this.getPaymentBreakdown(ap) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | ');
-            return { "No. PO": ap.id, "Tgl PO": (ap.dateStr || '').split(',')[0], "Outlet": this.getOutletName(ap.outletId) || '-', "Supplier": this.getSupplierName(ap.supplierId) || '-', "Jatuh Tempo": ap.dueDate || 'Belum Diatur', "Total Tagihan": ap.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ap) || 0, "Sisa Hutang": this.getSisaTagihan(ap) || 0 };
-        });
+        formattedData = (this.financeAPList || []).map(ap => { let rincian = (this.getPaymentBreakdown(ap) || []).map(p => `${p.method}: Rp ${p.amount}`).join(' | '); return { "No. PO": ap.id, "Tgl PO": (ap.dateStr || '').split(',')[0], "Outlet": this.getOutletName(ap.outletId) || '-', "Supplier": this.getSupplierName(ap.supplierId) || '-', "Jatuh Tempo": ap.dueDate || 'Belum Diatur', "Total Tagihan": ap.total || 0, "Rincian Pembayaran": rincian, "Total Dibayar": this.getActualPaid(ap) || 0, "Sisa Hutang": this.getSisaTagihan(ap) || 0 }; });
     } 
-    // 🌟 1. EXPORT INVENTORI - INFORMASI STOK
     else if (this.exportConfig.target === 'inv_stocks') {
         if (!this.filteredInventoryProducts || this.filteredInventoryProducts.length === 0) return alert('Tidak ada data stok yang sesuai dengan filter!');
         this.filteredInventoryProducts.forEach(p => {
-            let hppMode = this.appSettings?.hppMethod || 'STANDARD';
-            let hpp = (hppMode === 'AVERAGE') ? (p.averageCost || p.hppPrice || 0) : (p.hppPrice || 0);
-            
+            let hppMode = this.appSettings?.hppMethod || 'STANDARD'; let hpp = (hppMode === 'AVERAGE') ? (p.averageCost || p.hppPrice || 0) : (p.hppPrice || 0);
             let rowP = { "Nama Produk / Varian": p.name, "SKU": p.sku || '-', "HPP (Rp)": hpp, "Jual (Rp)": typeof this.getEffectiveBasePrice === 'function' ? this.getEffectiveBasePrice(p) : 0 };
             (this.displayOutlets || []).forEach(out => rowP[`Stok Fisik: ${out.name}`] = typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, out.id) : 0);
             rowP[this.invOutletFilter ? 'Total Outlet Ini' : 'Total Keseluruhan'] = this.invOutletFilter ? (typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0) : (typeof this.getBaseTotalStock === 'function' ? this.getBaseTotalStock(p) : 0);
-            
             formattedData.push(rowP);
             if (p.variants && p.variants.length > 0) {
                 p.variants.forEach((v, idx) => {
@@ -13194,85 +13062,49 @@ processExport() {
             }
         });
     } 
-    // 🌟 2. EXPORT INVENTORI - STOCK ALERT
     else if (this.exportConfig.target === 'inv_alerts') {
         if (!this.lowStockItems || this.lowStockItems.length === 0) return alert('Tidak ada data stock alert!');
-        this.lowStockItems.forEach(alert => {
-            let row = {
-                "Produk / Varian": alert.name, "SKU": alert.sku || '-',
-                [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0,
-                "Batas Minimum": alert.minStock || 0,
-                "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS')
-            };
-            formattedData.push(row);
-        });
+        this.lowStockItems.forEach(alert => { formattedData.push({ "Produk / Varian": alert.name, "SKU": alert.sku || '-', [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, "Batas Minimum": alert.minStock || 0, "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') }); });
     } 
-    // 🌟 3. EXPORT INVENTORI - ALOKASI STOK
     else if (this.exportConfig.target === 'inv_allocation') {
         if (!this.invOutletFilter) return alert("Silakan pilih Cabang (Outlet) terlebih dahulu untuk memproses Alokasi Stok.");
         if (!this.filteredInventoryProducts || this.filteredInventoryProducts.length === 0) return alert('Tidak ada data alokasi stok!');
         let outletName = this.outlets.find(o => o.id === this.invOutletFilter)?.name || 'Cabang';
-        
         this.filteredInventoryProducts.forEach(p => {
-            formattedData.push({
-                "Produk / Varian": p.name, "SKU": p.sku || '-',
-                [`Stok Fisik (${outletName})`]: typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0,
-                "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(p.sku, this.invOutletFilter) : 0,
-                "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, null, this.invOutletFilter) : 0
-            });
+            formattedData.push({ "Produk / Varian": p.name, "SKU": p.sku || '-', [`Stok Fisik (${outletName})`]: typeof this.getProductStockAtOutlet === 'function' ? this.getProductStockAtOutlet(p, this.invOutletFilter) : 0, "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(p.sku, this.invOutletFilter) : 0, "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, null, this.invOutletFilter) : 0 });
             if (p.variants && p.variants.length > 0) {
-                p.variants.forEach((v, idx) => {
-                    formattedData.push({
-                        "Produk / Varian": ` - ${v.name || v.attributes || 'Varian '+(idx+1)}`, "SKU": v.variantSku || '-',
-                        [`Stok Fisik (${outletName})`]: (v.outletStocks && v.outletStocks[this.invOutletFilter]) ? v.outletStocks[this.invOutletFilter] : 0,
-                        "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(v.variantSku, this.invOutletFilter) : 0,
-                        "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, v, this.invOutletFilter) : 0
-                    });
-                });
+                p.variants.forEach((v, idx) => { formattedData.push({ "Produk / Varian": ` - ${v.name || v.attributes || 'Varian '+(idx+1)}`, "SKU": v.variantSku || '-', [`Stok Fisik (${outletName})`]: (v.outletStocks && v.outletStocks[this.invOutletFilter]) ? v.outletStocks[this.invOutletFilter] : 0, "Ditahan (Masuk Kasir)": typeof this.getReservedStock === 'function' ? this.getReservedStock(v.variantSku, this.invOutletFilter) : 0, "Tersedia (Bisa Dijual)": typeof this.getAvailableStock === 'function' ? this.getAvailableStock(p, v, this.invOutletFilter) : 0 }); });
             }
         });
     } 
-    // 🌟 4. EXPORT INVENTORI - LOG MUTASI STOK
     else if (this.exportConfig.target === 'inv_logs') {
         if (!this.filteredStockLogs || this.filteredStockLogs.length === 0) return alert('Tidak ada log mutasi stok!');
-        this.filteredStockLogs.forEach(log => {
-            formattedData.push({
-                "Waktu": log.dateStr, "Ref. Transaksi": log.refId || '-', "Cabang (Outlet)": log.outletName || 'Gudang Pusat',
-                "Nama Item": log.productName + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-',
-                "Qty": log.qtyChange, "Status": log.type === 'OUT' ? 'KELUAR' : (log.type === 'ADJUST' ? 'SESUAI' : 'MASUK'), "User / PIC": log.userName || log.cashierName || 'Sistem'
-            });
-        });
+        this.filteredStockLogs.forEach(log => { formattedData.push({ "Waktu": log.dateStr, "Ref. Transaksi": log.refId || '-', "Cabang (Outlet)": log.outletName || 'Gudang Pusat', "Nama Item": log.productName + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-', "Qty": log.qtyChange, "Status": log.type === 'OUT' ? 'KELUAR' : (log.type === 'ADJUST' ? 'SESUAI' : 'MASUK'), "User / PIC": log.userName || log.cashierName || 'Sistem' }); });
     } 
-    // 🌟 5. EXPORT INVENTORI - KARTU STOK (LEDGER)
     else if (this.exportConfig.target === 'inv_stockcard') {
         if (!this.stockCardSummary || this.stockCardSummary.length === 0) return alert('Tidak ada riwayat kartu stok!');
-        this.stockCardSummary.forEach(log => {
-            formattedData.push({
-                "Nama Produk & Varian": log.name + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-', "Tanggal": log.displayDate || '-',
-                "Lokasi (Cabang)": this.stockCardOutlet ? (this.outlets.find(o => o.id === this.stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)',
-                "Stok Awal": log.stokAwal || 0, "Masuk (In)": log.masuk || 0, "Keluar (Out)": log.keluar || 0, "Stok Akhir": log.stokAkhir || 0
-            });
-        });
+        this.stockCardSummary.forEach(log => { formattedData.push({ "Nama Produk & Varian": log.name + (log.variantName && log.variantName !== '-' ? ` (${log.variantName})` : ''), "SKU": log.sku || '-', "Tanggal": log.displayDate || '-', "Lokasi (Cabang)": this.stockCardOutlet ? (this.outlets.find(o => o.id === this.stockCardOutlet)?.name || 'Unknown') : 'Semua (Global)', "Stok Awal": log.stokAwal || 0, "Masuk (In)": log.masuk || 0, "Keluar (Out)": log.keluar || 0, "Stok Akhir": log.stokAkhir || 0 }); });
     } 
-    // 🌟 EXPORT STOK OPNAME
     else if (this.exportConfig.target === 'opname') {
         if (!this.filteredOpnameHistory || this.filteredOpnameHistory.length === 0) return alert('Tidak ada data opname!');
         this.filteredOpnameHistory.forEach(op => {
             let namaCabang = this.getOutletName(op.outletId) || 'Global/Pusat';
             if (op.items && op.items.length > 0) {
-                op.items.forEach(item => {
-                    formattedData.push({
-                        "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-',
-                        "Nama Produk / Varian": item.name + (item.variantName && item.variantName !== '-' ? ` - ${item.variantName}` : ''),
-                        "SKU / Varian": item.sku || '-', "Stok Sistem": item.stokSistem || 0, "Stok Fisik": item.stokFisik || 0, "Selisih": item.diff || 0, "Catatan Item": item.note || '-'
-                    });
-                });
-            } else {
-                formattedData.push({
-                    "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-',
-                    "Nama Produk / Varian": '-', "SKU / Varian": '-', "Stok Sistem": 0, "Stok Fisik": 0, "Selisih": 0, "Catatan Item": '-'
-                });
-            }
+                op.items.forEach(item => { formattedData.push({ "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-', "Nama Produk / Varian": item.name + (item.variantName && item.variantName !== '-' ? ` - ${item.variantName}` : ''), "SKU / Varian": item.sku || '-', "Stok Sistem": item.stokSistem || 0, "Stok Fisik": item.stokFisik || 0, "Selisih": item.diff || 0, "Catatan Item": item.note || '-' }); });
+            } else { formattedData.push({ "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-', "Nama Produk / Varian": '-', "SKU / Varian": '-', "Stok Sistem": 0, "Stok Fisik": 0, "Selisih": 0, "Catatan Item": '-' }); }
+        });
+    }
+    // 🌟 FULL EXPORT TRANSFER
+    else if (this.exportConfig.target === 'transfers') {
+        if (!this.transferHistory || this.transferHistory.length === 0) return alert('Tidak ada riwayat transfer!');
+        this.transferHistory.forEach(tf => {
+            let fromName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.fromOutlet) : tf.fromOutlet;
+            let toName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.toOutlet) : tf.toOutlet;
+            let rowBase = { "No. Dokumen": tf.id || '-', "Tanggal Buat": tf.dateStr || '-', "Cabang Asal": fromName || '-', "Cabang Tujuan": toName || '-', "PIC": tf.pic || '-', "Status": tf.status || 'PENDING', "Catatan Dokumen": tf.note || '-' };
+
+            if (tf.items && tf.items.length > 0) {
+                tf.items.forEach(item => { formattedData.push({ ...rowBase, "Nama Produk": item.name || '-', "SKU / Varian": item.sku || item.variantSku || '-', "Qty Transfer": item.qty || 0 }); });
+            } else { formattedData.push({ ...rowBase, "Nama Produk": '-', "SKU / Varian": '-', "Qty Transfer": 0 }); }
         });
     } else {
         return alert("Error: Target export tidak dikenali.");
@@ -13311,59 +13143,49 @@ downloadTemplate() {
     let sampleData = [];
     let fileName = `Template_${this.importConfig.target}.xlsx`;
 
-    // 🌟 PENAMBAHAN CONTOH (SAMPLE DATA) PADA TEMPLATE
     if (this.importConfig.target === 'categories') {
         headers = ['Nama Kategori', 'Kategori Induk'];
-        sampleData = [
-            ['Makanan', ''],
-            ['Snack', 'Makanan'],
-            ['Minuman', ''],
-            ['Kopi', 'Minuman']
-        ];
+        sampleData = [ ['Makanan', ''], ['Snack', 'Makanan'], ['Minuman', ''], ['Kopi', 'Minuman'] ];
     } else if (this.importConfig.target === 'customers') {
         headers = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
-        sampleData = [
-            ['Budi Santoso', '081234567890', 'Jl. Sudirman No 1, Jakarta', 'Gold'],
-            ['Siti Aminah', '085678901234', 'Jl. Melati No 2, Bandung', 'Silver']
-        ];
+        sampleData = [ ['Budi Santoso', '081234567890', 'Jl. Sudirman No 1, Jakarta', 'Gold'], ['Siti Aminah', '085678901234', 'Jl. Melati No 2, Bandung', 'Silver'] ];
     } else if (this.importConfig.target === 'suppliers') {
         headers = ['Nama Supplier', 'No. Telepon', 'Alamat'];
-        sampleData = [
-            ['PT Sumber Makmur', '02198765432', 'Kawasan Industri Pulo Gadung Blok A'],
-            ['CV Maju Bersama', '081122334455', 'Jl. Raya Bogor KM 20']
-        ];
+        sampleData = [ ['PT Sumber Makmur', '02198765432', 'Kawasan Industri Pulo Gadung Blok A'], ['CV Maju Bersama', '081122334455', 'Jl. Raya Bogor KM 20'] ];
     } else if (this.importConfig.target === 'sales') {
         headers = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan', 'Subtotal Barang', 'Total Diskon', 'Pajak (PPN)', 'Biaya Layanan', 'Ongkir', 'TOTAL AKHIR', 'Sudah Dibayar', 'Kembalian', 'Metode Pembayaran', 'Status Bayar'];
         sampleData = [
-            // Contoh Invoice 1 (Terdapat 2 Baris Produk)
             ['INV-2026-001', '28/07/2026 10:00', 'Pusat', 'Admin', 'Umum', 'direct', 'Kopi Susu', 'KPS-01', 2, 20000, 40000, 0, 4400, 0, 0, 44400, 50000, 5600, 'CASH', 'LUNAS'],
             ['INV-2026-001', '28/07/2026 10:00', 'Pusat', 'Admin', 'Umum', 'direct', 'Roti Bakar', 'RBK-02', 1, 15000, 15000, 0, 1650, 0, 0, 16650, 0, 0, 'CASH', 'LUNAS'],
-            // Contoh Invoice 2
             ['INV-2026-002', '28/07/2026 11:30', 'Cabang 1', 'Kasir 1', 'Budi', 'online', 'Es Teh Manis', 'EST-01', 3, 5000, 15000, 2000, 1430, 1000, 0, 15430, 15430, 0, 'TRANSFER', 'LUNAS']
         ];
     } else if (this.importConfig.target === 'po') {
         headers = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan', 'Subtotal Barang', 'Pajak (%)', 'Pajak (Rp)', 'TOTAL AKHIR', 'DP / Dibayar', 'Sisa Hutang', 'Metode Bayar', 'Jatuh Tempo', 'Status Bayar', 'Status Barang'];
         sampleData = [
-            // Contoh PO 1 (Terdapat 2 Baris Produk)
             ['PO-2026-001', '28/07/2026', 'Pusat', 'PT Sumber Makmur', 'Admin', 'Biji Kopi Arabica', 'BKA-1KG', 'B-001', '31/12/2026', 10, 150000, 1500000, 11, 165000, 1665000, 1665000, 0, 'TRANSFER', '28/07/2026', 'LUNAS', 'SELESAI'],
             ['PO-2026-001', '28/07/2026', 'Pusat', 'PT Sumber Makmur', 'Admin', 'Susu UHT 1L', 'S-UHT-1L', 'B-001', '01/06/2027', 24, 18000, 432000, 11, 47520, 479520, 479520, 0, 'TRANSFER', '28/07/2026', 'LUNAS', 'SELESAI'],
-            // Contoh PO 2 (Hutang)
             ['PO-2026-002', '28/07/2026', 'Cabang 1', 'CV Maju Bersama', 'Manajer', 'Sirup Karamel', 'SRP-KRM', 'AUTO', '', 5, 85000, 425000, 0, 0, 425000, 200000, 225000, 'CASH', '05/08/2026', 'HUTANG', 'PENDING']
         ];
     } 
-    // 🌟 TEMPLATE OPNAME BARU
     else if (this.importConfig.target === 'opname') {
         headers = ['ID Dokumen', 'Waktu', 'Cabang', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Stok Sistem', 'Stok Fisik', 'Catatan Item'];
         sampleData = [
             ['OPN-2026-001', '29/07/2026 10:00', 'Pusat', 'Admin', 'SELESAI', 'Audit Bulanan', 'Kopi Susu', 'KPS-01', 50, 48, 'Rusak 2 cup'],
             ['OPN-2026-001', '29/07/2026 10:00', 'Pusat', 'Admin', 'SELESAI', 'Audit Bulanan', 'Gula Aren', 'GLA-02', 20, 20, 'Aman']
         ];
+    } 
+    // 🌟 TEMPLATE TRANSFER BARANG
+    else if (this.importConfig.target === 'transfers') {
+        headers = ['No. Dokumen', 'Tanggal Buat', 'Cabang Asal', 'Cabang Tujuan', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Qty Transfer'];
+        sampleData = [
+            ['TRF-2026-001', '30/07/2026 10:00', 'Quinsah Seni Budaya', 'Quinsah Tanah Abang', 'Admin', 'PENDING', 'Restock akhir bulan', 'Kebaya Janggan', 'QC002', 10],
+            ['TRF-2026-001', '30/07/2026 10:00', 'Quinsah Seni Budaya', 'Quinsah Tanah Abang', 'Admin', 'PENDING', 'Restock akhir bulan', 'Baju Teletubbies', 'QC003', 5]
+        ];
     } else {
         return alert('Template tidak tersedia untuk data ini.');
     }
 
     if (typeof XLSX !== 'undefined') {
-        // Gabungkan Header dengan Sample Data ke dalam Sheet Excel
         const dataToSheet = [headers, ...sampleData];
         const worksheet = XLSX.utils.aoa_to_sheet(dataToSheet);
         const workbook = XLSX.utils.book_new();
@@ -13403,10 +13225,12 @@ handleFileUpload(event) {
                     expectedHeaders = ['No. Invoice', 'Waktu', 'Cabang', 'Kasir / PIC', 'Pelanggan', 'Tipe Pesanan', 'Nama Produk', 'SKU / Varian', 'Qty', 'Harga Satuan', 'Subtotal Barang', 'Total Diskon', 'Pajak (PPN)', 'Biaya Layanan', 'Ongkir', 'TOTAL AKHIR', 'Sudah Dibayar', 'Kembalian', 'Metode Pembayaran', 'Status Bayar'];
                 } else if (this.importConfig.target === 'po') {
                     expectedHeaders = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan', 'Subtotal Barang', 'Pajak (%)', 'Pajak (Rp)', 'TOTAL AKHIR', 'DP / Dibayar', 'Sisa Hutang', 'Metode Bayar', 'Jatuh Tempo', 'Status Bayar', 'Status Barang'];
-                } 
-                // 🌟 EXPECTED HEADER OPNAME
-                else if (this.importConfig.target === 'opname') {
+                } else if (this.importConfig.target === 'opname') {
                     expectedHeaders = ['ID Dokumen', 'Waktu', 'Cabang', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Stok Sistem', 'Stok Fisik', 'Catatan Item'];
+                } 
+                // 🌟 VALIDASI HEADER TRANSFER BARANG
+                else if (this.importConfig.target === 'transfers') {
+                    expectedHeaders = ['No. Dokumen', 'Tanggal Buat', 'Cabang Asal', 'Cabang Tujuan', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Qty Transfer'];
                 }
 
                 let isFormatValid = true;
@@ -13465,8 +13289,9 @@ async processImport() {
         if (this.importConfig.target === 'suppliers') collectionName = "suppliers";
         if (this.importConfig.target === 'sales') collectionName = "transactions"; 
         if (this.importConfig.target === 'po') collectionName = "purchases";
-        if (this.importConfig.target === 'opname') collectionName = "opnames"; // 🌟 ADD OPNAME COLLECTION
-        
+        if (this.importConfig.target === 'opname') collectionName = "opnames";
+        if (this.importConfig.target === 'transfers') collectionName = "stockTransfers"; // 🌟 KOLEKSI TRANSFER
+
         const q = query(collection(db, collectionName), where("companyId", "==", compId));
         const existingDocs = await getDocs(q);
         
@@ -13474,7 +13299,8 @@ async processImport() {
         const existingNames = new Map();
         const existingInvoices = new Map(); 
         const existingPOs = new Map();
-        const existingOpnames = new Map(); // 🌟 OPNAME MAP BARU
+        const existingOpnames = new Map();
+        const existingTransfers = new Map(); // 🌟 MAP TRANSFER
 
         existingDocs.forEach((docSnap) => {
             const data = docSnap.data();
@@ -13490,13 +13316,17 @@ async processImport() {
                 const opRef = data.id || docId;
                 existingOpnames.set(opRef.toString().trim(), docId);
             }
+            if (collectionName === "stockTransfers") {
+                const trfRef = data.id || docId;
+                existingTransfers.set(trfRef.toString().trim(), docId);
+            }
         });
 
         let insertCount = 0;
         let updateCount = 0;
 
         if (this.importConfig.target === 'po') {
-            // 🌟 LOGIKA GROUPING KHUSUS PO (DISESUAIKAN INDEXNYA DENGAN TEMPLATE BARU)
+            // Logika PO yang sudah ada
             let poGroups = {};
             for (let row of dataRows) {
                 let poId = row[0] ? row[0].toString().trim() : null;
@@ -13519,13 +13349,10 @@ async processImport() {
                     let outletName = header[2] ? header[2].toString().trim() : '';
                     let supplierName = header[3] ? header[3].toString().trim() : '';
                     let pic = header[4] ? header[4].toString().trim() : '';
-                    
-                    // Baca Rincian Keuangan dari Header PO (Mengikuti Index Template Baru)
                     let taxPercent = header[12] ? parseFloat(String(header[12]).replace(/[^0-9.]/g, '')) : 0;
                     let taxAmount = header[13] ? parseInt(String(header[13]).replace(/[^0-9]/g, '')) : 0;
                     let totalAkhir = header[14] ? parseInt(String(header[14]).replace(/[^0-9]/g, '')) : 0;
                     let paidAmount = header[15] ? parseInt(String(header[15]).replace(/[^0-9]/g, '')) : 0;
-                    
                     let paymentMethod = header[17] ? header[17].toString().trim() : 'CASH';
                     let dueDate = header[18] ? header[18].toString().trim() : '';
                     let paymentStatus = (header[19] || '').toString().toUpperCase().includes('LUNAS') ? 'LUNAS' : 'HUTANG';
@@ -13546,7 +13373,6 @@ async processImport() {
                     let calcSubtotalItems = 0;
                     
                     for (let r of rows) {
-                        // Baca Item sesuai Index PO Baru
                         let prodName = r[5] ? r[5].toString().trim() : '';
                         let variant = r[6] ? r[6].toString().trim() : '';
                         let batchNo = r[7] ? r[7].toString().trim() : 'AUTO';
@@ -13560,10 +13386,7 @@ async processImport() {
                                 let fProd = this.products.find(p => p.name.toLowerCase() === prodName.toLowerCase() || (p.sku && p.sku.toLowerCase() === prodName.toLowerCase()));
                                 if (fProd) matchedProductId = fProd.id;
                             }
-                            items.push({
-                                productId: matchedProductId, productName: prodName, variantName: variant, variantSku: variant,
-                                sku: variant, batchNo: batchNo, expiredDate: expiredDate, qty: qty, price: price
-                            });
+                            items.push({ productId: matchedProductId, productName: prodName, variantName: variant, variantSku: variant, sku: variant, batchNo: batchNo, expiredDate: expiredDate, qty: qty, price: price });
                             calcSubtotalItems += (qty * price);
                         }
                     }
@@ -13571,12 +13394,7 @@ async processImport() {
                     let finalTotal = totalAkhir || (calcSubtotalItems + taxAmount);
                     if (paymentStatus === 'LUNAS') paidAmount = finalTotal;
 
-                    let docPayload = {
-                        invoiceNo: poId, id: poId, dateStr, outletId: matchedOutletId, supplierId: matchedSupplierId, pic,
-                        poStatus, paymentStatus, paymentMethod, dueDate, taxPercent, taxAmount, paidAmount, total: finalTotal,
-                        items, paymentHistory: [{ method: paymentMethod, amount: paidAmount, date: dateStr }]
-                    };
-
+                    let docPayload = { invoiceNo: poId, id: poId, dateStr, outletId: matchedOutletId, supplierId: matchedSupplierId, pic, poStatus, paymentStatus, paymentMethod, dueDate, taxPercent, taxAmount, paidAmount, total: finalTotal, items, paymentHistory: [{ method: paymentMethod, amount: paidAmount, date: dateStr }] };
                     let existingDocId = existingPOs.get(poId);
                     if (existingDocId) {
                         batch.update(doc(db, collectionName, existingDocId), { updatedAt: new Date(), ...docPayload });
@@ -13591,6 +13409,7 @@ async processImport() {
             }
             
         } else if (this.importConfig.target === 'sales') {
+            // Logika Penjualan yang sudah ada
             let salesGroups = {};
             for (let row of dataRows) {
                 let invId = row[0] ? row[0].toString().trim() : null;
@@ -13615,7 +13434,6 @@ async processImport() {
                     let cashierName = header[3] ? header[3].toString().trim() : '';
                     let customerName = header[4] ? header[4].toString().trim() : 'Umum';
                     let orderType = header[5] ? header[5].toString().trim() : 'direct';
-                    
                     let subtotal = header[10] ? parseFloat(String(header[10]).replace(/[^0-9.-]/g, '')) : 0;
                     let discountAmt = header[11] ? parseFloat(String(header[11]).replace(/[^0-9.-]/g, '')) : 0;
                     let taxAmt = header[12] ? parseFloat(String(header[12]).replace(/[^0-9.-]/g, '')) : 0;
@@ -13624,7 +13442,6 @@ async processImport() {
                     let grandTotal = header[15] ? parseFloat(String(header[15]).replace(/[^0-9.-]/g, '')) : 0;
                     let amountReceived = header[16] ? parseFloat(String(header[16]).replace(/[^0-9.-]/g, '')) : 0;
                     let changeAmount = header[17] ? parseFloat(String(header[17]).replace(/[^0-9.-]/g, '')) : 0;
-                    
                     let paymentMethod = header[18] ? header[18].toString().trim() : 'CASH';
                     let paymentStatus = header[19] ? header[19].toString().trim() : 'LUNAS';
 
@@ -13649,26 +13466,15 @@ async processImport() {
                             let prodRef = null;
                             if (this.products && this.products.length > 0) {
                                 let fProd = this.products.find(p => p.name.toLowerCase() === prodName.toLowerCase() || (p.sku && p.sku.toLowerCase() === prodName.toLowerCase()));
-                                if (fProd) {
-                                    matchedProductId = fProd.id;
-                                    prodRef = fProd; 
-                                }
+                                if (fProd) { matchedProductId = fProd.id; prodRef = fProd; }
                             }
 
-                            items.push({
-                                productId: matchedProductId, productName: prodName, name: prodName, 
-                                variantName: variant, variantSku: variant, sku: variant, 
-                                qty: qty, price: price, finalPrice: price
-                            });
+                            items.push({ productId: matchedProductId, productName: prodName, name: prodName, variantName: variant, variantSku: variant, sku: variant, qty: qty, price: price, finalPrice: price });
                             calcSubtotal += (qty * price);
 
-                            // POTONG STOK LOGIC
                             if (isNewInvoice && prodRef) {
                                 let outId = matchedOutletId || this.posActiveOutletId || '';
-                                
-                                if (!chunkProductUpdates[prodRef.id]) {
-                                    chunkProductUpdates[prodRef.id] = JSON.parse(JSON.stringify(prodRef));
-                                }
+                                if (!chunkProductUpdates[prodRef.id]) chunkProductUpdates[prodRef.id] = JSON.parse(JSON.stringify(prodRef));
                                 let prodToUpdate = chunkProductUpdates[prodRef.id];
 
                                 if (variant && variant !== '-') {
@@ -13684,23 +13490,12 @@ async processImport() {
                                 }
 
                                 let logRef = doc(collection(db, "stockLogs"));
-                                batch.set(logRef, {
-                                    companyId: compId, createdAt: new Date(), dateStr: dateStr || new Date().toLocaleString('id-ID'),
-                                    type: 'OUT', productId: prodRef.id, sku: prodRef.sku || '-', productName: prodRef.name || '-',
-                                    variantSku: variant || null, variantName: variant || '-', qtyChange: -qty, outletId: outId,
-                                    outletName: outletName || 'Outlet', refId: invId, userName: cashierName || 'Sistem (Import)', note: 'Penjualan (Import Excel)'
-                                });
+                                batch.set(logRef, { companyId: compId, createdAt: new Date(), dateStr: dateStr || new Date().toLocaleString('id-ID'), type: 'OUT', productId: prodRef.id, sku: prodRef.sku || '-', productName: prodRef.name || '-', variantSku: variant || null, variantName: variant || '-', qtyChange: -qty, outletId: outId, outletName: outletName || 'Outlet', refId: invId, userName: cashierName || 'Sistem (Import)', note: 'Penjualan (Import Excel)' });
                             }
                         }
                     }
 
-                    let docPayload = {
-                        id: invId, dateStr, outletId: matchedOutletId, outletName, cashierName, 
-                        customer: customerName, orderType, paymentStatus, paymentMethod, 
-                        total: grandTotal || calcSubtotal, subtotal: subtotal || calcSubtotal,
-                        discountAmt, taxAmt, serviceAmt, shippingCost, amountReceived: amountReceived || (grandTotal || calcSubtotal), changeAmount,
-                        items: items, fulfillmentStatus: 'COMPLETED'
-                    };
+                    let docPayload = { id: invId, dateStr, outletId: matchedOutletId, outletName, cashierName, customer: customerName, orderType, paymentStatus, paymentMethod, total: grandTotal || calcSubtotal, subtotal: subtotal || calcSubtotal, discountAmt, taxAmt, serviceAmt, shippingCost, amountReceived: amountReceived || (grandTotal || calcSubtotal), changeAmount, items: items, fulfillmentStatus: 'COMPLETED' };
 
                     let existingDocId = existingInvoices.get(invId);
                     if (existingDocId && existingDocId !== "pending_insert") {
@@ -13714,74 +13509,44 @@ async processImport() {
                 }
                 
                 for (let prodId in chunkProductUpdates) {
-                    batch.update(doc(db, "products", prodId), {
-                        variants: chunkProductUpdates[prodId].variants || [],
-                        baseOutletStocks: chunkProductUpdates[prodId].baseOutletStocks || {}
-                    });
+                    batch.update(doc(db, "products", prodId), { variants: chunkProductUpdates[prodId].variants || [], baseOutletStocks: chunkProductUpdates[prodId].baseOutletStocks || {} });
                 }
                 await batch.commit();
             }
             
         } else if (this.importConfig.target === 'categories') {
-            // 🌟 LOGIKA CERDAS IMPORT KATEGORI & SUB-KATEGORI SECARA BERSAMAAN
+            // Logika Kategori yang sudah ada
             let categoryIdMap = new Map();
-            
-            // 1. Petakan kategori yang sudah ada di database
-            existingDocs.forEach(docSnap => {
-                categoryIdMap.set(docSnap.data().name.toLowerCase().trim(), docSnap.id);
-            });
-
-            // 2. Siapkan ID untuk kategori baru di file agar bisa direferensikan sebagai Induk
+            existingDocs.forEach(docSnap => { categoryIdMap.set(docSnap.data().name.toLowerCase().trim(), docSnap.id); });
             dataRows.forEach(row => {
                 if (!row[0]) return;
-                let name = row[0].toString().trim();
-                let nameLower = name.toLowerCase();
-                if (!categoryIdMap.has(nameLower)) {
-                    categoryIdMap.set(nameLower, doc(collection(db, collectionName)).id);
-                }
+                let nameLower = row[0].toString().trim().toLowerCase();
+                if (!categoryIdMap.has(nameLower)) categoryIdMap.set(nameLower, doc(collection(db, collectionName)).id);
             });
 
             const BATCH_LIMIT = 400; 
             const chunks = [];
-            for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) {
-                chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
-            }
+            for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
 
             let existingNamesSet = new Set();
             existingDocs.forEach(docSnap => existingNamesSet.add(docSnap.data().name.toLowerCase().trim()));
 
             for (const chunk of chunks) {
                 const batch = writeBatch(db); 
-                
                 chunk.forEach((row) => {
                     if (!row[0]) return; 
-
                     const name = row[0].toString().trim();
                     const parentName = row[1] ? row[1].toString().trim() : '';
                     const nameLower = name.toLowerCase();
-                    const parentNameLower = parentName.toLowerCase();
-                    
                     let docId = categoryIdMap.get(nameLower);
-                    let parentId = parentName ? (categoryIdMap.get(parentNameLower) || null) : null;
-
+                    let parentId = parentName ? (categoryIdMap.get(parentName.toLowerCase()) || null) : null;
                     const docRef = doc(db, collectionName, docId);
 
                     if (existingNamesSet.has(nameLower)) {
-                        batch.update(docRef, {
-                            name: name,
-                            parentId: parentId,
-                            updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin",
-                            updatedAt: new Date()
-                        });
+                        batch.update(docRef, { name: name, parentId: parentId, updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin", updatedAt: new Date() });
                         updateCount++;
                     } else {
-                        batch.set(docRef, {
-                            companyId: compId, 
-                            name: name,
-                            parentId: parentId,
-                            createdAt: new Date(),
-                            createdBy: this.userProfile?.name || this.currentUser?.name || "Admin"
-                        });
+                        batch.set(docRef, { companyId: compId, name: name, parentId: parentId, createdAt: new Date(), createdBy: this.userProfile?.name || this.currentUser?.name || "Admin" });
                         existingNamesSet.add(nameLower); 
                         insertCount++;
                     }
@@ -13789,7 +13554,6 @@ async processImport() {
                 await batch.commit(); 
             }
         } 
-        // 🌟 LOGIKA IMPORT OPNAME BARU
         else if (this.importConfig.target === 'opname') {
             let opnameGroups = {};
             for (let row of dataRows) {
@@ -13801,11 +13565,9 @@ async processImport() {
 
             let opArray = Object.values(opnameGroups);
             const BATCH_LIMIT = 40; 
-            
             for (let i = 0; i < opArray.length; i += BATCH_LIMIT) {
                 const batch = writeBatch(db);
                 let chunkOP = opArray.slice(i, i + BATCH_LIMIT);
-                
                 for (let rows of chunkOP) {
                     let header = rows[0];
                     let opId = header[0].toString().trim();
@@ -13828,20 +13590,10 @@ async processImport() {
                         let stokSistem = r[8] ? parseInt(String(r[8]).replace(/[^0-9-]/g, '')) : 0;
                         let stokFisik = r[9] ? parseInt(String(r[9]).replace(/[^0-9-]/g, '')) : 0;
                         let itemNote = r[10] ? r[10].toString().trim() : '';
-                        
-                        if (prodName && prodName !== '-') {
-                            items.push({
-                                name: prodName, variantName: '-', sku: sku,
-                                stokSistem: stokSistem, stokFisik: stokFisik,
-                                diff: stokFisik - stokSistem, note: itemNote
-                            });
-                        }
+                        if (prodName && prodName !== '-') items.push({ name: prodName, variantName: '-', sku: sku, stokSistem: stokSistem, stokFisik: stokFisik, diff: stokFisik - stokSistem, note: itemNote });
                     }
 
-                    let docPayload = {
-                        id: opId, dateStr, outletId: matchedOutletId, pic, status, note, items
-                    };
-
+                    let docPayload = { id: opId, dateStr, outletId: matchedOutletId, pic, status, note, items };
                     let existingDocId = existingOpnames.get(opId);
                     if (existingDocId) {
                         batch.update(doc(db, collectionName, existingDocId), { updatedAt: new Date(), ...docPayload });
@@ -13855,29 +13607,107 @@ async processImport() {
                 await batch.commit();
             }
         }
+        // 🌟 LOGIKA IMPORT TRANSFER BARANG
+        else if (this.importConfig.target === 'transfers') {
+            let trfGroups = {};
+            for (let row of dataRows) {
+                let trfId = row[0] ? row[0].toString().trim() : null;
+                if (!trfId) continue;
+                if (!trfGroups[trfId]) trfGroups[trfId] = [];
+                trfGroups[trfId].push(row);
+            }
+
+            let trfArray = Object.values(trfGroups);
+            const BATCH_LIMIT = 40;
+
+            for (let i = 0; i < trfArray.length; i += BATCH_LIMIT) {
+                const batch = writeBatch(db);
+                let chunkTRF = trfArray.slice(i, i + BATCH_LIMIT);
+
+                for (let rows of chunkTRF) {
+                    let header = rows[0];
+                    let trfId = header[0].toString().trim();
+                    let dateStr = header[1] ? header[1].toString().trim() : new Date().toLocaleString('id-ID');
+                    let fromOutletName = header[2] ? header[2].toString().trim() : '';
+                    let toOutletName = header[3] ? header[3].toString().trim() : '';
+                    let pic = header[4] ? header[4].toString().trim() : 'Admin';
+                    let status = header[5] ? header[5].toString().trim().toUpperCase() : 'PENDING';
+                    let note = header[6] ? header[6].toString().trim() : '';
+
+                    let matchedFromOutletId = '';
+                    let matchedToOutletId = '';
+                    if (this.outlets && this.outlets.length > 0) {
+                        let foundFrom = this.outlets.find(o => o.name.toLowerCase() === fromOutletName.toLowerCase());
+                        if (foundFrom) matchedFromOutletId = foundFrom.id;
+                        let foundTo = this.outlets.find(o => o.name.toLowerCase() === toOutletName.toLowerCase());
+                        if (foundTo) matchedToOutletId = foundTo.id;
+                    }
+
+                    let items = [];
+                    for (let r of rows) {
+                        let prodName = r[7] ? r[7].toString().trim() : '';
+                        let sku = r[8] ? r[8].toString().trim() : '';
+                        let qty = r[9] ? parseInt(String(r[9]).replace(/[^0-9]/g, '')) : 0;
+
+                        if (prodName && prodName !== '-' && qty > 0) {
+                            let matchedProductId = '';
+                            let isVariant = false;
+                            let variantSku = null;
+
+                            // Temukan produk & varian
+                            if (this.products && this.products.length > 0) {
+                                let fProd = this.products.find(p => p.sku === sku || p.name.toLowerCase() === prodName.toLowerCase() || (p.variants && p.variants.some(v => v.variantSku === sku)));
+                                if (fProd) {
+                                    matchedProductId = fProd.id;
+                                    let fVar = (fProd.variants || []).find(v => v.variantSku === sku);
+                                    if (fVar) {
+                                        isVariant = true;
+                                        variantSku = fVar.variantSku;
+                                        prodName = fProd.name; // Simpan base name asli
+                                    }
+                                }
+                            }
+
+                            items.push({
+                                isVariant: isVariant,
+                                productId: matchedProductId,
+                                variantSku: variantSku,
+                                sku: sku,
+                                name: prodName, 
+                                variantName: isVariant ? sku : '-', // Menggunakan SKU jika variant name belum ketemu akurat dari file
+                                qty: qty
+                            });
+                        }
+                    }
+
+                    let docPayload = { id: trfId, dateStr, fromOutlet: matchedFromOutletId, toOutlet: matchedToOutletId, pic, status, note, items };
+
+                    let existingDocId = existingTransfers.get(trfId);
+                    if (existingDocId) {
+                        batch.update(doc(db, collectionName, existingDocId), { updatedAt: new Date(), ...docPayload });
+                        updateCount++;
+                    } else {
+                        batch.set(doc(db, collectionName, trfId), { companyId: compId, createdAt: new Date(), ...docPayload });
+                        existingTransfers.set(trfId, trfId);
+                        insertCount++;
+                    }
+                }
+                await batch.commit();
+            }
+        }
         else {
             const BATCH_LIMIT = 400; 
             const chunks = [];
-            for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) {
-                chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
-            }
+            for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
 
             for (const chunk of chunks) {
                 const batch = writeBatch(db); 
                 
                 chunk.forEach((row) => {
                     if (!row[0]) return; 
-
                     let existingDocId = null;
-                    let insertPayload = {
-                        companyId: compId, createdAt: new Date(),
-                        createdBy: this.userProfile?.name || this.currentUser?.name || "Admin",
-                        updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin"
-                    };
-                    let updatePayload = {
-                        updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin",
-                        updatedAt: new Date()
-                    };
+                    let insertPayload = { companyId: compId, createdAt: new Date(), createdBy: this.userProfile?.name || this.currentUser?.name || "Admin", updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin" };
+                    let updatePayload = { updatedBy: this.userProfile?.name || this.currentUser?.name || "Admin", updatedAt: new Date() };
 
                     const name = row[0] ? row[0].toString().trim() : '';
                     const phone = row[1] ? row[1].toString().trim() : '';
@@ -13894,14 +13724,11 @@ async processImport() {
                     }
 
                     if (existingDocId) {
-                        if (name) updatePayload.name = name;
-                        if (phone) updatePayload.phone = phone;
-                        if (address) updatePayload.address = address;
+                        if (name) updatePayload.name = name; if (phone) updatePayload.phone = phone; if (address) updatePayload.address = address;
                         if (this.importConfig.target === 'customers') updatePayload.membershipId = matchedMembershipId;
                     } else {
                         insertPayload = { ...insertPayload, name, phone, address };
                         if (this.importConfig.target === 'customers') insertPayload.membershipId = matchedMembershipId;
-                        
                         existingNames.set(name.toLowerCase(), "pending_insert");
                         if (phone) existingPhones.set(phone, "pending_insert");
                     }
@@ -13927,6 +13754,7 @@ async processImport() {
         else if (this.importConfig.target === 'sales' && typeof this.fetchTransactions === 'function') await this.fetchTransactions();
         else if (this.importConfig.target === 'po' && typeof this.fetchPurchases === 'function') await this.fetchPurchases();
         else if (this.importConfig.target === 'opname' && typeof this.fetchOpnameHistory === 'function') await this.fetchOpnameHistory();
+        else if (this.importConfig.target === 'transfers' && typeof this.fetchTransferHistory === 'function') await this.fetchTransferHistory(); // 🌟 RE-FETCH TRANSFER
 
         Swal.fire('Berhasil', `Proses Selesai!\n- ${insertCount} Data Baru ditambahkan.\n- ${updateCount} Data Lama diperbarui.`, 'success');
 
@@ -13943,7 +13771,7 @@ async processImport() {
     } finally {
         this.isProcessing = false;
     }
-},
+}
 
         // ==========================================
         // MODUL PRINTER BLUETOOTH (ESC/POS)
