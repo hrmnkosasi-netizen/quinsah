@@ -16,6 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <style>
 /* ==========================================================================
@@ -12718,67 +12720,65 @@ resetTransferFilter() {
     downloadTransferDoc(tf, format) {
     if (!tf) return;
     
-    // 1. Ekstraksi Informasi Dasar Dokumen
+    // Siapkan Info Nama Cabang
     const docName = `Transfer_Detail_${tf.id || 'Doc'}`;
     const fromName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.fromOutlet) : (tf.fromOutlet || '-');
     const toName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.toOutlet) : (tf.toOutlet || '-');
     
-    // Susunan Header Dokumen
-    const docHeader = [
-        ["ID Dokumen", tf.id || '-'],
-        ["Tanggal", tf.dateStr || '-'],
-        ["Rute", `${fromName} -> ${toName}`],
-        ["Pengirim / PIC", tf.pic || '-'],
-        ["Status", tf.status || '-'],
-        ["Catatan", tf.note || '-'],
-        [] // Baris kosong untuk pemisah
-    ];
-
-    // Susunan Data Item (Tabel)
-    const itemHeaders = ["Produk / Varian", "SKU / Varian SKU", "Qty Transfer"];
-    let itemData = [];
-    
-    if (tf.items && tf.items.length > 0) {
-        tf.items.forEach(item => {
-            let namaProduk = item.name || '-';
-            if (item.variantName && item.variantName !== '-') {
-                namaProduk += ` - ${item.variantName}`;
-            }
-            itemData.push([
-                namaProduk,
-                item.sku || item.variantSku || '-',
-                item.qty || 0
-            ]);
-        });
-    } else {
-        itemData.push(["Tidak ada data item", "-", 0]);
-    }
-
-    // 2. PROSES DOWNLOAD BERDASARKAN FORMAT
+    // ==============================================
+    // 📊 LOGIKA UNTUK EXCEL & CSV (KOLOM DATAR / FLAT)
+    // ==============================================
     if (format === 'xlsx' || format === 'csv') {
         if (typeof XLSX === 'undefined') return alert("Library Excel (SheetJS) belum dimuat.");
         
-        // Menggabungkan Info Dokumen dan Tabel Item
-        const wsData = [
-            ...docHeader,
-            itemHeaders,
-            ...itemData
-        ];
+        let flatData = [];
         
-        const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+        // Looping setiap barang, lalu gabungkan dengan info dokumen (ID, Tanggal, dll)
+        if (tf.items && tf.items.length > 0) {
+            tf.items.forEach(item => {
+                let namaProduk = item.name || '-';
+                if (item.variantName && item.variantName !== '-') namaProduk += ` - ${item.variantName}`;
+                
+                flatData.push({
+                    "ID Dokumen": tf.id || '-',
+                    "Tanggal": tf.dateStr || '-',
+                    "Rute": `${fromName} -> ${toName}`,
+                    "Cabang Asal": fromName,
+                    "Cabang Tujuan": toName,
+                    "Pengirim / PIC": tf.pic || '-',
+                    "Status": tf.status || '-',
+                    "Catatan": tf.note || '-',
+                    "Produk / Varian": namaProduk,
+                    "SKU / Varian SKU": item.sku || item.variantSku || '-',
+                    "Qty Transfer": item.qty || 0
+                });
+            });
+        } else {
+            // Jika dokumen transfer tidak punya barang (kosong)
+            flatData.push({
+                "ID Dokumen": tf.id || '-', "Tanggal": tf.dateStr || '-', "Rute": `${fromName} -> ${toName}`,
+                "Cabang Asal": fromName, "Cabang Tujuan": toName, "Pengirim / PIC": tf.pic || '-', 
+                "Status": tf.status || '-', "Catatan": tf.note || '-',
+                "Produk / Varian": "-", "SKU / Varian SKU": "-", "Qty Transfer": 0
+            });
+        }
+
+        // Generate Sheet dengan Data Rapi (json_to_sheet otomatis membuat header kolom di baris pertama)
+        const worksheet = XLSX.utils.json_to_sheet(flatData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Detail Dokumen");
 
         if (format === 'xlsx') {
             XLSX.writeFile(workbook, `${docName}.xlsx`);
         } else {
-            // Untuk CSV, convert secara spesifik
             XLSX.writeFile(workbook, `${docName}.csv`, { bookType: "csv" });
         }
     } 
+    // ==============================================
+    // 📄 LOGIKA UNTUK PDF (GAYA KOP SURAT)
+    // ==============================================
     else if (format === 'pdf') {
-        // Pastikan jsPDF dan jsPDF-AutoTable sudah terinstall/dimuat
-        if (typeof window.jspdf === 'undefined') return alert("Library jsPDF belum dimuat.");
+        if (typeof window.jspdf === 'undefined') return alert("Library jsPDF belum dimuat. Pastikan script CDN sudah dipasang di index.html");
         
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -12796,11 +12796,25 @@ resetTransferFilter() {
         doc.text(`Pengirim   : ${tf.pic || '-'}`, 14, 48);
         doc.text(`Catatan    : ${tf.note || '-'}`, 14, 54);
 
-        // Styling Tabel Item menggunakan AutoTable
+        // Susun Tabel Item PDF
+        const itemHeaders = [["Produk / Varian", "SKU / Varian SKU", "Qty Transfer"]];
+        let itemData = [];
+        
+        if (tf.items && tf.items.length > 0) {
+            tf.items.forEach(item => {
+                let namaProduk = item.name || '-';
+                if (item.variantName && item.variantName !== '-') namaProduk += ` - ${item.variantName}`;
+                itemData.push([namaProduk, item.sku || item.variantSku || '-', item.qty || 0]);
+            });
+        } else {
+            itemData.push(["Tidak ada data item", "-", 0]);
+        }
+
+        // Terapkan AutoTable ke PDF
         if (typeof doc.autoTable === 'function') {
             doc.autoTable({
                 startY: 60,
-                head: [itemHeaders],
+                head: itemHeaders,
                 body: itemData,
                 theme: 'grid',
                 headStyles: { fillColor: [40, 167, 69] }, // Warna hijau ala success
