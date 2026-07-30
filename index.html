@@ -5059,15 +5059,44 @@ body.sidebar-open {
                             </span>
                         </td>
                         <td class="text-center">
-                            <button class="btn btn-sm btn-light border text-primary me-1 py-1 px-2" title="Lihat Detail" @click="viewTransfer(tf.id)"><i class="bi bi-eye"></i></button>
-                            
-                            <button v-if="tf.status === 'PENDING'" class="btn btn-sm btn-light border text-warning me-1 py-1 px-2" title="Edit Pengajuan" @click="editTransfer(tf.id)"><i class="bi bi-pencil"></i></button>
-                            <button v-if="tf.status === 'PENDING'" class="btn btn-sm btn-primary text-white me-1 py-1 px-2" title="Proses Pengiriman (Potong Stok Asal)" @click="sendTransfer(tf.id)"><i class="bi bi-truck"></i></button>
-                            
-                            <button v-if="tf.status === 'DIKIRIM'" class="btn btn-sm btn-success text-white me-1 py-1 px-2" title="Konfirmasi Terima Barang" @click="receiveTransfer(tf.id)"><i class="bi bi-box-arrow-in-down"></i></button>
-                            <button v-if="tf.status === 'DIKIRIM'" class="btn btn-sm btn-light border text-secondary me-1 py-1 px-2" title="Batalkan Pengiriman (Stok Kembali)" @click="unsendTransfer(tf.id)"><i class="bi bi-arrow-counterclockwise"></i></button>
-                            
-                            <button v-if="tf.status !== 'VOID'" class="btn btn-sm btn-light border text-danger py-1 px-2" title="Batalkan Keseluruhan Dokumen" @click="voidTransfer(tf.id)"><i class="bi bi-x-octagon"></i></button>
+                            <div class="d-inline-flex gap-1 align-items-center">
+                                <!-- Tombol Lihat Detail -->
+                                <button class="btn btn-sm btn-light border text-primary py-1 px-2" title="Lihat Detail" @click="viewTransfer(tf.id)"><i class="bi bi-eye"></i></button>
+                                
+                                <!-- 🌟 TAMBAHAN TOMBOL DOWNLOAD (Dropdown) -->
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light border text-success py-1 px-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Download Dokumen">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 0.85rem;">
+                                        <li><h6 class="dropdown-header text-dark fw-bold">Pilih Format:</h6></li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="#" @click.prevent="downloadTransferDoc(tf, 'pdf')">
+                                                <i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i> Download PDF
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="#" @click.prevent="downloadTransferDoc(tf, 'xlsx')">
+                                                <i class="bi bi-file-earmark-excel-fill text-success me-2"></i> Download Excel
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2" href="#" @click.prevent="downloadTransferDoc(tf, 'csv')">
+                                                <i class="bi bi-filetype-csv text-info me-2"></i> Download CSV
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Tombol Aksi Lainnya -->
+                                <button v-if="tf.status === 'PENDING'" class="btn btn-sm btn-light border text-warning py-1 px-2" title="Edit Pengajuan" @click="editTransfer(tf.id)"><i class="bi bi-pencil"></i></button>
+                                <button v-if="tf.status === 'PENDING'" class="btn btn-sm btn-primary text-white py-1 px-2" title="Proses Pengiriman (Potong Stok Asal)" @click="sendTransfer(tf.id)"><i class="bi bi-truck"></i></button>
+                                
+                                <button v-if="tf.status === 'DIKIRIM'" class="btn btn-sm btn-success text-white py-1 px-2" title="Konfirmasi Terima Barang" @click="receiveTransfer(tf.id)"><i class="bi bi-box-arrow-in-down"></i></button>
+                                <button v-if="tf.status === 'DIKIRIM'" class="btn btn-sm btn-light border text-secondary py-1 px-2" title="Batalkan Pengiriman (Stok Kembali)" @click="unsendTransfer(tf.id)"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                
+                                <button v-if="tf.status !== 'VOID'" class="btn btn-sm btn-light border text-danger py-1 px-2" title="Batalkan Keseluruhan Dokumen" @click="voidTransfer(tf.id)"><i class="bi bi-x-octagon"></i></button>
+                            </div>
                         </td>
                     </tr>
                     <tr v-if="filteredTransferHistory.length === 0">
@@ -12684,6 +12713,105 @@ resetTransferFilter() {
     this.transferStatusFilter = '';
     this.transferStartDate = hariIni;
     this.transferEndDate = hariIni;
+},
+
+    downloadTransferDoc(tf, format) {
+    if (!tf) return;
+    
+    // 1. Ekstraksi Informasi Dasar Dokumen
+    const docName = `Transfer_Detail_${tf.id || 'Doc'}`;
+    const fromName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.fromOutlet) : (tf.fromOutlet || '-');
+    const toName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.toOutlet) : (tf.toOutlet || '-');
+    
+    // Susunan Header Dokumen
+    const docHeader = [
+        ["ID Dokumen", tf.id || '-'],
+        ["Tanggal", tf.dateStr || '-'],
+        ["Rute", `${fromName} -> ${toName}`],
+        ["Pengirim / PIC", tf.pic || '-'],
+        ["Status", tf.status || '-'],
+        ["Catatan", tf.note || '-'],
+        [] // Baris kosong untuk pemisah
+    ];
+
+    // Susunan Data Item (Tabel)
+    const itemHeaders = ["Produk / Varian", "SKU / Varian SKU", "Qty Transfer"];
+    let itemData = [];
+    
+    if (tf.items && tf.items.length > 0) {
+        tf.items.forEach(item => {
+            let namaProduk = item.name || '-';
+            if (item.variantName && item.variantName !== '-') {
+                namaProduk += ` - ${item.variantName}`;
+            }
+            itemData.push([
+                namaProduk,
+                item.sku || item.variantSku || '-',
+                item.qty || 0
+            ]);
+        });
+    } else {
+        itemData.push(["Tidak ada data item", "-", 0]);
+    }
+
+    // 2. PROSES DOWNLOAD BERDASARKAN FORMAT
+    if (format === 'xlsx' || format === 'csv') {
+        if (typeof XLSX === 'undefined') return alert("Library Excel (SheetJS) belum dimuat.");
+        
+        // Menggabungkan Info Dokumen dan Tabel Item
+        const wsData = [
+            ...docHeader,
+            itemHeaders,
+            ...itemData
+        ];
+        
+        const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Detail Dokumen");
+
+        if (format === 'xlsx') {
+            XLSX.writeFile(workbook, `${docName}.xlsx`);
+        } else {
+            // Untuk CSV, convert secara spesifik
+            XLSX.writeFile(workbook, `${docName}.csv`, { bookType: "csv" });
+        }
+    } 
+    else if (format === 'pdf') {
+        // Pastikan jsPDF dan jsPDF-AutoTable sudah terinstall/dimuat
+        if (typeof window.jspdf === 'undefined') return alert("Library jsPDF belum dimuat.");
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Styling Kop Surat / Header PDF
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text("Detail Dokumen Transfer", 14, 20);
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`ID Dokumen : ${tf.id || '-'}`, 14, 30);
+        doc.text(`Tanggal    : ${tf.dateStr || '-'}`, 14, 36);
+        doc.text(`Rute       : ${fromName} -> ${toName}`, 14, 42);
+        doc.text(`Pengirim   : ${tf.pic || '-'}`, 14, 48);
+        doc.text(`Catatan    : ${tf.note || '-'}`, 14, 54);
+
+        // Styling Tabel Item menggunakan AutoTable
+        if (typeof doc.autoTable === 'function') {
+            doc.autoTable({
+                startY: 60,
+                head: [itemHeaders],
+                body: itemData,
+                theme: 'grid',
+                headStyles: { fillColor: [40, 167, 69] }, // Warna hijau ala success
+                styles: { fontSize: 9 }
+            });
+        } else {
+            doc.text("(Library jspdf-autotable tidak ditemukan, tabel item tidak dapat diproses)", 14, 65);
+        }
+        
+        doc.save(`${docName}.pdf`);
+    }
 },
             
 resetOpnameFilter() {
