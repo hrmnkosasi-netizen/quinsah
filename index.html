@@ -3371,9 +3371,23 @@ body.sidebar-open {
     <div v-if="catalogTab==='products'" class="dashboard-card">
         <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
             <h6 class="fw-bold mb-0">Daftar Induk Produk</h6>
-            <div class="d-flex gap-2 align-items-center">
-                <input type="text" class="form-control form-control-sm" v-model="catalogProductSearch" placeholder="Cari Produk / SKU...">
-                <button class="btn btn-sm btn-primary-custom" @click="openModal('addProductModal')" style="white-space: nowrap;"><i class="bi bi-plus-lg me-1"></i> Tambah Baru</button>
+            
+            <!-- 🌟 UPDATE: KELOMPOK PENCARIAN & TOMBOL AKSI -->
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <input type="text" class="form-control form-control-sm" style="max-width: 200px;" v-model="catalogProductSearch" placeholder="Cari Produk / SKU...">
+                
+                <div class="btn-group shadow-sm" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="importConfig.showModal = true; importConfig.target = 'products'; importConfig.step = 1">
+                        <i class="bi bi-download text-primary me-1"></i> Import
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="exportConfig.showModal = true; exportConfig.target = 'products'; exportConfig.showPreview = false">
+                        <i class="bi bi-upload text-primary me-1"></i> Export
+                    </button>
+                </div>
+                
+                <button class="btn btn-sm btn-primary-custom shadow-sm" @click="openModal('addProductModal')" style="white-space: nowrap;">
+                    <i class="bi bi-plus-lg me-1"></i> Tambah Baru
+                </button>
             </div>
         </div>
         <div class="table-responsive">
@@ -12957,12 +12971,13 @@ resetOpnameFilter() {
 },
             
 // ==============================================
-// 🌟 FUNGSI EXPORT & IMPORT FULL (TERMASUK TRANSFER) 🌟
+// 🌟 FUNGSI EXPORT & IMPORT FULL (TERMASUK TRANSFER & PRODUK) 🌟
 // ==============================================
 
 getExportDataCount() {
     let count = 0;
-    if (this.exportConfig.target === 'categories') count = this.structuredCategories ? this.structuredCategories.length : 0;
+    if (this.exportConfig.target === 'products') count = this.filteredCatalogProducts ? this.filteredCatalogProducts.length : 0; // 🌟 BARU
+    else if (this.exportConfig.target === 'categories') count = this.structuredCategories ? this.structuredCategories.length : 0;
     else if (this.exportConfig.target === 'variants') count = this.filteredAllVariantsList ? this.filteredAllVariantsList.length : 0;
     else if (this.exportConfig.target === 'customers') count = this.filteredCustomers ? this.filteredCustomers.length : 0;
     else if (this.exportConfig.target === 'suppliers') count = this.filteredSuppliers ? this.filteredSuppliers.length : 0;
@@ -12999,7 +13014,19 @@ previewExportData() {
 
     let formattedData = [];
 
-    if (this.exportConfig.target === 'categories') {
+    // 🌟 PREVIEW PRODUK BARU
+    if (this.exportConfig.target === 'products') {
+        let dataSumber = (this.filteredCatalogProducts || []).slice(0, 5);
+        dataSumber.forEach(p => {
+            let catPath = this.getCategoryPath(p) || '-';
+            formattedData.push({
+                "SKU Induk": p.sku || '-', "Nama Produk": p.name || '-', "Kategori": catPath,
+                "HPP (Modal)": p.hppPrice || 0, "Harga Jual": p.sellPrice || 0,
+                "Min. Stok (Alert)": p.minStock || 0, "Aktif (POS)": p.isActive === false ? 'TIDAK' : 'YA'
+            });
+        });
+    }
+    else if (this.exportConfig.target === 'categories') {
         let dataSumber = (this.structuredCategories || []).slice(0, 5);
         let getCatParentName = (c) => {
             if (!c.parentId) return '-';
@@ -13085,21 +13112,9 @@ previewExportData() {
     } 
     else if (this.exportConfig.target === 'inv_alerts') {
         let dataSumber = (this.lowStockItems || []).slice(0, 5);
-        let namaLokasi = this.alertOutletFilter 
-            ? (this.outlets.find(o => o.id === this.alertOutletFilter)?.name || 'Cabang Tidak Diketahui') 
-            : 'Semua Cabang (Global)';
-
-        dataSumber.forEach(alert => { 
-            formattedData.push({ 
-                "Produk / Varian": alert.name, 
-                "SKU": alert.sku || '-', 
-                "Lokasi": namaLokasi, // Kolom Lokasi ditambahkan
-                [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, 
-                "Batas Minimum": alert.minStock || 0, 
-                "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') 
-            }); 
-        });
-    }
+        let namaLokasi = this.alertOutletFilter ? (this.outlets.find(o => o.id === this.alertOutletFilter)?.name || 'Cabang Tidak Diketahui') : 'Semua Cabang (Global)';
+        dataSumber.forEach(alert => { formattedData.push({ "Produk / Varian": alert.name, "SKU": alert.sku || '-', "Lokasi": namaLokasi, [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, "Batas Minimum": alert.minStock || 0, "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') }); });
+    } 
     else if (this.exportConfig.target === 'inv_allocation') {
         let dataSumber = (this.filteredInventoryProducts || []).slice(0, 5);
         let outletName = this.outlets.find(o => o.id === this.invOutletFilter)?.name || 'Cabang';
@@ -13122,32 +13137,16 @@ previewExportData() {
         let dataSumber = (this.filteredOpnameHistory || []).slice(0, 5);
         dataSumber.forEach(op => { let namaCabang = this.getOutletName(op.outletId) || 'Global/Pusat'; formattedData.push({ "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-', "Total Item Varian": op.items ? op.items.length : 0 }); });
     }
-    // 🌟 PREVIEW EXPORT TRANSFER (UPDATE)
     else if (this.exportConfig.target === 'transfers') {
-        // GANTI transferHistory menjadi filteredTransferHistory
         let dataSumber = (this.filteredTransferHistory || []).slice(0, 5); 
-        
         dataSumber.forEach(tf => {
             let fromName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.fromOutlet) : tf.fromOutlet;
             let toName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.toOutlet) : tf.toOutlet;
-            
-            let rowBase = {
-                "No. Dokumen": tf.id || '-', "Tanggal Buat": tf.dateStr || '-', "Cabang Asal": fromName || '-', "Cabang Tujuan": toName || '-', 
-                "PIC": tf.pic || '-', "Status": tf.status || 'PENDING', "Catatan Dokumen": tf.note || '-'
-            };
+            let rowBase = { "No. Dokumen": tf.id || '-', "Tanggal Buat": tf.dateStr || '-', "Cabang Asal": fromName || '-', "Cabang Tujuan": toName || '-', "PIC": tf.pic || '-', "Status": tf.status || 'PENDING', "Catatan Dokumen": tf.note || '-' };
 
             if (tf.items && tf.items.length > 0) {
-                tf.items.forEach(item => {
-                    formattedData.push({
-                        ...rowBase,
-                        "Nama Produk": item.name || '-',
-                        "SKU / Varian": item.sku || item.variantSku || '-',
-                        "Qty Transfer": item.qty || 0
-                    });
-                });
-            } else {
-                formattedData.push({ ...rowBase, "Nama Produk": '-', "SKU / Varian": '-', "Qty Transfer": 0 });
-            }
+                tf.items.forEach(item => { formattedData.push({ ...rowBase, "Nama Produk": item.name || '-', "SKU / Varian": item.sku || item.variantSku || '-', "Qty Transfer": item.qty || 0 }); });
+            } else { formattedData.push({ ...rowBase, "Nama Produk": '-', "SKU / Varian": '-', "Qty Transfer": 0 }); }
         });
     }
 
@@ -13170,7 +13169,19 @@ processExport() {
     const today = new Date().toISOString().split('T')[0];
     let fileName = `Data_${this.exportConfig.target}_${today}`;
 
-    if (this.exportConfig.target === 'categories') {
+    // 🌟 FULL EXPORT PRODUK
+    if (this.exportConfig.target === 'products') {
+        if (!this.filteredCatalogProducts || this.filteredCatalogProducts.length === 0) return alert('Tidak ada data produk!');
+        this.filteredCatalogProducts.forEach(p => {
+            let catPath = this.getCategoryPath(p) || '-';
+            formattedData.push({
+                "SKU Induk": p.sku || '-', "Nama Produk": p.name || '-', "Kategori": catPath,
+                "HPP (Modal)": p.hppPrice || 0, "Harga Jual": p.sellPrice || 0,
+                "Min. Stok (Alert)": p.minStock || 0, "Aktif (POS)": p.isActive === false ? 'TIDAK' : 'YA'
+            });
+        });
+    }
+    else if (this.exportConfig.target === 'categories') {
         if (!this.structuredCategories || this.structuredCategories.length === 0) return alert('Tidak ada data kategori!');
         let getCatParentName = (c) => { if (!c.parentId) return '-'; let p = (this.categories || this.structuredCategories || []).find(x => x.id === c.parentId); return p ? p.name : '-'; };
         formattedData = this.structuredCategories.map(c => ({ "Nama Kategori": c.name || '-', "Kategori Induk": getCatParentName(c) }));
@@ -13245,21 +13256,9 @@ processExport() {
     } 
     else if (this.exportConfig.target === 'inv_alerts') {
         if (!this.lowStockItems || this.lowStockItems.length === 0) return alert('Tidak ada data stock alert!');
-        let namaLokasi = this.alertOutletFilter 
-            ? (this.outlets.find(o => o.id === this.alertOutletFilter)?.name || 'Cabang Tidak Diketahui') 
-            : 'Semua Cabang (Global)';
-
-        this.lowStockItems.forEach(alert => { 
-            formattedData.push({ 
-                "Produk / Varian": alert.name, 
-                "SKU": alert.sku || '-', 
-                "Lokasi": namaLokasi, // Kolom Lokasi ditambahkan
-                [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, 
-                "Batas Minimum": alert.minStock || 0, 
-                "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') 
-            }); 
-        });
-    }
+        let namaLokasi = this.alertOutletFilter ? (this.outlets.find(o => o.id === this.alertOutletFilter)?.name || 'Cabang Tidak Diketahui') : 'Semua Cabang (Global)';
+        this.lowStockItems.forEach(alert => { formattedData.push({ "Produk / Varian": alert.name, "SKU": alert.sku || '-', "Lokasi": namaLokasi, [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, "Batas Minimum": alert.minStock || 0, "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') }); });
+    } 
     else if (this.exportConfig.target === 'inv_allocation') {
         if (!this.invOutletFilter) return alert("Silakan pilih Cabang (Outlet) terlebih dahulu untuk memproses Alokasi Stok.");
         if (!this.filteredInventoryProducts || this.filteredInventoryProducts.length === 0) return alert('Tidak ada data alokasi stok!');
@@ -13288,11 +13287,8 @@ processExport() {
             } else { formattedData.push({ "ID Dokumen": op.id || '-', "Waktu": op.dateStr || '-', "Cabang": namaCabang, "PIC": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-', "Nama Produk / Varian": '-', "SKU / Varian": '-', "Stok Sistem": 0, "Stok Fisik": 0, "Selisih": 0, "Catatan Item": '-' }); }
         });
     }
-    // 🌟 FULL EXPORT TRANSFER (UPDATE)
     else if (this.exportConfig.target === 'transfers') {
-        // GANTI transferHistory menjadi filteredTransferHistory
         if (!this.filteredTransferHistory || this.filteredTransferHistory.length === 0) return alert('Tidak ada riwayat transfer sesuai filter!');
-        
         this.filteredTransferHistory.forEach(tf => {
             let fromName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.fromOutlet) : tf.fromOutlet;
             let toName = typeof this.getOutletName === 'function' ? this.getOutletName(tf.toOutlet) : tf.toOutlet;
@@ -13339,7 +13335,15 @@ downloadTemplate() {
     let sampleData = [];
     let fileName = `Template_${this.importConfig.target}.xlsx`;
 
-    if (this.importConfig.target === 'categories') {
+    // 🌟 TEMPLATE PRODUK
+    if (this.importConfig.target === 'products') {
+        headers = ['SKU Induk', 'Nama Produk', 'Kategori', 'HPP (Modal)', 'Harga Jual', 'Min. Stok (Alert)', 'Aktif (POS)'];
+        sampleData = [ 
+            ['QNS-SHIRT-01', 'Kemeja Flanel Kotak Premium', 'Pakaian Pria > Atasan', 75000, 150000, 5, 'YA'], 
+            ['QC-ROK-001', 'Rok Prisket Wanita', 'Pakaian Wanita > Bawahan', 35000, 45000, 2, 'YA'] 
+        ];
+    }
+    else if (this.importConfig.target === 'categories') {
         headers = ['Nama Kategori', 'Kategori Induk'];
         sampleData = [ ['Makanan', ''], ['Snack', 'Makanan'], ['Minuman', ''], ['Kopi', 'Minuman'] ];
     } else if (this.importConfig.target === 'customers') {
@@ -13370,7 +13374,6 @@ downloadTemplate() {
             ['OPN-2026-001', '29/07/2026 10:00', 'Pusat', 'Admin', 'SELESAI', 'Audit Bulanan', 'Gula Aren', 'GLA-02', 20, 20, 'Aman']
         ];
     } 
-    // 🌟 TEMPLATE TRANSFER BARANG
     else if (this.importConfig.target === 'transfers') {
         headers = ['No. Dokumen', 'Tanggal Buat', 'Cabang Asal', 'Cabang Tujuan', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Qty Transfer'];
         sampleData = [
@@ -13411,7 +13414,10 @@ handleFileUpload(event) {
                 const uploadedHeaders = jsonData[0]; 
                 
                 let expectedHeaders = [];
-                if (this.importConfig.target === 'categories') {
+                // 🌟 VALIDASI HEADER PRODUK
+                if (this.importConfig.target === 'products') {
+                    expectedHeaders = ['SKU Induk', 'Nama Produk', 'Kategori', 'HPP (Modal)', 'Harga Jual', 'Min. Stok (Alert)', 'Aktif (POS)'];
+                } else if (this.importConfig.target === 'categories') {
                     expectedHeaders = ['Nama Kategori', 'Kategori Induk'];
                 } else if (this.importConfig.target === 'customers') {
                     expectedHeaders = ['Nama', 'No. Telepon', 'Alamat', 'Membership'];
@@ -13423,9 +13429,7 @@ handleFileUpload(event) {
                     expectedHeaders = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan', 'Subtotal Barang', 'Pajak (%)', 'Pajak (Rp)', 'TOTAL AKHIR', 'DP / Dibayar', 'Sisa Hutang', 'Metode Bayar', 'Jatuh Tempo', 'Status Bayar', 'Status Barang'];
                 } else if (this.importConfig.target === 'opname') {
                     expectedHeaders = ['ID Dokumen', 'Waktu', 'Cabang', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Stok Sistem', 'Stok Fisik', 'Catatan Item'];
-                } 
-                // 🌟 VALIDASI HEADER TRANSFER BARANG
-                else if (this.importConfig.target === 'transfers') {
+                } else if (this.importConfig.target === 'transfers') {
                     expectedHeaders = ['No. Dokumen', 'Tanggal Buat', 'Cabang Asal', 'Cabang Tujuan', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Qty Transfer'];
                 }
 
@@ -13481,47 +13485,117 @@ async processImport() {
     
     try {
         let collectionName = "customers";
+        if (this.importConfig.target === 'products') collectionName = "products"; // 🌟 KOLEKSI PRODUK
         if (this.importConfig.target === 'categories') collectionName = "categories";
         if (this.importConfig.target === 'suppliers') collectionName = "suppliers";
         if (this.importConfig.target === 'sales') collectionName = "transactions"; 
         if (this.importConfig.target === 'po') collectionName = "purchases";
         if (this.importConfig.target === 'opname') collectionName = "opnames";
-        if (this.importConfig.target === 'transfers') collectionName = "stockTransfers"; // 🌟 KOLEKSI TRANSFER
+        if (this.importConfig.target === 'transfers') collectionName = "stockTransfers";
 
         const q = query(collection(db, collectionName), where("companyId", "==", compId));
         const existingDocs = await getDocs(q);
         
         const existingPhones = new Map();
         const existingNames = new Map();
+        const existingSKUs = new Map(); // 🌟 Untuk Produk
         const existingInvoices = new Map(); 
         const existingPOs = new Map();
         const existingOpnames = new Map();
-        const existingTransfers = new Map(); // 🌟 MAP TRANSFER
+        const existingTransfers = new Map();
 
         existingDocs.forEach((docSnap) => {
             const data = docSnap.data();
             const docId = docSnap.id;
-            if (data.phone) existingPhones.set(data.phone.toString().trim(), docId);
-            if (data.name) existingNames.set(data.name.toString().toLowerCase().trim(), docId);
-            if (data.invoiceId || data.id) existingInvoices.set(String(data.invoiceId || data.id).trim(), docId);
-            if (collectionName === "purchases") {
-                const poRef = data.invoiceNo || docId;
-                existingPOs.set(poRef.toString().trim(), docId);
-            }
-            if (collectionName === "opnames") {
-                const opRef = data.id || docId;
-                existingOpnames.set(opRef.toString().trim(), docId);
-            }
-            if (collectionName === "stockTransfers") {
-                const trfRef = data.id || docId;
-                existingTransfers.set(trfRef.toString().trim(), docId);
+            
+            if (collectionName === "products") {
+                if (data.sku) existingSKUs.set(data.sku.toString().toLowerCase().trim(), docId);
+                if (data.name) existingNames.set(data.name.toString().toLowerCase().trim(), docId);
+            } else {
+                if (data.phone) existingPhones.set(data.phone.toString().trim(), docId);
+                if (data.name) existingNames.set(data.name.toString().toLowerCase().trim(), docId);
+                if (data.invoiceId || data.id) existingInvoices.set(String(data.invoiceId || data.id).trim(), docId);
+                if (collectionName === "purchases") {
+                    const poRef = data.invoiceNo || docId;
+                    existingPOs.set(poRef.toString().trim(), docId);
+                }
+                if (collectionName === "opnames") {
+                    const opRef = data.id || docId;
+                    existingOpnames.set(opRef.toString().trim(), docId);
+                }
+                if (collectionName === "stockTransfers") {
+                    const trfRef = data.id || docId;
+                    existingTransfers.set(trfRef.toString().trim(), docId);
+                }
             }
         });
 
         let insertCount = 0;
         let updateCount = 0;
 
-        if (this.importConfig.target === 'po') {
+        // 🌟 LOGIKA IMPORT PRODUK BARU
+        if (this.importConfig.target === 'products') {
+            const BATCH_LIMIT = 400; 
+            const chunks = [];
+            for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
+
+            for (const chunk of chunks) {
+                const batch = writeBatch(db); 
+                chunk.forEach((row) => {
+                    const sku = row[0] ? row[0].toString().trim() : '';
+                    const name = row[1] ? row[1].toString().trim() : '';
+                    if (!name) return; // Nama produk wajib ada
+                    
+                    const catPath = row[2] ? row[2].toString().trim() : '';
+                    const hpp = row[3] ? parseInt(String(row[3]).replace(/[^0-9]/g, '')) : 0;
+                    const sell = row[4] ? parseInt(String(row[4]).replace(/[^0-9]/g, '')) : 0;
+                    const minAlert = row[5] ? parseInt(String(row[5]).replace(/[^0-9]/g, '')) : 0;
+                    const isActive = row[6] ? (row[6].toString().trim().toUpperCase() === 'YA') : true;
+
+                    // Coba cari Category ID dari Path (Ini sederhana, bisa diperbaiki sesuai struktur kategori aslinya)
+                    let matchedCategoryId = null;
+                    if (catPath && this.categories && this.categories.length > 0) {
+                        let catParts = catPath.split('>');
+                        let lastPartName = catParts[catParts.length-1].trim().toLowerCase();
+                        let foundCat = this.categories.find(c => c.name.toLowerCase() === lastPartName);
+                        if (foundCat) matchedCategoryId = foundCat.id;
+                    }
+
+                    let existingDocId = null;
+                    if (sku && existingSKUs.has(sku.toLowerCase())) existingDocId = existingSKUs.get(sku.toLowerCase());
+                    else if (existingNames.has(name.toLowerCase())) existingDocId = existingNames.get(name.toLowerCase());
+
+                    let docPayload = {
+                        name: name,
+                        sku: sku,
+                        categoryId: matchedCategoryId,
+                        hppPrice: hpp,
+                        sellPrice: sell,
+                        minStock: minAlert,
+                        isActive: isActive
+                    };
+
+                    if (existingDocId && existingDocId !== "pending_insert") {
+                        batch.update(doc(db, collectionName, existingDocId), { updatedAt: new Date(), ...docPayload });
+                        updateCount++;
+                    } else {
+                        let newDocRef = doc(collection(db, collectionName));
+                        batch.set(newDocRef, { 
+                            companyId: compId, 
+                            createdAt: new Date(), 
+                            baseOutletStocks: {}, // Default kosong untuk produk baru dari excel
+                            variants: [], 
+                            ...docPayload 
+                        });
+                        if (sku) existingSKUs.set(sku.toLowerCase(), "pending_insert");
+                        existingNames.set(name.toLowerCase(), "pending_insert");
+                        insertCount++;
+                    }
+                });
+                await batch.commit(); 
+            }
+        }
+        else if (this.importConfig.target === 'po') {
             // Logika PO yang sudah ada
             let poGroups = {};
             for (let row of dataRows) {
@@ -13803,7 +13877,6 @@ async processImport() {
                 await batch.commit();
             }
         }
-        // 🌟 LOGIKA IMPORT TRANSFER BARANG
         else if (this.importConfig.target === 'transfers') {
             let trfGroups = {};
             for (let row of dataRows) {
@@ -13850,7 +13923,6 @@ async processImport() {
                             let isVariant = false;
                             let variantSku = null;
 
-                            // Temukan produk & varian
                             if (this.products && this.products.length > 0) {
                                 let fProd = this.products.find(p => p.sku === sku || p.name.toLowerCase() === prodName.toLowerCase() || (p.variants && p.variants.some(v => v.variantSku === sku)));
                                 if (fProd) {
@@ -13859,7 +13931,7 @@ async processImport() {
                                     if (fVar) {
                                         isVariant = true;
                                         variantSku = fVar.variantSku;
-                                        prodName = fProd.name; // Simpan base name asli
+                                        prodName = fProd.name; 
                                     }
                                 }
                             }
@@ -13870,7 +13942,7 @@ async processImport() {
                                 variantSku: variantSku,
                                 sku: sku,
                                 name: prodName, 
-                                variantName: isVariant ? sku : '-', // Menggunakan SKU jika variant name belum ketemu akurat dari file
+                                variantName: isVariant ? sku : '-', 
                                 qty: qty
                             });
                         }
@@ -13944,13 +14016,14 @@ async processImport() {
 
         this.importConfig.step = 3; 
         
-        if (this.importConfig.target === 'categories' && typeof this.fetchCategories === 'function') await this.fetchCategories();
+        if (this.importConfig.target === 'products' && typeof this.fetchProducts === 'function') await this.fetchProducts(); // 🌟 RE-FETCH PRODUK
+        else if (this.importConfig.target === 'categories' && typeof this.fetchCategories === 'function') await this.fetchCategories();
         else if (this.importConfig.target === 'customers' && typeof this.fetchCustomers === 'function') await this.fetchCustomers();
         else if (this.importConfig.target === 'suppliers' && typeof this.fetchSuppliers === 'function') await this.fetchSuppliers();
         else if (this.importConfig.target === 'sales' && typeof this.fetchTransactions === 'function') await this.fetchTransactions();
         else if (this.importConfig.target === 'po' && typeof this.fetchPurchases === 'function') await this.fetchPurchases();
         else if (this.importConfig.target === 'opname' && typeof this.fetchOpnameHistory === 'function') await this.fetchOpnameHistory();
-        else if (this.importConfig.target === 'transfers' && typeof this.fetchTransferHistory === 'function') await this.fetchTransferHistory(); // 🌟 RE-FETCH TRANSFER
+        else if (this.importConfig.target === 'transfers' && typeof this.fetchTransferHistory === 'function') await this.fetchTransferHistory();
 
         Swal.fire('Berhasil', `Proses Selesai!\n- ${insertCount} Data Baru ditambahkan.\n- ${updateCount} Data Lama diperbarui.`, 'success');
 
