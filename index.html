@@ -13080,8 +13080,21 @@ previewExportData() {
     } 
     else if (this.exportConfig.target === 'inv_alerts') {
         let dataSumber = (this.lowStockItems || []).slice(0, 5);
-        dataSumber.forEach(alert => { formattedData.push({ "Produk / Varian": alert.name, "SKU": alert.sku || '-', [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, "Batas Minimum": alert.minStock || 0, "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') }); });
-    } 
+        let namaLokasi = this.alertOutletFilter 
+            ? (this.outlets.find(o => o.id === this.alertOutletFilter)?.name || 'Cabang Tidak Diketahui') 
+            : 'Semua Cabang (Global)';
+
+        dataSumber.forEach(alert => { 
+            formattedData.push({ 
+                "Produk / Varian": alert.name, 
+                "SKU": alert.sku || '-', 
+                "Lokasi": namaLokasi, // Kolom Lokasi ditambahkan
+                [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, 
+                "Batas Minimum": alert.minStock || 0, 
+                "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') 
+            }); 
+        });
+    }
     else if (this.exportConfig.target === 'inv_allocation') {
         let dataSumber = (this.filteredInventoryProducts || []).slice(0, 5);
         let outletName = this.outlets.find(o => o.id === this.invOutletFilter)?.name || 'Cabang';
@@ -13227,8 +13240,21 @@ processExport() {
     } 
     else if (this.exportConfig.target === 'inv_alerts') {
         if (!this.lowStockItems || this.lowStockItems.length === 0) return alert('Tidak ada data stock alert!');
-        this.lowStockItems.forEach(alert => { formattedData.push({ "Produk / Varian": alert.name, "SKU": alert.sku || '-', [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, "Batas Minimum": alert.minStock || 0, "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') }); });
-    } 
+        let namaLokasi = this.alertOutletFilter 
+            ? (this.outlets.find(o => o.id === this.alertOutletFilter)?.name || 'Cabang Tidak Diketahui') 
+            : 'Semua Cabang (Global)';
+
+        this.lowStockItems.forEach(alert => { 
+            formattedData.push({ 
+                "Produk / Varian": alert.name, 
+                "SKU": alert.sku || '-', 
+                "Lokasi": namaLokasi, // Kolom Lokasi ditambahkan
+                [this.alertOutletFilter ? 'Sisa Stok Cabang' : 'Sisa Stok Global']: alert.currentStock || 0, 
+                "Batas Minimum": alert.minStock || 0, 
+                "Status": alert.currentStock <= 0 ? 'HABIS TOTAL' : (alert.currentStock < alert.minStock ? 'SEGERA RESTOCK' : 'HAMPIR HABIS') 
+            }); 
+        });
+    }
     else if (this.exportConfig.target === 'inv_allocation') {
         if (!this.invOutletFilter) return alert("Silakan pilih Cabang (Outlet) terlebih dahulu untuk memproses Alokasi Stok.");
         if (!this.filteredInventoryProducts || this.filteredInventoryProducts.length === 0) return alert('Tidak ada data alokasi stok!');
