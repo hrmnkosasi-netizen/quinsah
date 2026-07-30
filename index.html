@@ -14122,62 +14122,73 @@ async processImport() {
 },
 
         // ==========================================
-        // MODUL PRINTER BLUETOOTH (ESC/POS)
-        // ==========================================
-                    async connectBluetoothPrinter() {
-            try {
-                // Kembalikan UUID MPT-III ke dalam daftar agar tidak ditolak
-                const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: [
-                        '000018f0-0000-1000-8000-00805f9b34fb', 
-                        '0000ffe0-0000-1000-8000-00805f9b34fb', 
-                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-                        '49535343-fe7d-4ae5-8fa9-9fafd205e455' // Wajib ada untuk MPT-III/Panda
-                    ]
-                });
-                
-                const server = await device.gatt.connect();
-                const services = await server.getPrimaryServices();
-                let validCharacteristic = null;
+// 1. FUNGSI MENGHUBUNGKAN PRINTER BLUETOOTH
+// ==========================================
+async connectBluetoothPrinter() {
+    try {
+        console.log("Meminta akses Bluetooth...");
+        
+        // Membuka pencarian untuk SEMUA perangkat Bluetooth tanpa membatasi nama merk tertentu.
+        // Ini memastikan printer-printer rebranding atau no-brand tetap terdeteksi.
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb', // Standar Service UUID Printer Thermal (ESC/POS)
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Alternatif Service UUID untuk Panda / Xprinter / Iware
+                '00001800-0000-1000-8000-00805f9b34fb', // Generic Access (Beberapa printer lokal)
+                '00001801-0000-1000-8000-00805f9b34fb'  // Generic Attribute
+            ]
+        });
 
-                // Cari characteristic yang mendukung Write (Pasti ketemu yang 49535343)
-                for (const service of services) {
-                    try {
-                        const characteristics = await service.getCharacteristics();
-                        for (const char of characteristics) {
-                            if (char.properties.writeWithoutResponse || char.properties.write) {
-                                validCharacteristic = char;
-                                // Jika ketemu jalur khusus MPT-III, kunci!
-                                if (char.uuid.includes('49535343-8841')) {
-                                    break;
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        continue;
-                    }
-                    if (validCharacteristic && validCharacteristic.uuid.includes('49535343-8841')) break;
+        console.log("Menghubungkan ke GATT Server...");
+        const server = await device.gatt.connect();
+
+        // Mencari layanan utama (Service) yang tersedia di dalam printer
+        const services = await server.getPrimaryServices();
+        let printerService = null;
+        let pCharacteristic = null;
+
+        // Looping untuk mencari Karakteristik (jalur komunikasi) yang memiliki izin 'Write'
+        for (let service of services) {
+            const characteristics = await service.getCharacteristics();
+            for (let characteristic of characteristics) {
+                // Printer POS yang normal pasti memiliki jalur Write atau WriteWithoutResponse
+                if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+                    printerService = service;
+                    pCharacteristic = characteristic;
+                    break; 
                 }
-
-                if (validCharacteristic) {
-                    this.printerCharacteristic = validCharacteristic;
-                    this.printerServer = server;
-                    this.printerDevice = device;
-
-                    this.printerDevice.addEventListener('gattserverdisconnected', this.onPrinterDisconnected.bind(this));
-                    alert(`SEMPURNA!\nPrinter terhubung (Jalur Data: ${validCharacteristic.uuid.split('-')[0]}).`);
-                } else {
-                    throw new Error("Tidak ditemukan jalur cetak (Write) pada printer ini.");
-                }
-            } catch (error) {
-                console.error("Koneksi Printer Gagal:", error);
-                alert("Koneksi dibatalkan / gagal: " + error.message);
-                
-                this.printerCharacteristic = null;
-                this.printerDevice = null;
             }
-        },
+            if (pCharacteristic) break;
+        }
+
+        if (!pCharacteristic) {
+            throw new Error("Gagal mengenali jalur komunikasi. Perangkat ini mungkin bukan printer kasir atau tidak mendukung Web Bluetooth.");
+        }
+
+        // Simpan koneksi ke state Vue agar bisa dipakai fungsi print
+        this.printerDevice = device;
+        this.printerCharacteristic = pCharacteristic; 
+        
+        // Listener otomatis jika printer dimatikan atau terputus koneksinya
+        device.addEventListener('gattserverdisconnected', () => {
+            this.printerDevice = null;
+            this.printerCharacteristic = null;
+            alert('Koneksi Bluetooth ke printer terputus!');
+        });
+
+        alert("Berhasil Terhubung dengan: " + (device.name || "Printer Kasir"));
+
+    } catch (error) {
+        console.error("Gagal konek Bluetooth:", error);
+        // Menangani pesan error jika user membatalkan pencarian Bluetooth
+        if (error.name === 'NotFoundError' || error.message.includes('cancelled')) {
+             console.log("Pencarian Bluetooth dibatalkan oleh pengguna.");
+        } else {
+             alert("Gagal menghubungkan: " + error.message);
+        }
+    }
+},
 
         disconnectBluetoothPrinter() {
             if (this.printerDevice && this.printerDevice.gatt.connected) {
@@ -14193,154 +14204,181 @@ async processImport() {
             alert("Koneksi ke Printer terputus!");
         },
 
-        formatPrintLine(leftText, rightText) {
-    // 🌟 Pastikan input selalu menjadi String dan cegah undefined
+        // ==========================================
+// 2. FUNGSI MERAPIKAN BARIS TEKS (RATA KANAN-KIRI)
+// ==========================================
+formatPrintLine(leftText, rightText) {
     let left = String(leftText || '');
     let right = String(rightText || '');
     
-    let width = parseInt(this.printerPaperSize) || 32; 
-    let spaceLength = width - left.length - right.length;
-    if (spaceLength < 1) spaceLength = 1;
+    // Mengambil batas maksimal huruf dalam 1 baris kertas (32 huruf utk 58mm, 48 huruf utk 80mm)
+    let width = parseInt(this.printerPaperSize) || 48; 
     
-    return left + ' '.repeat(spaceLength) + right + '\n';
+    // Jika nama produk + harga melebihi batas kertas, harganya akan otomatis diturunkan ke baris baru dengan rata kanan
+    if (left.length + right.length >= width) {
+        return left + '\n' + ' '.repeat(Math.max(0, width - right.length)) + right;
+    }
+    
+    // Menghitung berapa banyak spasi kosong di tengah untuk meratakan harga ke kanan
+    let spaceLength = width - left.length - right.length;
+    
+    return left + ' '.repeat(spaceLength) + right; 
 },
 
-        async printReceiptBluetooth(trx) {
-            if (!this.printerCharacteristic) {
-                alert("Printer belum terhubung! Silakan hubungkan di menu Setelan.");
-                return;
-            }
+// ==========================================
+// 3. FUNGSI UTAMA CETAK STRUK (STANDAR ESC/POS)
+// ==========================================
+async printReceiptBluetooth(trx) {
+    if (!this.printerCharacteristic) {
+        alert("Printer belum terhubung! Silakan cari & hubungkan printer di menu Setelan.");
+        return;
+    }
 
-            // Kunci agar tidak nge-print dobel jika tombol dipencet berkali-kali
-            if (this._isPrinting) {
-                console.warn("Sedang memproses cetakan, harap tunggu...");
-                return; 
-            }
-            this._isPrinting = true; 
+    // Mengunci proses print agar sistem tidak hang jika kasir tidak sengaja tap berkali-kali
+    if (this._isPrinting) {
+        console.warn("Sedang memproses antrean cetakan...");
+        return; 
+    }
+    this._isPrinting = true; 
 
-            try {
-                const ESC = '\x1B';
-                const INIT = ESC + '@';
-                const ALIGN_CENTER = ESC + 'a' + '\x01';
-                const ALIGN_LEFT = ESC + 'a' + '\x00';
-                const BOLD_ON = ESC + 'E' + '\x01';
-                const BOLD_OFF = ESC + 'E' + '\x00';
+    try {
+        // Kode Perintah Hexadecimal Universal (ESC/POS) untuk printer Thermal
+        const ESC = '\x1B';
+        const GS = '\x1D';
+        const INIT = ESC + '@'; // Reset printer ke mode awal
+        const ALIGN_CENTER = ESC + 'a' + '\x01';
+        const ALIGN_LEFT = ESC + 'a' + '\x00';
+        const BOLD_ON = ESC + 'E' + '\x01';
+        const BOLD_OFF = ESC + 'E' + '\x00';
+        
+        let paperWidth = parseInt(this.printerPaperSize) || 48; 
+        let garis = '-'.repeat(paperWidth) + '\n';
+        let garisGanda = '='.repeat(paperWidth) + '\n';
+
+        // 🌟 MULAI MENYUSUN ISI TEKS STRUK
+        let text = INIT;
+        
+        // Bagian Atas (Kop Toko)
+        text += ALIGN_CENTER + BOLD_ON;
+        text += (this.appSettings?.storeName || 'NAMA TOKO') + '\n';
+        text += BOLD_OFF;
+        text += (this.appSettings?.storeAddress || 'Cabang: ' + this.getOutletName(trx.outletId)) + '\n';
+        text += (this.appSettings?.storePhone ? 'Telp: ' + this.appSettings.storePhone + '\n' : '');
+        text += garis;
+
+        // Bagian Detail Nota
+        text += ALIGN_LEFT;
+        text += `No   : ${trx.id}\n`;
+        text += `Tgl  : ${trx.dateStr}\n`;
+        text += `Kasir: ${trx.cashierName || 'Admin'}\n`;
+        text += `Plg  : ${trx.customer || 'Umum'}\n`;
+        text += garis;
+
+        // Bagian Daftar Barang
+        if (trx.items && trx.items.length > 0) {
+            trx.items.forEach(item => {
+                let itemName = item.productId === 'EXCHANGE' ? '[TUKAR] ' + item.name : item.name;
+                text += `${itemName}\n`;
+                let qtyPrice = `${item.qty} x ${this.formatNumber(item.finalPrice || item.sellPrice)}`;
+                let subTotal = this.formatNumber(item.qty * (item.finalPrice || item.sellPrice));
                 
-                let garis = '-'.repeat(this.printerPaperSize || 32) + '\n';
-                let garisGanda = '='.repeat(this.printerPaperSize || 32) + '\n';
-
-                let text = INIT;
+                if (item.productId === 'EXCHANGE') subTotal = '-' + subTotal;
                 
-                // Header Toko
-                text += ALIGN_CENTER + BOLD_ON;
-                text += (this.appSettings?.storeName || 'QUINSAH COLLECTION') + '\n';
-                text += BOLD_OFF;
-                text += (this.appSettings?.storeAddress || 'Cabang: ' + this.getOutletName(trx.outletId)) + '\n';
-                text += (this.appSettings?.storePhone ? 'Telp: ' + this.appSettings.storePhone + '\n' : '');
-                text += garis;
+                text += this.formatPrintLine(qtyPrice, subTotal) + '\n';
+            });
+        }
+        text += garis;
 
-                // Info Transaksi
-                text += ALIGN_LEFT;
-                text += `No   : ${trx.id}\n`;
-                text += `Tgl  : ${trx.dateStr}\n`;
-                text += `Kasir: ${trx.cashierName || 'Admin'}\n`;
-                text += `Plg  : ${trx.customer || 'Umum'}\n`;
-                text += garis;
+        // Bagian Kalkulasi Harga
+        text += this.formatPrintLine('Subtotal', this.formatNumber(trx.total)) + '\n';
+        if (trx.discountAmt > 0 || trx.globalDiscountAmt > 0) {
+            let totalDiskon = Number(trx.discountAmt || 0) + Number(trx.globalDiscountAmt || 0);
+            text += this.formatPrintLine('Diskon', '-' + this.formatNumber(totalDiskon)) + '\n';
+        }
+        if (trx.taxAmt > 0) {
+            text += this.formatPrintLine('Pajak (PPN)', this.formatNumber(trx.taxAmt)) + '\n';
+        }
 
-                // Rincian Barang
-                if (trx.items && trx.items.length > 0) {
-                    trx.items.forEach(item => {
-                        let itemName = item.productId === 'EXCHANGE' ? '[TUKAR] ' + item.name : item.name;
-                        text += `${itemName}\n`;
-                        let qtyPrice = `${item.qty} x ${this.formatNumber(item.finalPrice || item.sellPrice)}`;
-                        let subTotal = this.formatNumber(item.qty * (item.finalPrice || item.sellPrice));
-                        
-                        if (item.productId === 'EXCHANGE') subTotal = '-' + subTotal;
-                        text += this.formatPrintLine(qtyPrice, subTotal);
-                    });
-                }
-                text += garis;
+        text += BOLD_ON;
+        text += this.formatPrintLine('TOTAL AKHIR', 'Rp ' + this.formatNumber(trx.total)) + '\n';
+        text += BOLD_OFF;
+        
+        text += garisGanda;
+        
+        // Bagian Pembayaran (Hindari Error Variabel)
+        let methodPay = trx.paymentMethod ? String(trx.paymentMethod).toUpperCase() : 'TUNAI';
+        let valReceived = trx.amountReceived !== undefined ? trx.amountReceived : trx.total;
+        
+        text += this.formatPrintLine('Metode Bayar', methodPay) + '\n';
+        text += this.formatPrintLine('Total Dibayar', 'Rp ' + this.formatNumber(valReceived)) + '\n';
+        
+        let kembalian = Number(valReceived) - Number(trx.total || 0);
+        if (kembalian > 0) {
+            text += this.formatPrintLine('KEMBALIAN', 'Rp ' + this.formatNumber(kembalian)) + '\n';
+        }
 
-                // Total & Pembayaran
-                text += this.formatPrintLine('Subtotal', this.formatNumber(trx.total));
-                if (trx.discountAmt > 0 || trx.globalDiscountAmt > 0) {
-                    let totalDiskon = Number(trx.discountAmt || 0) + Number(trx.globalDiscountAmt || 0);
-                    text += this.formatPrintLine('Diskon', '-' + this.formatNumber(totalDiskon));
-                }
-                if (trx.taxAmt > 0) {
-                    text += this.formatPrintLine('Pajak (PPN)', this.formatNumber(trx.taxAmt));
-                }
+        text += '\n' + ALIGN_CENTER;
+        text += 'Terima kasih atas kunjungan Anda\n';
+        text += 'Barang yg sdh dibeli tdk dpt ditukar\n';
+        
+        // Mendorong kertas naik & Memotong kertas (Untuk printer dengan Auto-Cutter)
+        text += '\n\n\n\n\n'; 
+        text += GS + 'V' + '\x41' + '\x00'; 
 
-                text += BOLD_ON;
-                text += this.formatPrintLine('TOTAL AKHIR', 'Rp ' + this.formatNumber(trx.total));
-                text += BOLD_OFF;
-                
-                text += garisGanda;
-                text += this.formatPrintLine('Metode Bayar', trx.paymentMethod || 'TUNAI');
-                text += this.formatPrintLine('Total Dibayar', 'Rp ' + this.formatNumber(trx.amountReceived || trx.total));
-                
-                let kembalian = (trx.amountReceived || 0) - (trx.total || 0);
-                if (kembalian > 0) {
-                    text += this.formatPrintLine('KEMBALIAN', 'Rp ' + this.formatNumber(kembalian));
-                }
-
-                text += '\n' + ALIGN_CENTER;
-                text += 'Terima kasih atas kunjungan Anda\n';
-                text += 'Barang yg sdh dibeli tdk dpt ditukar\n';
-                text += '\n\n\n\n\n\n'; 
-
-                // 🌟 MENGGUNAKAN LOGIKA ENCODING ASCII DARI ANDA 🌟
-                let uint8array = new Uint8Array(text.length);
-                for (let i = 0; i < text.length; i++) {
-                    uint8array[i] = text.charCodeAt(i) & 0xFF;
-                }
-                
-                let CHUNK_SIZE = 64; 
-                let canWriteWithoutResponse = this.printerCharacteristic.properties.writeWithoutResponse;
-                
-                for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
-                    let chunk = uint8array.slice(i, i + CHUNK_SIZE);
-                    
-                    let success = false;
-                    let retries = 5;
-                    
-                    while (!success && retries > 0) {
-                        try {
-                            if (canWriteWithoutResponse) {
-                                await this.printerCharacteristic.writeValueWithoutResponse(chunk);
-                            } else {
-                                await this.printerCharacteristic.writeValue(chunk);
-                            }
-                            success = true; 
-                        } catch (err) {
-                            if (err.message.toLowerCase().includes('in progress') || err.message.toLowerCase().includes('busy')) {
-                                console.warn("Lalu lintas Bluetooth padat, mencoba ulang...");
-                                retries--;
-                                await new Promise(resolve => setTimeout(resolve, 150)); 
-                            } else {
-                                throw err; 
-                            }
-                        }
+        // 🌟 PROSES PENGIRIMAN DATA (ANTI-HANG UNTUK SEMUA PRINTER)
+        // Menggunakan TextEncoder agar karakter UTF-8 terkonversi sempurna ke format mesin ASCII
+        const encoder = new TextEncoder();
+        const uint8array = encoder.encode(text);
+        
+        // Membagi data menjadi potongan-potongan kecil (Chunk). 
+        // 40 byte adalah angka ideal. Terlalu besar = Mesin Hang (seperti Panda R80B), Terlalu kecil = Lemot.
+        let CHUNK_SIZE = 40; 
+        let canWriteWithoutResponse = this.printerCharacteristic.properties.writeWithoutResponse;
+        
+        for (let i = 0; i < uint8array.length; i += CHUNK_SIZE) {
+            let chunk = uint8array.slice(i, i + CHUNK_SIZE);
+            let success = false;
+            let retries = 5;
+            
+            while (!success && retries > 0) {
+                try {
+                    // Beberapa mesin POS lebih responsif terhadap Write tanpa verifikasi, 
+                    // namun mesin kelas atas menuntut Write dengan verifikasi.
+                    if (canWriteWithoutResponse) {
+                        await this.printerCharacteristic.writeValueWithoutResponse(chunk);
+                    } else {
+                        await this.printerCharacteristic.writeValue(chunk);
                     }
-
-                    if (!success) {
-                        throw new Error("Gagal mengirim data ke printer, Bluetooth sibuk / macet.");
+                    success = true; 
+                } catch (err) {
+                    // Jika Bluetooth mesin sedang memproses potongan data sebelumnya (Busy)
+                    if (err.message.toLowerCase().includes('in progress') || err.message.toLowerCase().includes('busy')) {
+                        retries--;
+                        // Memberi waktu mesin bernapas (delay 150ms) lalu coba tembak lagi
+                        await new Promise(resolve => setTimeout(resolve, 150)); 
+                    } else {
+                        throw err; 
                     }
-                    
-                    // Jeda aman untuk mencegah Buffer Overflow
-                    await new Promise(resolve => setTimeout(resolve, 80)); 
                 }
-                
-                console.log("Struk berhasil dikirim ke mesin printer!");
-                
-            } catch (err) {
-                console.error("Gagal mengirim teks print:", err);
-                alert("Proses cetak gagal: " + err.message);
-            } finally {
-                // Buka kembali kuncinya
-                this._isPrinting = false;
             }
-        },
+
+            if (!success) {
+                throw new Error("Pengiriman macet. Memory antrean (buffer) printer kepenuhan atau terputus di tengah jalan.");
+            }
+            
+            // Memberi jeda 30 milidetik antar pengiriman chunk. 
+            // Sangat penting agar mesin yang CPU-nya lambat (seperti XPrinter / Panda R80B) tidak kewalahan.
+            await new Promise(resolve => setTimeout(resolve, 30)); 
+        }
+        
+    } catch (err) {
+        console.error("Gagal mencetak struk:", err);
+        alert("Proses cetak gagal: " + err.message);
+    } finally {
+        // Bebaskan kunci, mesin siap mencetak antrean selanjutnya
+        this._isPrinting = false;
+    }
+},
 
         async testPrint() {
             let dummyTrx = {
