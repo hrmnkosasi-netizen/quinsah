@@ -3790,49 +3790,45 @@ body.sidebar-open {
         </div>
     
             <div v-if="currentView === 'opname'" class="dashboard-card mb-4">
-                    
     <div v-if="opnameView === 'list'">
+        <!-- HEADER & TOMBOL AKSI -->
         <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
             <h6 class="fw-bold mb-0">Riwayat Stok Opname</h6>
-            
             <div class="d-flex gap-2">
-                <!-- 🌟 GRUP TOMBOL IMPORT & EXPORT -->
-                <div class="btn-group shadow-sm" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="importConfig.showModal = true; importConfig.target = 'opname'; importConfig.step = 1">
-                        <i class="bi bi-download text-primary me-1"></i> Import
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark" @click="exportConfig.showModal = true; exportConfig.target = 'opname'; exportConfig.showPreview = false">
-                        <i class="bi bi-upload text-primary me-1"></i> Export
-                    </button>
-                </div>
-                
-                <button class="btn btn-sm btn-primary-custom shadow-sm" @click="startNewOpname()">
-                    <i class="bi bi-plus-lg me-1"></i>Buat Opname Baru
+                <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark border" @click="importConfig.showModal = true; importConfig.target = 'opname'; importConfig.step = 1">
+                    <i class="bi bi-download text-primary me-1"></i> Import
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary bg-white text-dark border" @click="exportConfig.showModal = true; exportConfig.target = 'opname'; exportConfig.showPreview = false">
+                    <i class="bi bi-upload text-primary me-1"></i> Export
+                </button>
+                <button class="btn btn-sm btn-danger fw-bold shadow-sm" @click="startNewOpname()">
+                    <i class="bi bi-plus-lg me-1"></i> Buat Opname Baru
                 </button>
             </div>
         </div>
 
-        <!-- 🌟 KOTAK FILTER -->
-        <div class="card border rounded-3 mb-3 shadow-none bg-white">
-            <div class="card-body p-3">
+        <!-- KOTAK FILTER -->
+        <div class="card shadow-sm border-0 mb-3 bg-white">
+            <div class="card-body p-2">
                 <div class="row g-2 align-items-end">
+                    <!-- (Bagian Filter Anda Tetap Sama) -->
                     <div class="col-12 col-md-3">
                         <label class="form-label small fw-bold text-muted mb-1">Cari ID / PIC / Catatan</label>
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-                            <input type="text" class="form-control shadow-none" v-model="opnameSearchQuery" placeholder="Ketik pencarian...">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" v-model="opnameSearchQuery" placeholder="Ketik pencarian...">
                         </div>
                     </div>
                     <div class="col-6 col-md-2">
                         <label class="form-label small fw-bold text-muted mb-1">Cabang</label>
-                        <select class="form-select form-select-sm shadow-none" v-model="opnameOutletFilter">
+                        <select class="form-select form-select-sm" v-model="opnameOutletFilter">
                             <option value="">-- Semua --</option>
                             <option v-for="ot in outlets" :key="ot.id" :value="ot.id">{{ ot.name }}</option>
                         </select>
                     </div>
                     <div class="col-6 col-md-2">
                         <label class="form-label small fw-bold text-muted mb-1">Status</label>
-                        <select class="form-select form-select-sm shadow-none" v-model="opnameStatusFilter">
+                        <select class="form-select form-select-sm" v-model="opnameStatusFilter">
                             <option value="">-- Semua --</option>
                             <option value="SELESAI">SELESAI</option>
                             <option value="PENDING">PENDING</option>
@@ -3841,23 +3837,24 @@ body.sidebar-open {
                     </div>
                     <div class="col-6 col-md-2">
                         <label class="form-label small fw-bold text-muted mb-1">Dari Tgl</label>
-                        <input type="date" class="form-control form-control-sm shadow-none" v-model="opnameStartDate">
+                        <input type="date" class="form-control form-control-sm" v-model="opnameStartDate">
                     </div>
                     <div class="col-6 col-md-2">
                         <label class="form-label small fw-bold text-muted mb-1">Sampai Tgl</label>
-                        <input type="date" class="form-control form-control-sm shadow-none" v-model="opnameEndDate">
+                        <input type="date" class="form-control form-control-sm" v-model="opnameEndDate">
                     </div>
                     <div class="col-12 col-md-1">
-                        <button class="btn btn-sm btn-outline-danger w-100 shadow-sm text-nowrap" @click="resetOpnameFilter()" title="Reset Filter">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Reset
+                        <button class="btn btn-sm btn-outline-danger w-100" @click="resetOpnameFilter()" title="Reset Filter">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
                         </button>
                     </div>
                 </div>
             </div>
         </div>
         
+        <!-- TABEL UTAMA OPNAME -->
         <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle text-nowrap" style="font-size: 0.8rem;">
+            <table class="table table-bordered table-hover align-middle text-nowrap bg-white" style="font-size: 0.8rem;">
                 <thead class="table-light text-center">
                     <tr>
                         <th>ID Dokumen</th>
@@ -3873,23 +3870,45 @@ body.sidebar-open {
                     <tr v-for="op in filteredOpnameHistory" :key="op.id">
                         <td class="fw-bold text-primary">{{ op.id }}</td>
                         <td class="text-muted">{{ op.dateStr }}</td>
-                        <td class="text-center">{{ getOutletName(op.outletId) || '-' }}</td>
-                        <td>{{ op.pic }}</td>
+                        <td class="text-center">
+                            <!-- Gaya Badge Cabang disamakan dengan Transfer -->
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">{{ getOutletName(op.outletId) || 'Global' }}</span>
+                        </td>
+                        <td class="text-center text-secondary small fw-semibold">
+                            <i class="bi bi-person-badge me-1"></i>{{ op.pic }}
+                        </td>
                         <td><span class="text-muted" style="white-space: normal; min-width: 150px; display: inline-block;">{{ op.note || '-' }}</span></td>
                         <td class="text-center">
-                            <span class="badge" :class="{'bg-danger': op.status === 'VOID', 'bg-success': op.status === 'SELESAI', 'bg-warning text-dark': op.status === 'PENDING'}">
+                            <span class="badge" :class="{'bg-danger': op.status === 'VOID', 'bg-success': op.status === 'SELESAI', 'bg-secondary': op.status === 'PENDING'}">
                                 {{ op.status }}
                             </span>
                         </td>
                         <td class="text-center">
-                            <button class="btn btn-sm btn-light border text-primary me-1 py-1 px-2" title="Lihat Detail & Print" @click="viewOpname(op.id)"><i class="bi bi-eye"></i></button>
-                            <button class="btn btn-sm btn-light border text-dark me-1 py-1 px-2" title="Print Dokumen (PDF)" @click="printOpnameDetail(op.id)"><i class="bi bi-printer"></i></button>
-                            <template v-if="op.status === 'PENDING'">
-                                <button class="btn btn-sm btn-light border text-warning me-1 py-1 px-2" title="Edit Draft" @click="editOpname(op.id)"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-success text-white me-1 py-1 px-2" title="Setujui & Sesuaikan Stok" @click="approveOpname(op.id)"><i class="bi bi-check-circle"></i></button>
-                            </template>
-                            <button v-if="op.status === 'SELESAI'" class="btn btn-sm btn-light border text-danger py-1 px-2 me-1" title="Void Dokumen" @click="voidOpname(op.id)"><i class="bi bi-x-octagon"></i></button>
-                            <button v-if="op.status === 'VOID'" class="btn btn-sm btn-light border text-secondary py-1 px-2" title="Batalkan Void (Un-Void)" @click="unvoidOpname(op.id)"><i class="bi bi-arrow-counterclockwise"></i></button>
+                            <div class="d-inline-flex gap-1 align-items-center">
+                                <!-- Tombol Lihat Detail (Memanggil viewOpname via SweetAlert / Modal) -->
+                                <button class="btn btn-sm btn-light border text-primary py-1 px-2" title="Lihat Detail" @click="viewOpname(op.id)"><i class="bi bi-eye"></i></button>
+                                
+                                <!-- 🌟 TOMBOL DOWNLOAD BARU (MENGGANTIKAN TOMBOL PRINT LAMA) -->
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light border text-success py-1 px-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Download Dokumen">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 0.85rem;">
+                                        <li><h6 class="dropdown-header text-dark fw-bold">Pilih Format:</h6></li>
+                                        <li><a class="dropdown-item py-2" href="#" @click.prevent="downloadOpnameDoc(op, 'pdf')"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i> Download PDF</a></li>
+                                        <li><a class="dropdown-item py-2" href="#" @click.prevent="downloadOpnameDoc(op, 'xlsx')"><i class="bi bi-file-earmark-excel-fill text-success me-2"></i> Download Excel</a></li>
+                                        <li><a class="dropdown-item py-2" href="#" @click.prevent="downloadOpnameDoc(op, 'csv')"><i class="bi bi-filetype-csv text-info me-2"></i> Download CSV</a></li>
+                                    </ul>
+                                </div>
+
+                                <!-- Aksi Lainnya -->
+                                <template v-if="op.status === 'PENDING'">
+                                    <button class="btn btn-sm btn-light border text-warning py-1 px-2" title="Edit Draft" @click="editOpname(op.id)"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-success text-white py-1 px-2" title="Setujui & Sesuaikan Stok" @click="approveOpname(op.id)"><i class="bi bi-check-circle"></i></button>
+                                </template>
+                                <button v-if="op.status === 'SELESAI'" class="btn btn-sm btn-light border text-danger py-1 px-2" title="Void Dokumen" @click="voidOpname(op.id)"><i class="bi bi-x-octagon"></i></button>
+                                <button v-if="op.status === 'VOID'" class="btn btn-sm btn-light border text-secondary py-1 px-2" title="Batalkan Void (Un-Void)" @click="unvoidOpname(op.id)"><i class="bi bi-arrow-counterclockwise"></i></button>
+                            </div>
                         </td>
                     </tr>
                     <tr v-if="filteredOpnameHistory.length === 0">
@@ -18565,27 +18584,23 @@ async logStock(type, { productId, sku, name, variantSku, variantName, qty, outle
     let opname = this.opnameHistory.find(o => o.id === id);
     if (!opname) return;
     
-    // Tarik metode HPP yang sedang aktif
     let hppMethod = (this.appSettings && this.appSettings.hppMethod) ? this.appSettings.hppMethod : 'FIFO';
+    let namaCabang = typeof this.getOutletName === 'function' ? this.getOutletName(opname.outletId) : opname.outletId;
 
     let tableRows = opname.items.map(item => {
-        let diffText = item.diff > 0 ? `<span class="text-success">+${item.diff}</span>` : `<span class="text-danger">${item.diff}</span>`;
+        let diffText = item.diff > 0 ? `<span class="badge bg-success bg-opacity-10 text-success border border-success">+${item.diff}</span>` : (item.diff < 0 ? `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger">${item.diff}</span>` : `<span class="badge bg-light text-muted border">0</span>`);
         let batchInfo = '-';
         
-        // LOGIKA CERDAS MENDETEKSI STATUS DOKUMEN OPNAME
         if (opname.status === 'VOID') {
             batchInfo = '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger"><i class="bi bi-x-circle me-1"></i>Opname Dibatalkan</span>';
         } else if (opname.status === 'PENDING') {
             batchInfo = '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning"><i class="bi bi-hourglass-split me-1"></i>Menunggu Konfirmasi</span>';
         } else if (opname.status === 'SELESAI') {
-            // JIKA SELESAI, TAMPILKAN POTONGAN BATCH ATAU INFO BATCH BARU
             if (item.diff < 0 && item.cutBatches && item.cutBatches.length > 0) {
                 batchInfo = item.cutBatches.map(b => `<div class="badge bg-danger bg-opacity-10 text-danger border border-danger mb-1 text-wrap" style="font-size:0.7rem;"><i class="bi bi-box-seam me-1"></i>Batch: ${b.batchNo || '-'} | Exp: ${b.expiredDate ? new Date(b.expiredDate).toLocaleDateString('id-ID') : '-'} (Qty: ${b.qty})</div>`).join('<br>');
             } else if (item.diff > 0) {
-                // LOGIKA BARU: Tampilkan Nomor Batch dan Expired Date dari Inputan Admin
                 let bNo = item.batchNo ? item.batchNo : ('OPN-' + opname.id);
                 let bExp = item.expiredDate ? new Date(item.expiredDate).toLocaleDateString('id-ID') : '-';
-                
                 batchInfo = `<div class="badge bg-success bg-opacity-10 text-success border border-success mb-1 text-wrap" style="font-size:0.7rem;"><i class="bi bi-plus-circle me-1"></i>Batch: ${bNo} | Exp: ${bExp}</div>`;
             } else {
                 batchInfo = '<span class="text-muted small">Tidak Ada Mutasi</span>';
@@ -18593,7 +18608,7 @@ async logStock(type, { productId, sku, name, variantSku, variantName, qty, outle
         }
 
         return `<tr>
-                    <td class="text-start">${item.name} <br><small class="text-muted">${item.variantName !== '-' ? item.variantName : ''}</small></td>
+                    <td class="text-start fw-bold">${item.name} <br><small class="text-muted fw-normal">${item.variantName !== '-' ? item.variantName : ''}</small></td>
                     <td class="text-center"><span class="badge bg-light text-dark border">${item.sku || '-'}</span></td>
                     <td class="text-center">${item.stokSistem}</td>
                     <td class="text-center fw-bold bg-warning bg-opacity-10">${item.stokFisik}</td>
@@ -18605,19 +18620,21 @@ async logStock(type, { productId, sku, name, variantSku, variantName, qty, outle
 
     let htmlContent = `
         <div class="text-start mb-3 p-3 bg-light rounded border" style="font-size: 0.85rem;">
-            <div class="row">
+            <div class="row g-2">
                 <div class="col-sm-6">
                     <b>ID Dokumen:</b> <span class="text-primary">${opname.id}</span><br>
-                    <b>Waktu:</b> ${opname.dateStr}
+                    <b>Waktu:</b> ${opname.dateStr}<br>
+                    <b>Cabang / Outlet:</b> <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">${namaCabang || 'Global'}</span>
                 </div>
                 <div class="col-sm-6">
-                    <b>PIC:</b> ${opname.pic}<br>
-                    <b>Catatan Jurnal:</b> ${opname.note}
+                    <b>PIC (Petugas):</b> ${opname.pic}<br>
+                    <b>Status Dokumen:</b> ${opname.status}<br>
+                    <b>Catatan Jurnal:</b> ${opname.note || '-'}
                 </div>
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table table-bordered table-sm align-middle text-nowrap" style="font-size: 0.8rem;">
+            <table class="table table-bordered table-sm align-middle text-nowrap table-hover" style="font-size: 0.8rem;">
                 <thead class="table-secondary text-center">
                     <tr>
                         <th>Produk / Varian</th>
@@ -18632,15 +18649,147 @@ async logStock(type, { productId, sku, name, variantSku, variantName, qty, outle
                 <tbody>${tableRows}</tbody>
             </table>
         </div>
+        
+        <!-- Action Buttons inside SweetAlert -->
+        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+             <div class="dropdown dropup">
+                <button class="btn btn-outline-success btn-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-download me-1"></i> Download Dokumen
+                </button>
+                <ul class="dropdown-menu shadow">
+                    <li><h6 class="dropdown-header text-dark fw-bold">Pilih Format:</h6></li>
+                    <li><a class="dropdown-item py-2" href="#" onclick="document.querySelector('#btn-hidden-pdf-${opname.id}').click()"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i> PDF</a></li>
+                    <li><a class="dropdown-item py-2" href="#" onclick="document.querySelector('#btn-hidden-xlsx-${opname.id}').click()"><i class="bi bi-file-earmark-excel-fill text-success me-2"></i> Excel</a></li>
+                    <li><a class="dropdown-item py-2" href="#" onclick="document.querySelector('#btn-hidden-csv-${opname.id}').click()"><i class="bi bi-filetype-csv text-info me-2"></i> CSV</a></li>
+                </ul>
+            </div>
+            
+            <!-- Hidden triggers for Vue Methods from inside Vanilla JS (SweetAlert) -->
+            <button id="btn-hidden-pdf-${opname.id}" style="display:none;" @click="downloadOpnameDoc(opname, 'pdf')"></button>
+            <button id="btn-hidden-xlsx-${opname.id}" style="display:none;" @click="downloadOpnameDoc(opname, 'xlsx')"></button>
+            <button id="btn-hidden-csv-${opname.id}" style="display:none;" @click="downloadOpnameDoc(opname, 'csv')"></button>
+        </div>
     `;
 
     Swal.fire({
         title: 'Detail Stok Opname',
         html: htmlContent,
         width: '1000px', 
-        confirmButtonText: 'Tutup',
-        confirmButtonColor: '#6c757d'
+        showConfirmButton: false, // Disembunyikan karena kita buat tombol custom di htmlContent
+        showCloseButton: true
     });
+    
+    // Trik untuk mengaitkan event onclick di dalam DOM SweetAlert ke Vue Method
+    setTimeout(() => {
+        document.querySelector(`#btn-hidden-pdf-${opname.id}`).onclick = (e) => { e.preventDefault(); this.downloadOpnameDoc(opname, 'pdf'); };
+        document.querySelector(`#btn-hidden-xlsx-${opname.id}`).onclick = (e) => { e.preventDefault(); this.downloadOpnameDoc(opname, 'xlsx'); };
+        document.querySelector(`#btn-hidden-csv-${opname.id}`).onclick = (e) => { e.preventDefault(); this.downloadOpnameDoc(opname, 'csv'); };
+    }, 100);
+},
+            downloadOpnameDoc(op, format) {
+    if (!op) return;
+    
+    const docName = `Opname_Detail_${op.id || 'Doc'}`;
+    const namaCabang = typeof this.getOutletName === 'function' ? this.getOutletName(op.outletId) : (op.outletId || 'Global');
+    
+    // ==============================================
+    // 📊 EXCEL & CSV (MENDATAR / FLAT)
+    // ==============================================
+    if (format === 'xlsx' || format === 'csv') {
+        if (typeof XLSX === 'undefined') return alert("Library Excel (SheetJS) belum dimuat.");
+        
+        let flatData = [];
+        if (op.items && op.items.length > 0) {
+            op.items.forEach(item => {
+                let namaProduk = item.name || '-';
+                if (item.variantName && item.variantName !== '-') namaProduk += ` - ${item.variantName}`;
+                
+                flatData.push({
+                    "ID Dokumen": op.id || '-',
+                    "Tanggal Eksekusi": op.dateStr || '-',
+                    "Cabang / Outlet": namaCabang,
+                    "Petugas (PIC)": op.pic || '-',
+                    "Status": op.status || '-',
+                    "Catatan Dokumen": op.note || '-',
+                    "Produk / Varian": namaProduk,
+                    "SKU": item.sku || item.variantSku || '-',
+                    "Stok Sistem": item.stokSistem || 0,
+                    "Stok Fisik": item.stokFisik || 0,
+                    "Selisih": item.diff || 0,
+                    "Catatan Item": item.note || '-'
+                });
+            });
+        } else {
+             flatData.push({
+                "ID Dokumen": op.id || '-', "Tanggal Eksekusi": op.dateStr || '-', "Cabang / Outlet": namaCabang,
+                "Petugas (PIC)": op.pic || '-', "Status": op.status || '-', "Catatan Dokumen": op.note || '-',
+                "Produk / Varian": "-", "SKU": "-", "Stok Sistem": 0, "Stok Fisik": 0, "Selisih": 0, "Catatan Item": "-"
+            });
+        }
+
+        const worksheet = XLSX.utils.json_to_sheet(flatData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Detail Opname");
+
+        if (format === 'xlsx') {
+            XLSX.writeFile(workbook, `${docName}.xlsx`);
+        } else {
+            XLSX.writeFile(workbook, `${docName}.csv`, { bookType: "csv" });
+        }
+    } 
+    // ==============================================
+    // 📄 PDF (GAYA DOKUMEN / KOP SURAT)
+    // ==============================================
+    else if (format === 'pdf') {
+        if (typeof window.jspdf === 'undefined') return alert("Library jsPDF belum dimuat.");
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text("Laporan Stok Opname", 14, 20);
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`ID Dokumen : ${op.id || '-'}`, 14, 30);
+        doc.text(`Tanggal    : ${op.dateStr || '-'}`, 14, 36);
+        doc.text(`Cabang     : ${namaCabang}`, 14, 42);
+        doc.text(`Petugas    : ${op.pic || '-'}`, 14, 48);
+        doc.text(`Status     : ${op.status || '-'}`, 14, 54);
+        doc.text(`Catatan    : ${op.note || '-'}`, 14, 60);
+
+        const itemHeaders = [["Produk / Varian", "SKU", "Sistem", "Fisik", "Selisih", "Catatan"]];
+        let itemData = [];
+        
+        if (op.items && op.items.length > 0) {
+            op.items.forEach(item => {
+                let namaProduk = item.name || '-';
+                if (item.variantName && item.variantName !== '-') namaProduk += `\n(${item.variantName})`; // Pakai \n agar turun baris di PDF
+                
+                let diffText = item.diff > 0 ? `+${item.diff}` : `${item.diff}`;
+                itemData.push([namaProduk, item.sku || item.variantSku || '-', item.stokSistem, item.stokFisik, diffText, item.note || '-']);
+            });
+        }
+
+        if (typeof doc.autoTable === 'function') {
+            doc.autoTable({
+                startY: 65,
+                head: itemHeaders,
+                body: itemData,
+                theme: 'grid',
+                headStyles: { fillColor: [52, 58, 64] }, // Warna dark grey ala secondary
+                styles: { fontSize: 9, cellPadding: 2, valign: 'middle' },
+                columnStyles: { 
+                    2: { halign: 'center' }, // Sistem
+                    3: { halign: 'center', fontStyle: 'bold' }, // Fisik
+                    4: { halign: 'center', fontStyle: 'bold' }  // Selisih
+                }
+            });
+        }
+        
+        doc.save(`${docName}.pdf`);
+    }
 },
 
             getEmptyProductForm() { 
