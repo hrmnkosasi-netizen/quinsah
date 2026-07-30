@@ -4961,10 +4961,10 @@ body.sidebar-open {
                 <p class="text-muted small mb-0">Pantau pergerakan stok antar cabang/gudang.</p>
             </div>
             <div class="d-flex gap-2 align-items-center">
-                <button class="btn btn-sm btn-outline-secondary bg-white text-dark border" @click="importConfig.target = 'transfer'; importConfig.showModal = true">
+                <button class="btn btn-sm btn-outline-secondary bg-white text-dark border" @click="importConfig.target = 'transfers'; importConfig.showModal = true">
                     <i class="bi bi-download me-1"></i> Import
                 </button>
-                <button class="btn btn-sm btn-outline-secondary bg-white text-dark border" @click="exportConfig.target = 'transfer'; exportConfig.showModal = true">
+                <button class="btn btn-sm btn-outline-secondary bg-white text-dark border" @click="exportConfig.target = 'transfers'; exportConfig.showModal = true">
                     <i class="bi bi-upload me-1"></i> Export
                 </button>
                 <button class="btn btn-sm btn-danger fw-bold shadow-sm" @click="transferView = 'form'">
