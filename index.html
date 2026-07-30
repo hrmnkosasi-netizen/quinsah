@@ -6396,20 +6396,15 @@ body.sidebar-open {
                         <!-- BINGKAI UTAMA PREVIEW -->
                         <div class="w-100 shadow-sm position-relative rounded-4 border overflow-hidden bg-white" style="max-width: 360px; height: 60vh; min-height: 450px;">
                             
-                            <!-- Area Scrollable -->
-                            <div style="width: 100%; height: 100%; overflow-y: auto; position: relative;">
-                                
-                                <!-- Overlay Transparan: Memblokir klik/tap, tapi tetap mengizinkan scroll di HP -->
-                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: auto; touch-action: pan-y;"></div>
-
-                                <!-- Iframe Normal -->
-                                <iframe :src="getReceiptUrl(activeEReceipt.id)" 
-                                        frameborder="0" 
-                                        width="100%" 
-                                        height="100%" 
-                                        style="border: none; display: block;">
-                                </iframe>
-                            </div>
+                            <!-- Iframe menyesuaikan 100% kontainer. Scroll otomatis aktif dari dalam iframe -->
+                            <iframe :src="getReceiptUrl(activeEReceipt.id)" 
+                                    sandbox="allow-same-origin allow-scripts"
+                                    frameborder="0" 
+                                    width="100%" 
+                                    height="100%" 
+                                    style="border: none; display: block;">
+                            </iframe>
+                            
                         </div>
                         
                         <div class="small text-muted mt-3 text-center">
@@ -6469,7 +6464,6 @@ body.sidebar-open {
         </div>
     </div>
 </div>
-
 
 <div class="modal fade" id="batchDetailModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-xl"> 
