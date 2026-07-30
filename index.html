@@ -13334,12 +13334,17 @@ downloadTemplate() {
     let sampleData = [];
     let fileName = `Template_${this.importConfig.target}.xlsx`;
 
-    // 🌟 TEMPLATE PRODUK
+    // 🌟 TEMPLATE PRODUK LENGKAP DENGAN VARIAN
     if (this.importConfig.target === 'products') {
-        headers = ['SKU Induk', 'Nama Produk', 'Kategori', 'HPP (Modal)', 'Harga Jual', 'Min. Stok (Alert)', 'Aktif (POS)'];
+        headers = [
+            'SKU Induk', 'Nama Produk', 'Kategori', 'UOM', 'Aktif di POS', 
+            'SKU Varian', 'Nama Varian', 'HPP (Modal)', 'Harga Jual Normal', 
+            'Tipe Diskon', 'Nilai Diskon', 'Min Stock', 'Max Stock'
+        ];
         sampleData = [ 
-            ['QNS-SHIRT-01', 'Kemeja Flanel Kotak Premium', 'Pakaian Pria > Atasan', 75000, 150000, 5, 'YA'], 
-            ['QC-ROK-001', 'Rok Prisket Wanita', 'Pakaian Wanita > Bawahan', 35000, 45000, 2, 'YA'] 
+            ['ROK-01', 'Rok Prisket Wanita', 'Pakaian Wanita', 'Pcs', 'YA', '', '', 35000, 45000, 'none', 0, 5, 100], 
+            ['KEM-FLN', 'Kemeja Flanel', 'Pakaian Pria', 'Pcs', 'YA', 'KEM-FLN-M', 'Size M', 75000, 150000, 'percent', 10, 2, 50],
+            ['KEM-FLN', 'Kemeja Flanel', 'Pakaian Pria', 'Pcs', 'YA', 'KEM-FLN-L', 'Size L', 75000, 150000, 'percent', 10, 2, 50]
         ];
     }
     else if (this.importConfig.target === 'categories') {
@@ -13362,22 +13367,19 @@ downloadTemplate() {
         headers = ['No. PO', 'Tanggal', 'Cabang', 'Supplier', 'PIC', 'Nama Produk', 'SKU / Varian', 'No. Batch', 'Tgl Expired', 'Qty Beli', 'Harga Satuan', 'Subtotal Barang', 'Pajak (%)', 'Pajak (Rp)', 'TOTAL AKHIR', 'DP / Dibayar', 'Sisa Hutang', 'Metode Bayar', 'Jatuh Tempo', 'Status Bayar', 'Status Barang'];
         sampleData = [
             ['PO-2026-001', '28/07/2026', 'Pusat', 'PT Sumber Makmur', 'Admin', 'Biji Kopi Arabica', 'BKA-1KG', 'B-001', '31/12/2026', 10, 150000, 1500000, 11, 165000, 1665000, 1665000, 0, 'TRANSFER', '28/07/2026', 'LUNAS', 'SELESAI'],
-            ['PO-2026-001', '28/07/2026', 'Pusat', 'PT Sumber Makmur', 'Admin', 'Susu UHT 1L', 'S-UHT-1L', 'B-001', '01/06/2027', 24, 18000, 432000, 11, 47520, 479520, 479520, 0, 'TRANSFER', '28/07/2026', 'LUNAS', 'SELESAI'],
-            ['PO-2026-002', '28/07/2026', 'Cabang 1', 'CV Maju Bersama', 'Manajer', 'Sirup Karamel', 'SRP-KRM', 'AUTO', '', 5, 85000, 425000, 0, 0, 425000, 200000, 225000, 'CASH', '05/08/2026', 'HUTANG', 'PENDING']
+            ['PO-2026-001', '28/07/2026', 'Pusat', 'PT Sumber Makmur', 'Admin', 'Susu UHT 1L', 'S-UHT-1L', 'B-001', '01/06/2027', 24, 18000, 432000, 11, 47520, 479520, 479520, 0, 'TRANSFER', '28/07/2026', 'LUNAS', 'SELESAI']
         ];
-    } 
-    else if (this.importConfig.target === 'opname') {
+    } else if (this.importConfig.target === 'opname') {
         headers = ['ID Dokumen', 'Waktu', 'Cabang', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Stok Sistem', 'Stok Fisik', 'Catatan Item'];
         sampleData = [
             ['OPN-2026-001', '29/07/2026 10:00', 'Pusat', 'Admin', 'SELESAI', 'Audit Bulanan', 'Kopi Susu', 'KPS-01', 50, 48, 'Rusak 2 cup'],
             ['OPN-2026-001', '29/07/2026 10:00', 'Pusat', 'Admin', 'SELESAI', 'Audit Bulanan', 'Gula Aren', 'GLA-02', 20, 20, 'Aman']
         ];
-    } 
-    else if (this.importConfig.target === 'transfers') {
+    } else if (this.importConfig.target === 'transfers') {
         headers = ['No. Dokumen', 'Tanggal Buat', 'Cabang Asal', 'Cabang Tujuan', 'PIC', 'Status', 'Catatan Dokumen', 'Nama Produk', 'SKU / Varian', 'Qty Transfer'];
         sampleData = [
-            ['TRF-2026-001', '30/07/2026 10:00', 'Quinsah Seni Budaya', 'Quinsah Tanah Abang', 'Admin', 'PENDING', 'Restock akhir bulan', 'Kebaya Janggan', 'QC002', 10],
-            ['TRF-2026-001', '30/07/2026 10:00', 'Quinsah Seni Budaya', 'Quinsah Tanah Abang', 'Admin', 'PENDING', 'Restock akhir bulan', 'Baju Teletubbies', 'QC003', 5]
+            ['TRF-2026-001', '30/07/2026 10:00', 'Gudang Pusat', 'Cabang 1', 'Admin', 'PENDING', 'Restock', 'Kebaya Janggan', 'QC002', 10],
+            ['TRF-2026-001', '30/07/2026 10:00', 'Gudang Pusat', 'Cabang 1', 'Admin', 'PENDING', 'Restock', 'Baju Teletubbies', 'QC003', 5]
         ];
     } else {
         return alert('Template tidak tersedia untuk data ini.');
@@ -13413,9 +13415,13 @@ handleFileUpload(event) {
                 const uploadedHeaders = jsonData[0]; 
                 
                 let expectedHeaders = [];
-                // 🌟 VALIDASI HEADER PRODUK
+                // 🌟 VALIDASI HEADER BARU UNTUK PRODUK
                 if (this.importConfig.target === 'products') {
-                    expectedHeaders = ['SKU Induk', 'Nama Produk', 'Kategori', 'HPP (Modal)', 'Harga Jual', 'Min. Stok (Alert)', 'Aktif (POS)'];
+                    expectedHeaders = [
+                        'SKU Induk', 'Nama Produk', 'Kategori', 'UOM', 'Aktif di POS', 
+                        'SKU Varian', 'Nama Varian', 'HPP (Modal)', 'Harga Jual Normal', 
+                        'Tipe Diskon', 'Nilai Diskon', 'Min Stock', 'Max Stock'
+                    ];
                 } else if (this.importConfig.target === 'categories') {
                     expectedHeaders = ['Nama Kategori', 'Kategori Induk'];
                 } else if (this.importConfig.target === 'customers') {
@@ -13484,7 +13490,7 @@ async processImport() {
     
     try {
         let collectionName = "customers";
-        if (this.importConfig.target === 'products') collectionName = "products"; // 🌟 KOLEKSI PRODUK
+        if (this.importConfig.target === 'products') collectionName = "products";
         if (this.importConfig.target === 'categories') collectionName = "categories";
         if (this.importConfig.target === 'suppliers') collectionName = "suppliers";
         if (this.importConfig.target === 'sales') collectionName = "transactions"; 
@@ -13497,7 +13503,7 @@ async processImport() {
         
         const existingPhones = new Map();
         const existingNames = new Map();
-        const existingSKUs = new Map(); // 🌟 Untuk Produk
+        const existingSKUs = new Map();
         const existingInvoices = new Map(); 
         const existingPOs = new Map();
         const existingOpnames = new Map();
@@ -13532,47 +13538,112 @@ async processImport() {
         let insertCount = 0;
         let updateCount = 0;
 
-        // 🌟 LOGIKA IMPORT PRODUK BARU
+        // 🌟 1. LOGIKA IMPORT PRODUK (MENDUKUNG VARIAN)
         if (this.importConfig.target === 'products') {
             const BATCH_LIMIT = 400; 
+            
+            // Kelompokkan data Excel berdasarkan SKU Induk atau Nama Produk
+            let productGroups = {};
+            for (let row of dataRows) {
+                let skuInduk = row[0] ? row[0].toString().trim() : '';
+                let namaProduk = row[1] ? row[1].toString().trim() : '';
+                if (!namaProduk) continue; 
+
+                let groupKey = skuInduk ? skuInduk.toLowerCase() : namaProduk.toLowerCase();
+                if (!productGroups[groupKey]) productGroups[groupKey] = [];
+                productGroups[groupKey].push(row);
+            }
+
+            let groupedArray = Object.values(productGroups);
             const chunks = [];
-            for (let i = 0; i < dataRows.length; i += BATCH_LIMIT) chunks.push(dataRows.slice(i, i + BATCH_LIMIT));
+            for (let i = 0; i < groupedArray.length; i += (BATCH_LIMIT / 5)) {
+                chunks.push(groupedArray.slice(i, i + (BATCH_LIMIT / 5)));
+            }
 
             for (const chunk of chunks) {
                 const batch = writeBatch(db); 
-                chunk.forEach((row) => {
-                    const sku = row[0] ? row[0].toString().trim() : '';
-                    const name = row[1] ? row[1].toString().trim() : '';
-                    if (!name) return; // Nama produk wajib ada
+                
+                for (let productRows of chunk) {
+                    let headRow = productRows[0]; // Ambil baris pertama sebagai Header Induk Produk
                     
-                    const catPath = row[2] ? row[2].toString().trim() : '';
-                    const hpp = row[3] ? parseInt(String(row[3]).replace(/[^0-9]/g, '')) : 0;
-                    const sell = row[4] ? parseInt(String(row[4]).replace(/[^0-9]/g, '')) : 0;
-                    const minAlert = row[5] ? parseInt(String(row[5]).replace(/[^0-9]/g, '')) : 0;
-                    const isActive = row[6] ? (row[6].toString().trim().toUpperCase() === 'YA') : true;
+                    const skuInduk = headRow[0] ? headRow[0].toString().trim() : '';
+                    const name = headRow[1] ? headRow[1].toString().trim() : '';
+                    const catName = headRow[2] ? headRow[2].toString().trim() : '';
+                    const uom = headRow[3] ? headRow[3].toString().trim() : 'Pcs';
+                    const isSellable = headRow[4] ? (headRow[4].toString().trim().toUpperCase() === 'YA') : true;
 
-                    // Coba cari Category ID dari Path (Ini sederhana, bisa diperbaiki sesuai struktur kategori aslinya)
-                    let matchedCategoryId = null;
-                    if (catPath && this.categories && this.categories.length > 0) {
-                        let catParts = catPath.split('>');
-                        let lastPartName = catParts[catParts.length-1].trim().toLowerCase();
-                        let foundCat = this.categories.find(c => c.name.toLowerCase() === lastPartName);
+                    let matchedCategoryId = '';
+                    if (catName && this.categories && this.categories.length > 0) {
+                        let foundCat = this.categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
                         if (foundCat) matchedCategoryId = foundCat.id;
                     }
 
+                    let hasVariants = false;
+                    let parsedVariants = [];
+                    let singleHpp = 0, singleSell = 0, singleDiscType = 'none', singleDiscVal = 0, singleMin = 0, singleMax = 0;
+
+                    // Cek jika barisnya lebih dari 1 atau jika baris pertama mengisi SKU/Nama Varian
+                    if (productRows.length > 1 || (headRow[5] && headRow[5].toString().trim() !== '') || (headRow[6] && headRow[6].toString().trim() !== '')) {
+                        hasVariants = true;
+                        
+                        productRows.forEach(vRow => {
+                            let vSku = vRow[5] ? vRow[5].toString().trim() : '';
+                            let vName = vRow[6] ? vRow[6].toString().trim() : '';
+                            let vHpp = vRow[7] ? parseInt(String(vRow[7]).replace(/[^0-9]/g, '')) : 0;
+                            let vSell = vRow[8] ? parseInt(String(vRow[8]).replace(/[^0-9]/g, '')) : 0;
+                            let vDiscType = vRow[9] ? vRow[9].toString().trim().toLowerCase() : 'none';
+                            if (!['none', 'percent', 'nominal'].includes(vDiscType)) vDiscType = 'none';
+                            let vDiscVal = vRow[10] ? parseInt(String(vRow[10]).replace(/[^0-9]/g, '')) : 0;
+                            let vMin = vRow[11] ? parseInt(String(vRow[11]).replace(/[^0-9]/g, '')) : 0;
+                            let vMax = vRow[12] ? parseInt(String(vRow[12]).replace(/[^0-9]/g, '')) : 0;
+
+                            if(vName) {
+                                parsedVariants.push({
+                                    name: vName,
+                                    variantSku: vSku || `${skuInduk}-${parsedVariants.length+1}`,
+                                    hppPrice: vHpp,
+                                    sellPrice: vSell,
+                                    discountType: vDiscType,
+                                    discountValue: vDiscVal,
+                                    minStock: vMin,
+                                    maxStock: vMax,
+                                    outletStocks: {} // Dibiarkan kosong/0 saat awal import
+                                });
+                            }
+                        });
+                        
+                        singleHpp = parsedVariants[0]?.hppPrice || 0;
+                        singleSell = parsedVariants[0]?.sellPrice || 0;
+
+                    } else {
+                        singleHpp = headRow[7] ? parseInt(String(headRow[7]).replace(/[^0-9]/g, '')) : 0;
+                        singleSell = headRow[8] ? parseInt(String(headRow[8]).replace(/[^0-9]/g, '')) : 0;
+                        singleDiscType = headRow[9] ? headRow[9].toString().trim().toLowerCase() : 'none';
+                        if (!['none', 'percent', 'nominal'].includes(singleDiscType)) singleDiscType = 'none';
+                        singleDiscVal = headRow[10] ? parseInt(String(headRow[10]).replace(/[^0-9]/g, '')) : 0;
+                        singleMin = headRow[11] ? parseInt(String(headRow[11]).replace(/[^0-9]/g, '')) : 0;
+                        singleMax = headRow[12] ? parseInt(String(headRow[12]).replace(/[^0-9]/g, '')) : 0;
+                    }
+
                     let existingDocId = null;
-                    if (sku && existingSKUs.has(sku.toLowerCase())) existingDocId = existingSKUs.get(sku.toLowerCase());
+                    if (skuInduk && existingSKUs.has(skuInduk.toLowerCase())) existingDocId = existingSKUs.get(skuInduk.toLowerCase());
                     else if (existingNames.has(name.toLowerCase())) existingDocId = existingNames.get(name.toLowerCase());
 
                     let docPayload = {
                         name: name,
-                        sku: sku,
+                        sku: skuInduk,
                         categoryId: matchedCategoryId,
-                        hppPrice: hpp,
-                        sellPrice: sell,
-                        minStock: minAlert,
-                        isActive: isActive
+                        uom: uom,
+                        isSellable: isSellable,
+                        hppPrice: singleHpp,
+                        sellPrice: singleSell,
+                        discountType: singleDiscType,
+                        discountValue: singleDiscVal,
+                        minStock: singleMin,
+                        maxStock: singleMax
                     };
+
+                    if (hasVariants) docPayload.variants = parsedVariants;
 
                     if (existingDocId && existingDocId !== "pending_insert") {
                         batch.update(doc(db, collectionName, existingDocId), { updatedAt: new Date(), ...docPayload });
@@ -13582,20 +13653,23 @@ async processImport() {
                         batch.set(newDocRef, { 
                             companyId: compId, 
                             createdAt: new Date(), 
-                            baseOutletStocks: {}, // Default kosong untuk produk baru dari excel
-                            variants: [], 
+                            baseOutletStocks: {}, 
+                            variants: hasVariants ? parsedVariants : [], 
+                            tiers: [],
+                            modifiers: [],
+                            productTags: [],
                             ...docPayload 
                         });
-                        if (sku) existingSKUs.set(sku.toLowerCase(), "pending_insert");
+                        if (skuInduk) existingSKUs.set(skuInduk.toLowerCase(), "pending_insert");
                         existingNames.set(name.toLowerCase(), "pending_insert");
                         insertCount++;
                     }
-                });
+                }
                 await batch.commit(); 
             }
         }
+        // 🌟 2. LOGIKA IMPORT PO
         else if (this.importConfig.target === 'po') {
-            // Logika PO yang sudah ada
             let poGroups = {};
             for (let row of dataRows) {
                 let poId = row[0] ? row[0].toString().trim() : null;
@@ -13677,8 +13751,9 @@ async processImport() {
                 await batch.commit();
             }
             
-        } else if (this.importConfig.target === 'sales') {
-            // Logika Penjualan yang sudah ada
+        } 
+        // 🌟 3. LOGIKA IMPORT SALES / TRANSACTIONS
+        else if (this.importConfig.target === 'sales') {
             let salesGroups = {};
             for (let row of dataRows) {
                 let invId = row[0] ? row[0].toString().trim() : null;
@@ -13783,8 +13858,9 @@ async processImport() {
                 await batch.commit();
             }
             
-        } else if (this.importConfig.target === 'categories') {
-            // Logika Kategori yang sudah ada
+        } 
+        // 🌟 4. LOGIKA IMPORT CATEGORIES
+        else if (this.importConfig.target === 'categories') {
             let categoryIdMap = new Map();
             existingDocs.forEach(docSnap => { categoryIdMap.set(docSnap.data().name.toLowerCase().trim(), docSnap.id); });
             dataRows.forEach(row => {
@@ -13823,6 +13899,7 @@ async processImport() {
                 await batch.commit(); 
             }
         } 
+        // 🌟 5. LOGIKA IMPORT OPNAME
         else if (this.importConfig.target === 'opname') {
             let opnameGroups = {};
             for (let row of dataRows) {
@@ -13876,6 +13953,7 @@ async processImport() {
                 await batch.commit();
             }
         }
+        // 🌟 6. LOGIKA IMPORT TRANSFERS
         else if (this.importConfig.target === 'transfers') {
             let trfGroups = {};
             for (let row of dataRows) {
@@ -13962,6 +14040,7 @@ async processImport() {
                 await batch.commit();
             }
         }
+        // 🌟 7. LOGIKA IMPORT CUSTOMER & SUPPLIER (DEFAULT UMUM)
         else {
             const BATCH_LIMIT = 400; 
             const chunks = [];
@@ -14015,7 +14094,8 @@ async processImport() {
 
         this.importConfig.step = 3; 
         
-        if (this.importConfig.target === 'products' && typeof this.fetchProducts === 'function') await this.fetchProducts(); // 🌟 RE-FETCH PRODUK
+        // RE-FETCH DATA SESUDAH IMPORT
+        if (this.importConfig.target === 'products' && typeof this.fetchProducts === 'function') await this.fetchProducts(); 
         else if (this.importConfig.target === 'categories' && typeof this.fetchCategories === 'function') await this.fetchCategories();
         else if (this.importConfig.target === 'customers' && typeof this.fetchCustomers === 'function') await this.fetchCustomers();
         else if (this.importConfig.target === 'suppliers' && typeof this.fetchSuppliers === 'function') await this.fetchSuppliers();
