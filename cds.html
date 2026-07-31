@@ -43,7 +43,10 @@
     </div>
 
     <!-- KANAN: AREA KERANJANG REAL-TIME -->
-    <div class="bg-danger text-white text-center py-3 shadow-sm">
+    <!-- 🌟 KODE PEMBUNGKUS INI YANG SEBELUMNYA TERHAPUS 🌟 -->
+    <div class="cart-area position-relative"> 
+        
+        <div class="bg-danger text-white text-center py-3 shadow-sm">
             <h3 class="mb-0 fw-bold">{{ storeName }}</h3>
             <!-- Munculkan nama cabang jika ada -->
             <small v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</small>
@@ -89,7 +92,8 @@
                 <span class="fs-3 fw-bold text-success">Rp {{ formatRupiah(changeAmount) }}</span>
             </div>
         </div>
-    </div>
+
+    </div> <!-- 🌟 PENUTUP AREA KANAN (CART AREA) 🌟 -->
 </div>
 
 <!-- Menggunakan Firebase Modular (Web v9) -->
