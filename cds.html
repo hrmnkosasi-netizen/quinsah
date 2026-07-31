@@ -85,48 +85,43 @@
 
     <!-- FOOTER / RINGKASAN TAGIHAN -->
     <div class="cart-footer">
-        <!-- Subtotal Produk -->
-        <div class="d-flex justify-content-between mb-1 fs-6">
-            <span class="text-muted">Subtotal Produk</span>
-            <span class="fw-bold">Rp {{ formatRupiah(subtotal) }}</span>
-        </div>
-        
-        <!-- Extra Diskon -->
-        <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
-            <span>Extra Diskon</span>
-            <span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span>
-        </div>
+        <!<!-- Subtotal Produk -->
+<div class="d-flex justify-content-between mb-1 fs-6">
+    <span class="text-muted">Subtotal Produk</span>
+    <span class="fw-bold text-dark">Rp {{ formatRupiah(subtotal) }}</span>
+</div>
 
-        <!-- Diskon Member -->
-        <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
-            <span>Diskon Member</span>
-            <span class="fw-bold">- Rp {{ formatRupiah(memberDiscountAmt) }}</span>
-        </div>
+<!-- Extra Diskon (Diskon Bertingkat / Item) -->
+<div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
+    <span><i class="fas fa-tag"></i> Extra Diskon</span>
+    <span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span>
+</div>
 
-        <!-- Diskon Invoice / Global -->
-        <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
-            <span>Diskon Invoice</span>
-            <span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span>
-        </div>
+<!-- Diskon Global (Per Invoice) -->
+<div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
+    <span><i class="fas fa-tags"></i> Diskon Global</span>
+    <span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span>
+</div>
 
-        <!-- PPN -->
-        <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-1 fs-6">
-            <span class="text-muted">PPN (11%)</span>
-            <span class="fw-bold text-dark">+ Rp {{ formatRupiah(taxAmt) }}</span>
-        </div>
+<!-- PPN -->
+<div v-if="taxAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
+    <span>PPN (11%)</span>
+    <span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span>
+</div>
 
-        <hr class="my-2">
-        
-        <!-- Total Akhir -->
-        <div class="text-end mt-2">
-            <div class="text-muted fw-bold mb-0" style="font-size: 1rem;">TOTAL TAGIHAN</div>
-            <div class="total-text">Rp {{ formatRupiah(total) }}</div>
-        </div>
-        
-        <div v-if="changeAmount > 0" class="d-flex justify-content-between mt-3 bg-white p-3 rounded-3 shadow-sm border border-success">
-            <span class="fs-4 fw-bold text-success">KEMBALIAN</span>
-            <span class="fs-3 fw-bold text-success">Rp {{ formatRupiah(changeAmount) }}</span>
-        </div>
+<!-- ONGKIR -->
+<div v-if="shippingFee > 0" class="d-flex justify-content-between mb-1 fs-6 text-info">
+    <span><i class="fas fa-truck"></i> Ongkir ({{ courier }})</span>
+    <span class="fw-bold">+ Rp {{ formatRupiah(shippingFee) }}</span>
+</div>
+
+<hr class="my-2">
+
+<!-- Total Tagihan -->
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <span class="fw-bold text-uppercase" style="font-size: 0.9rem;">Total Tagihan</span>
+    <span class="fw-bold text-danger" style="font-size: 1.8rem;">Rp {{ formatRupiah(total) }}</span>
+</div>
     </div>
 </div>
 </div>
