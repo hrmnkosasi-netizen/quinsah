@@ -12326,6 +12326,13 @@ financeAPList() {
     taxAmount() {
         if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
     },
+
+    paymentData: {
+        deep: true,
+        handler() {
+            if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
+        }
+    }, 
             
     // ==========================================
     // 🌟 CCTV PEMBERSIH OTOMATIS MODAL IMPORT & EXPORT
@@ -12750,22 +12757,26 @@ parseDateStr(dateStr) {
             const grandTotal = Math.round(Number(this.grandTotal || this.total || 0));
 
             const cdsPayload = {
-                storeName: namaToko,
-                outletName: namaCabang,
-                cartItems: formattedCart,
-                
-                subtotal: subtotalBase,
-                extraDiscountAmt: extraDiskon,
-                memberDiscountAmt: diskonMember,
-                invoiceDiscountAmt: diskonInvoice,
-                taxAmt: ppn,
-                shippingFee: ongkir,
-                courier: kurir,
-                
-                total: grandTotal, 
-                paymentStatus: 'PENDING',
-                updatedAt: new Date().getTime() 
-            };
+            storeName: namaToko,
+            outletName: namaCabang,
+            cartItems: formattedCart,
+            
+            subtotal: subtotalBase,
+            extraDiscountAmt: extraDiskon,
+            memberDiscountAmt: diskonMember,
+            invoiceDiscountAmt: diskonInvoice,
+            taxAmt: ppn,
+            shippingFee: ongkir,
+            courier: kurir,
+            
+            total: grandTotal, 
+            paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
+            
+            // 🌟 TAMBAHAN BARU: Kirim metode pembayaran yang sedang aktif
+            paymentMethod: this.paymentData ? this.paymentData.method : null,
+            
+            updatedAt: new Date().getTime() 
+        };
 
             await setDoc(doc(db, "cds", docId), cdsPayload);
         } catch (error) {
