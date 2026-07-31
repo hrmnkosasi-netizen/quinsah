@@ -1399,8 +1399,8 @@ body.sidebar-open {
         </div>
         <div>
             <!-- Tombol untuk membuka link CDS di tablet -->
-            <a :href="'/cds.html?company=' + (currentUser?.companyId || '')" target="_blank" class="btn btn-outline-danger fw-bold rounded-pill">
-                <i class="bi bi-box-arrow-up-right me-1"></i> Buka Layar CDS
+            <a :href="'/cds.html?company=' + (getMyCompanyId ? getMyCompanyId() : '')" target="_blank" class="btn btn-outline-danger fw-bold rounded-pill">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Buka Layar CDS
             </a>
             <button class="btn btn-primary-custom fw-bold rounded-pill ms-2" @click="saveCDSSettings">
                 <i class="bi bi-save me-1"></i> Simpan Setelan
