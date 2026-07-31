@@ -101,10 +101,14 @@
     const appFirebase = initializeApp(firebaseConfig);
     const db = getFirestore(appFirebase);
 
-    // Ambil company ID dari URL (contoh: cds.html?company=ID_PERUSAHAAN)
+    // Ambil company ID dari URL, atau ambil dari localStorage jika Anda menyimpannya di sana
     const urlParams = new URLSearchParams(window.location.search);
-    const companyId = urlParams.get('company');
+    let companyId = urlParams.get('company');
 
+    // Jika di URL tidak ada parameter company, coba cek apakah tersimpan di localStorage browser
+    if (!companyId) {
+        companyId = localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
+    }
     const app = Vue.createApp({
         data() {
             return {
