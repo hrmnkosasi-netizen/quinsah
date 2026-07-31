@@ -1399,7 +1399,7 @@ body.sidebar-open {
         </div>
         <div>
             <!-- Tombol untuk membuka link CDS di tablet -->
-            <a :href="'/cds.html?company=' + (getMyCompanyId ? getMyCompanyId() : '')" target="_blank" class="btn btn-outline-danger fw-bold rounded-pill">
+            <a :href="'/cds.html?company=' + (getMyCompanyId ? getMyCompanyId() : '') + '&outlet=' + (appSettings.selectedReceiptOutletId || 'global')" target="_blank" class="btn btn-outline-danger fw-bold rounded-pill">
             <i class="bi bi-box-arrow-up-right me-1"></i> Buka Layar CDS
             </a>
             <button class="btn btn-primary-custom fw-bold rounded-pill ms-2" @click="saveCDSSettings">
@@ -12718,10 +12718,27 @@ parseDateStr(dateStr) {
         const compId = this.getMyCompanyId();
         if (!compId) return;
         
+        // 1. Dapatkan ID Outlet yang sedang aktif di kasir ini
+        const outletId = this.appSettings?.selectedReceiptOutletId || 'global';
+        
+        // 2. Tarik Nama Toko khusus untuk outlet ini (dari pengaturan struk)
+        let namaToko = 'Toko Kami';
+        if (this.appSettings?.outletReceipts && this.appSettings.outletReceipts[outletId]) {
+            namaToko = this.appSettings.outletReceipts[outletId].storeName || 'Toko Kami';
+        } else if (this.appSettings?.storeName) {
+            namaToko = this.appSettings.storeName;
+        }
+
+        // 3. Tarik Nama Cabang
+        const namaCabang = typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : 'Pusat';
+
         try {
-            // Melempar data keranjang real-time ke database Firebase
-            await setDoc(doc(db, "cds", compId), {
-                storeName: this.appSettings?.storeName || 'Toko Kami',
+            // KUNCI: Pisahkan dokumen CDS per Cabang/Outlet agar kasir tidak bentrok
+            const docId = `${compId}_${outletId}`;
+
+            await setDoc(doc(db, "cds", docId), {
+                storeName: namaToko,
+                outletName: namaCabang, // Menambahkan Nama Cabang
                 cartItems: this.cart,
                 subtotal: this.subTotal,
                 total: this.grandTotal,
