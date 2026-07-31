@@ -12718,10 +12718,8 @@ parseDateStr(dateStr) {
         const compId = this.getMyCompanyId();
         if (!compId) return;
         
-        // 1. Dapatkan ID Outlet yang sedang aktif di kasir ini
         const outletId = this.appSettings?.selectedReceiptOutletId || 'global';
         
-        // 2. Tarik Nama Toko khusus untuk outlet ini (dari pengaturan struk)
         let namaToko = 'Toko Kami';
         if (this.appSettings?.outletReceipts && this.appSettings.outletReceipts[outletId]) {
             namaToko = this.appSettings.outletReceipts[outletId].storeName || 'Toko Kami';
@@ -12729,16 +12727,17 @@ parseDateStr(dateStr) {
             namaToko = this.appSettings.storeName;
         }
 
-        // 3. Tarik Nama Cabang
         const namaCabang = typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : 'Pusat';
 
         try {
-            // KUNCI: Pisahkan dokumen CDS per Cabang/Outlet agar kasir tidak bentrok
             const docId = `${compId}_${outletId}`;
+            
+            // Cek di console apakah fungsi ini dipanggil
+            console.log("Mengirim data ke CDS...", docId, this.cart);
 
             await setDoc(doc(db, "cds", docId), {
                 storeName: namaToko,
-                outletName: namaCabang, // Menambahkan Nama Cabang
+                outletName: namaCabang,
                 cartItems: this.cart,
                 subtotal: this.subTotal,
                 total: this.grandTotal,
@@ -12748,7 +12747,7 @@ parseDateStr(dateStr) {
                 updatedAt: new Date().getTime() 
             });
         } catch (error) {
-            console.log("Sync CDS background error:", error);
+            console.error("Gagal sinkronisasi CDS:", error);
         }
     },
 
