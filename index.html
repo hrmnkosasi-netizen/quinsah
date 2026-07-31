@@ -19489,9 +19489,18 @@ await setDoc(doc(db, "users", res.user.uid), {
             formatNumber(num) { return new Intl.NumberFormat('id-ID').format(Math.round(num) || 0); },
             getMembershipDiscount(id) { if (!id) return 0; const m = this.memberships.find(x => x.id === id); return m ? (m.discountPercent || 0) : 0; },
             getMembershipName(id) { if (!id) return 'Reguler'; const m = this.memberships.find(x => x.id === id); return m ? (m.tierName || 'Reguler') : 'Reguler'; },
-            getOutletName(outletData) { if (!outletData) return 'Pusat'; const cabang = this.outlets.find(o => o.id === outletData); return cabang ? cabang.name : outletData; },
-            getOutletAddress(id) { if (!id) return '-'; const o = this.outlets.find(x => x.id === id); return o ? o.location : '-'; },
-            getOutletName(id) { if (!id) return '-'; const o = this.outlets.find(x => x.id === id); return o ? o.name : '-'; },
+            getOutletAddress(id) { 
+            if (!id) return '-'; 
+            const o = this.outlets.find(x => x.id === id); 
+            return o ? o.location : '-'; 
+},
+
+// 🌟 FUNGSI GABUNGAN YANG 100% AMAN UNTUK SEMUA FITUR
+            getOutletName(id) { 
+            if (!id) return 'Pusat'; // Jika data kosong, otomatis anggap cabang 'Pusat'
+            const outlet = this.outlets.find(o => o.id === id); 
+            return outlet ? outlet.name : id; // Jika ketemu tampilkan namanya, jika tidak ketemu (mungkin ID lama), tampilkan teks aslinya
+},
             getSupplierName(id) { if (!id) return '-'; const s = this.suppliers.find(x => x.id === id); return s ? s.name : '-'; },
             
             getCategoryLabel(cat) { let prefix = '\u00A0\u00A0\u00A0'.repeat(cat.treeLevel); if (cat.treeLevel > 0) prefix += '↳ '; return prefix + cat.name; },
