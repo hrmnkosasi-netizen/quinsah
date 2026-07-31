@@ -782,17 +782,19 @@ body.sidebar-open {
         </button>
     </form>
 
-    <!-- ================= TOMBOL GOOGLE (TETAP AMAN DI SINI) ================= -->
-    <div class="d-flex align-items-center mb-3 mt-2">
-        <hr class="flex-grow-1 m-0">
-        <span class="mx-2 text-muted small fw-bold">ATAU</span>
-        <hr class="flex-grow-1 m-0">
+    <!-- ================= TOMBOL GOOGLE (HANYA TAMPIL SAAT LOGIN) ================= -->
+    <div v-if="authMode === 'login'">
+        <div class="d-flex align-items-center mb-3 mt-2">
+            <hr class="flex-grow-1 m-0">
+            <span class="mx-2 text-muted small fw-bold">ATAU</span>
+            <hr class="flex-grow-1 m-0">
+        </div>
+        
+        <button type="button" @click="loginDenganGoogle" class="btn btn-outline-dark w-100 fw-bold py-2 mb-3 d-flex align-items-center justify-content-center">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" style="width: 20px; margin-right: 10px;">
+            Masuk dengan Google
+        </button>
     </div>
-    
-    <button type="button" @click="loginDenganGoogle" class="btn btn-outline-dark w-100 fw-bold py-2 mb-3 d-flex align-items-center justify-content-center">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" style="width: 20px; margin-right: 10px;">
-        Masuk dengan Google
-    </button>
 
     <!-- Teks Toggle Daftar/Masuk -->
     <div class="text-center small fw-semibold text-muted mt-2" v-if="!isSubdomainLokal">
