@@ -823,6 +823,11 @@ body.sidebar-open {
             <i class="bi bi-display"></i> POS
         </div>
 
+        <!-- 🌟 MENU BARU: LAYAR PELANGGAN (CDS) 🌟 -->
+        <div class="nav-icon" :class="{'active': currentView === 'cds'}" @click="currentView = 'cds'" v-if="hasAccess('pos', 'read')">
+            <i class="bi bi-monitor"></i> CDS
+        </div>
+        
         <!-- Jika POS & Kasir adalah modul yang sama, biarkan ID-nya sama. Tapi jika beda baris di matriks, pisahkan! -->
         <div class="nav-icon" :class="{'active': currentView === 'cash_register'}" @click="currentView = 'cash_register'" v-if="hasAccess('pos', 'read')">
             <i class="bi bi-cash-coin"></i> Kasir
@@ -1388,6 +1393,86 @@ body.sidebar-open {
     </div>
     </div>
 
+<!-- ========================================== -->
+<!-- MENU: CUSTOMER DISPLAY SYSTEM (CDS)        -->
+<!-- ========================================== -->
+<div v-if="currentMenu === 'cds'" class="dashboard-card fade-in">
+    <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="bi bi-display text-primary me-2"></i>Pengaturan Layar Pelanggan</h4>
+            <p class="text-muted small mb-0">Atur tampilan layar tablet yang menghadap ke pelanggan saat di meja kasir.</p>
+        </div>
+        <div>
+            <!-- Tombol untuk membuka link CDS di tablet -->
+            <a :href="'/cds.html?company=' + (currentUser?.companyId || '')" target="_blank" class="btn btn-outline-danger fw-bold rounded-pill">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Buka Layar CDS
+            </a>
+            <button class="btn btn-primary-custom fw-bold rounded-pill ms-2" @click="saveCDSSettings">
+                <i class="bi bi-save me-1"></i> Simpan Setelan
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Pengaturan Media Promosi -->
+        <div class="col-md-7 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom p-3">
+                    <h6 class="fw-bold mb-0">Media Promosi (Layar Kiri)</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Pilih Tipe Tampilan</label>
+                        <select class="form-select" v-model="cdsSettings.mediaType">
+                            <option value="video">Video (Looping)</option>
+                            <option value="image_single">1 Gambar Statis</option>
+                            <option value="image_slider">Gambar Berjalan (Slide)</option>
+                        </select>
+                    </div>
+
+                    <!-- Jika pilih Video -->
+                    <div v-if="cdsSettings.mediaType === 'video'" class="mb-3 p-3 bg-light rounded-3 border">
+                        <label class="form-label small fw-bold text-dark">URL Link Video Promosi (MP4)</label>
+                        <input type="text" class="form-control" v-model="cdsSettings.videoUrl" placeholder="Contoh: https://link-video.com/promo.mp4">
+                        <div class="small text-muted mt-1">Gunakan link video langsung (.mp4) berukuran kecil agar ringan saat diload di tablet.</div>
+                    </div>
+
+                    <!-- Jika pilih Gambar -->
+                    <div v-if="cdsSettings.mediaType === 'image_single' || cdsSettings.mediaType === 'image_slider'" class="mb-3 p-3 bg-light rounded-3 border">
+                        <label class="form-label small fw-bold text-dark">URL Gambar Promosi</label>
+                        <textarea class="form-control" v-model="cdsSettings.imageUrls" rows="3" placeholder="Contoh: https://link-gambar.com/promo1.jpg&#10;Gunakan enter untuk memisahkan jika lebih dari 1 gambar."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Teks Selamat Datang (Bawah Layar)</label>
+                        <input type="text" class="form-control" v-model="cdsSettings.welcomeText" placeholder="Terima kasih telah berbelanja di tempat kami!">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panduan Penggunaan Tablet -->
+        <div class="col-md-5 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-tablet-landscape me-2"></i>Cara Pasang di Tablet</h6>
+                    <ol class="small text-dark mb-0 ps-3" style="line-height: 1.8;">
+                        <li>Siapkan Tablet/iPad. Hubungkan ke WiFi toko Anda.</li>
+                        <li>Buka Google Chrome/Safari di Tablet tersebut.</li>
+                        <li>Ketikkan URL berikut di browser Tablet Anda: <br>
+                            <code class="bg-white px-2 py-1 rounded fw-bold text-danger border mt-1 d-inline-block">
+                                {{ getSubdomainName() }}.queenpos.id/cds.html
+                            </code>
+                        </li>
+                        <li>Setelah halaman terbuka, jadikan <b>Full Screen</b>.</li>
+                        <li>Tablet otomatis akan terhubung dengan Kasir Anda secara nirkabel (Real-time).</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            
             <div v-if="currentView === 'purchase'" class="dashboard-card">
     
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 pb-2 border-bottom gap-3">
@@ -10096,6 +10181,13 @@ body.sidebar-open {
             previewData: []     // Kosongkan
         },
 
+        cdsSettings: {
+            mediaType: 'video', // Pilihan: 'video', 'image_single', 'image_slider'
+            videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+            imageUrls: '', // Kosongkan dulu
+            welcomeText: 'Terima kasih telah berbelanja!'
+        },
+
         // Variabel Printer Bluetooth
         printerDevice: null,
         printerServer: null,
@@ -12203,6 +12295,32 @@ financeAPList() {
         }
     },
 
+    // Memantau perubahan pada keranjang belanja (cart)
+    // deep: true digunakan agar Vue bisa melacak perubahan di dalam array/objek secara mendetail
+    cart: {
+        deep: true,
+        handler() {
+            // Memanggil fungsi sinkronisasi jika fungsi tersebut tersedia
+            if (typeof this.syncLiveCartToFirebase === 'function') {
+                this.syncLiveCartToFirebase();
+            }
+        }
+    },
+    
+    // Memantau perubahan pada grand total
+    grandTotal() {
+        if (typeof this.syncLiveCartToFirebase === 'function') {
+            this.syncLiveCartToFirebase();
+        }
+    },
+    
+    // Memantau perubahan status pembayaran (untuk menampilkan watermark "LUNAS")
+    isPaymentSuccess() {
+        if (typeof this.syncLiveCartToFirebase === 'function') {
+            this.syncLiveCartToFirebase();
+        }
+    },
+            
     // ==========================================
     // 🌟 CCTV PEMBERSIH OTOMATIS MODAL IMPORT & EXPORT
     // ==========================================
@@ -12569,6 +12687,42 @@ parseDateStr(dateStr) {
         return new Date(); // Fallback jika gagal diproses
     }
 },
+
+    async saveCDSSettings() {
+        const compId = this.getMyCompanyId();
+        if (!compId) return;
+        
+        try {
+            await updateDoc(doc(db, "settings", compId), {
+                cdsSettings: this.cdsSettings
+            });
+            Swal.fire('Tersimpan!', 'Setelan Layar Pelanggan berhasil diperbarui.', 'success');
+        } catch (error) {
+            console.error("Gagal simpan CDS:", error);
+            Swal.fire('Error', 'Gagal menyimpan pengaturan.', 'error');
+        }
+    },
+
+    async syncLiveCartToFirebase() {
+        const compId = this.getMyCompanyId();
+        if (!compId) return;
+        
+        try {
+            // Melempar data keranjang real-time ke database Firebase
+            await setDoc(doc(db, "cds", compId), {
+                storeName: this.appSettings?.storeName || 'Toko Kami',
+                cartItems: this.cart,
+                subtotal: this.subTotal,
+                total: this.grandTotal,
+                discountAmt: this.discountAmt,
+                changeAmount: this.kembalian || 0,
+                paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
+                updatedAt: new Date().getTime() 
+            });
+        } catch (error) {
+            console.log("Sync CDS background error:", error);
+        }
+    },
 
 // Fungsi untuk menentukan indikator warna dan label waktu
 getServiceTime(dateStr) {
