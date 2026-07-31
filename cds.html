@@ -43,12 +43,10 @@
     </div>
 
     <!-- KANAN: AREA KERANJANG REAL-TIME -->
-    <!-- 🌟 KODE PEMBUNGKUS INI YANG SEBELUMNYA TERHAPUS 🌟 -->
     <div class="cart-area position-relative"> 
         
         <div class="bg-danger text-white text-center py-3 shadow-sm">
             <h3 class="mb-0 fw-bold">{{ storeName }}</h3>
-            <!-- Munculkan nama cabang jika ada -->
             <small v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</small>
             <small v-else>Selamat Datang!</small>
         </div>
@@ -64,23 +62,46 @@
             <div v-for="(item, index) in cartItems" :key="index" class="d-flex justify-content-between mb-4 border-bottom pb-3">
                 <div>
                     <div class="item-name">{{ item.name }}</div>
-                    <div class="item-price">{{ item.qty }} x Rp {{ formatRupiah(item.sellPrice) }}</div>
+                    
+                    <!-- Menampilkan Note/Catatan jika ada -->
+                    <div v-if="item.note" class="text-muted small fst-italic mb-1">
+                        📝 {{ item.note }}
+                    </div>
+                    
+                    <!-- Perhitungan Harga: Tampil Harga Coret jika ada diskon -->
+                    <div class="item-price">
+                        {{ item.qty }} x 
+                        <span v-if="item.discount > 0" class="text-decoration-line-through text-muted ms-1 me-1" style="font-size: 0.9em;">
+                            Rp {{ formatRupiah(item.sellPrice) }}
+                        </span>
+                        <span>Rp {{ formatRupiah(item.sellPrice - (item.discount || 0)) }}</span>
+                    </div>
                 </div>
                 <div class="fw-bold fs-4 align-self-center text-dark">
-                    Rp {{ formatRupiah(item.qty * item.sellPrice) }}
+                    <!-- Total per item = (Harga Asli - Diskon) * Qty -->
+                    Rp {{ formatRupiah((item.sellPrice - (item.discount || 0)) * item.qty) }}
                 </div>
             </div>
         </div>
 
         <div class="cart-footer">
             <div class="d-flex justify-content-between mb-2 fs-5">
-                <span class="text-muted">Subtotal</span>
+                <span class="text-muted">Subtotal Produk</span>
                 <span class="fw-bold">Rp {{ formatRupiah(subtotal) }}</span>
             </div>
+            
+            <!-- Extra Diskon Global -->
             <div class="d-flex justify-content-between mb-2 fs-5" v-if="discountAmt > 0">
-                <span class="text-danger">Diskon</span>
+                <span class="text-danger">Extra Diskon</span>
                 <span class="fw-bold text-danger">- Rp {{ formatRupiah(discountAmt) }}</span>
             </div>
+
+            <!-- PPN (Tambahan Baru) -->
+            <div class="d-flex justify-content-between mb-2 fs-5" v-if="taxAmt > 0">
+                <span class="text-muted">PPN</span>
+                <span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span>
+            </div>
+
             <hr>
             <div class="text-end mt-3">
                 <div class="text-muted fw-bold mb-1" style="font-size: 1.2rem;">TOTAL TAGIHAN</div>
@@ -93,7 +114,7 @@
             </div>
         </div>
 
-    </div> <!-- 🌟 PENUTUP AREA KANAN (CART AREA) 🌟 -->
+    </div>
 </div>
 
 <!-- Menggunakan Firebase Modular (Web v9) -->
@@ -125,6 +146,7 @@
                 subtotal: 0,
                 total: 0,
                 discountAmt: 0,
+                taxAmt: 0, // <--- TAMBAHKAN INI UNTUK PPN
                 changeAmount: 0,
                 paymentStatus: 'PENDING',
                 
@@ -167,11 +189,15 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     this.storeName = data.storeName || 'Toko Kami';
-                    this.outletName = data.outletName || ''; // Ambil nama cabang
+                    this.outletName = data.outletName || ''; 
                     this.cartItems = data.cartItems || [];
                     this.subtotal = data.subtotal || 0;
                     this.total = data.total || 0;
                     this.discountAmt = data.discountAmt || 0;
+                    
+                    // PENANGKAP DATA PPN DARI FIREBASE
+                    this.taxAmt = data.taxAmt || data.ppn || 0; 
+                    
                     this.changeAmount = data.changeAmount || 0;
                     this.paymentStatus = data.paymentStatus || 'PENDING';
                 }
