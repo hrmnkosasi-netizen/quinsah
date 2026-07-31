@@ -12738,10 +12738,11 @@ parseDateStr(dateStr) {
             await setDoc(doc(db, "cds", docId), {
                 storeName: namaToko,
                 outletName: namaCabang,
-                cartItems: this.cart,
-                subtotal: this.subTotal,
-                total: this.grandTotal,
-                discountAmt: this.discountAmt,
+                // Tambahkan || untuk mencegah nilai undefined masuk ke Firebase
+                cartItems: this.cart || [], 
+                subtotal: this.subTotal || 0, 
+                total: this.grandTotal || 0,
+                discountAmt: this.discountAmt || 0,
                 changeAmount: this.kembalian || 0,
                 paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
                 updatedAt: new Date().getTime() 
