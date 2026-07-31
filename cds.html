@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layar Pelanggan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        body { background-color: #f8f9fa; overflow: hidden; margin: 0; }
+        .split-screen { height: 100vh; display: flex; }
+        
+        /* Area Promo Kiri */
+        .promo-area { flex: 6.5; background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
+        .promo-area video, .promo-area img { width: 100%; height: 100%; object-fit: cover; }
+        .welcome-text { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); color: white; padding: 15px; text-align: center; font-size: 1.5rem; font-weight: bold; }
+
+        /* Area Keranjang Kanan */
+        .cart-area { flex: 3.5; background-color: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; z-index: 2;}
+        .cart-items { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .cart-footer { background-color: #f1f3f5; padding: 25px; border-top: 2px dashed #dee2e6; }
+        
+        .item-name { font-size: 1.2rem; font-weight: bold; }
+        .item-price { font-size: 1.1rem; color: #495057; }
+        .total-text { font-size: 2.5rem; font-weight: 900; color: #d9534f; }
+        
+        .status-lunas { position: absolute; top: 40%; left: 70%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 5rem; color: rgba(40, 167, 69, 0.8); border: 10px solid rgba(40, 167, 69, 0.8); padding: 20px 40px; border-radius: 20px; font-weight: 900; z-index: 10; }
+    </style>
+</head>
+<body>
+
+<div id="cdsApp" class="split-screen" v-cloak>
+    
+    <!-- KIRI: AREA PROMO DINAMIS DARI SETTINGAN -->
+    <div class="promo-area">
+        <!-- Tampil jika tipe Video -->
+        <video v-if="cdsSettings.mediaType === 'video' && cdsSettings.videoUrl" :src="cdsSettings.videoUrl" autoplay loop muted></video>
+        
+        <!-- Tampil jika tipe Gambar Single atau Slide -->
+        <img v-else-if="currentImage" :src="currentImage" alt="Promo">
+
+        <div class="welcome-text">{{ cdsSettings.welcomeText || 'Selamat Datang!' }}</div>
+    </div>
+
+    <!-- KANAN: AREA KERANJANG REAL-TIME -->
+    <div class="cart-area position-relative">
+        <div class="bg-danger text-white text-center py-3 shadow-sm">
+            <h3 class="mb-0 fw-bold">{{ storeName }}</h3>
+        </div>
+
+        <div v-if="paymentStatus === 'LUNAS'" class="status-lunas">LUNAS</div>
+
+        <div class="cart-items">
+            <div v-if="!cartItems || cartItems.length === 0" class="text-center text-muted mt-5">
+                <h4 class="mt-4">Keranjang Kosong</h4>
+                <p>Silakan bawa barang belanjaan Anda ke kasir.</p>
+            </div>
+            
+            <div v-for="(item, index) in cartItems" :key="index" class="d-flex justify-content-between mb-4 border-bottom pb-3">
+                <div>
+                    <div class="item-name">{{ item.name }}</div>
+                    <div class="item-price">{{ item.qty }} x Rp {{ formatRupiah(item.sellPrice) }}</div>
+                </div>
+                <div class="fw-bold fs-4 align-self-center text-dark">
+                    Rp {{ formatRupiah(item.qty * item.sellPrice) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="d-flex justify-content-between mb-2 fs-5">
+                <span class="text-muted">Subtotal</span>
+                <span class="fw-bold">Rp {{ formatRupiah(subtotal) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 fs-5" v-if="discountAmt > 0">
+                <span class="text-danger">Diskon</span>
+                <span class="fw-bold text-danger">- Rp {{ formatRupiah(discountAmt) }}</span>
+            </div>
+            <hr>
+            <div class="text-end mt-3">
+                <div class="text-muted fw-bold mb-1" style="font-size: 1.2rem;">TOTAL TAGIHAN</div>
+                <div class="total-text">Rp {{ formatRupiah(total) }}</div>
+            </div>
+            
+            <div v-if="changeAmount > 0" class="d-flex justify-content-between mt-4 bg-white p-3 rounded-3 shadow-sm border border-success">
+                <span class="fs-4 fw-bold text-success">KEMBALIAN</span>
+                <span class="fs-3 fw-bold text-success">Rp {{ formatRupiah(changeAmount) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Menggunakan Firebase Modular (Web v9) -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+    // ⚠️ MASUKKAN CONFIG FIREBASE ANDA DI SINI ⚠️
+    const firebaseConfig = {
+        apiKey: "API_KEY_ANDA",
+        authDomain: "DOMAIN_ANDA",
+        projectId: "PROJECT_ID_ANDA",
+        storageBucket: "BUCKET_ANDA",
+        messagingSenderId: "SENDER_ID",
+        appId: "APP_ID"
+    };
+
+    const appFirebase = initializeApp(firebaseConfig);
+    const db = getFirestore(appFirebase);
+
+    // Ambil company ID dari URL (contoh: cds.html?company=ID_PERUSAHAAN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const companyId = urlParams.get('company');
+
+    const app = Vue.createApp({
+        data() {
+            return {
+                storeName: 'Toko Kami',
+                cartItems: [],
+                subtotal: 0,
+                total: 0,
+                discountAmt: 0,
+                changeAmount: 0,
+                paymentStatus: 'PENDING',
+                
+                cdsSettings: { mediaType: 'video', videoUrl: '', imageUrls: '', welcomeText: '' },
+                currentImage: '',
+                imageIndex: 0,
+                slideInterval: null
+            }
+        },
+        methods: {
+            formatRupiah(number) {
+                if(!number) return '0';
+                return Number(number).toLocaleString('id-ID');
+            },
+            startImageSlider() {
+                clearInterval(this.slideInterval);
+                if (this.cdsSettings.mediaType !== 'video' && this.cdsSettings.imageUrls) {
+                    const images = this.cdsSettings.imageUrls.split('\n').filter(url => url.trim() !== '');
+                    if (images.length > 0) {
+                        this.currentImage = images[0].trim();
+                        if (this.cdsSettings.mediaType === 'image_slider' && images.length > 1) {
+                            this.slideInterval = setInterval(() => {
+                                this.imageIndex = (this.imageIndex + 1) % images.length;
+                                this.currentImage = images[this.imageIndex].trim();
+                            }, 5000); // Ganti gambar setiap 5 detik
+                        }
+                    }
+                }
+            }
+        },
+        mounted() {
+            if (!companyId) {
+                alert("ID Perusahaan tidak ditemukan di URL!");
+                return;
+            }
+
+            // 1. Dengarkan Perubahan Keranjang secara Real-time
+            onSnapshot(doc(db, "cds", companyId), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    this.storeName = data.storeName || 'Toko Kami';
+                    this.cartItems = data.cartItems || [];
+                    this.subtotal = data.subtotal || 0;
+                    this.total = data.total || 0;
+                    this.discountAmt = data.discountAmt || 0;
+                    this.changeAmount = data.changeAmount || 0;
+                    this.paymentStatus = data.paymentStatus || 'PENDING';
+                }
+            });
+
+            // 2. Dengarkan Perubahan Setelan Promo (Video/Gambar) secara Real-time
+            onSnapshot(doc(db, "settings", companyId), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.cdsSettings) {
+                        this.cdsSettings = data.cdsSettings;
+                        this.startImageSlider(); // Eksekusi slider gambar jika dipilih
+                    }
+                }
+            });
+        }
+    });
+
+    app.mount('#cdsApp');
+</script>
+</body>
+</html>
