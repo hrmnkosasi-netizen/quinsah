@@ -12728,9 +12728,9 @@ parseDateStr(dateStr) {
         return {
             name: item.name || '',
             qty: Number(item.qty || 1),
-            sellPrice: Number(hargaJual),
-            originalPrice: Number(hargaAsli),
-            discount: Number(item.discount || item.diskon || 0),
+            sellPrice: Math.round(Number(hargaJual)), // 🌟 FIX DESIMAL
+            originalPrice: Math.round(Number(hargaAsli)), // 🌟 FIX DESIMAL
+            discount: Math.round(Number(item.discount || item.diskon || 0)),
             note: item.note || ''
         };
     });
@@ -12738,35 +12738,33 @@ parseDateStr(dateStr) {
     try {
         const docId = `${compId}_${outletId}`;
         
-        // --- TANGKAP SEMUA BIAYA & DISKON SESUAI UI POS ---
-        // Extra diskon = gabungan diskon % dan diskon Rp per item
-        const extraDiskon = Number(this.discountAmount || 0) + Number(this.posDiscountAmount || 0);
+        // 🌟 TANGKAP DAN BULATKAN SEMUA VARIABEL MUTLAK DARI POS
+        const subtotalBase = Math.round(Number(this.subtotalBase || 0));
+        const extraDiskon = Math.round(Number(this.discountAmount || 0) + Number(this.posDiscountAmount || 0));
         
-        // Diskon Member (Tambahkan fallback penamaan variabel umum)
-        const diskonMember = Number(this.memberDiscountAmount || this.memberDiscountAmt || this.diskonMember || 0);
+        // Coba semua kemungkinan penamaan variabel Member dari sistem Anda
+        const diskonMember = Math.round(Number(this.memberDiscountAmount || this.posMemberDiscountAmount || this.memberDiscountAmt || 0));
         
-        // Diskon Global/Invoice
-        const diskonInvoice = Number(this.globalDiscountAmount || this.globalDiscountAmt || 0);
-        
-        // Ongkir & Kurir
-        const ongkir = Number(this.posShippingCost || this.shippingCost || 0);
+        const diskonInvoice = Math.round(Number(this.globalDiscountAmount || 0));
+        const ppn = Math.round(Number(this.taxAmount || 0));
+        const ongkir = Math.round(Number(this.posShippingCost || this.shippingCost || 0));
         const kurir = this.posCourier || this.courier || '';
+        const grandTotal = Math.round(Number(this.total || 0));
 
         const cdsPayload = {
             storeName: namaToko,
             outletName: namaCabang,
             cartItems: formattedCart,
             
-            subtotal: Number(this.subtotalBase || 0),
+            subtotal: subtotalBase,
             extraDiscountAmt: extraDiskon,
-            memberDiscountAmt: diskonMember,     // Kunci variabel Member
-            invoiceDiscountAmt: diskonInvoice,   // Kunci variabel Invoice
-            taxAmt: Number(this.taxAmount || 0),
+            memberDiscountAmt: diskonMember,
+            invoiceDiscountAmt: diskonInvoice,
+            taxAmt: ppn,
             shippingFee: ongkir,
             courier: kurir,
             
-            total: Number(this.total || 0),
-            changeAmount: 0,
+            total: grandTotal, // 🌟 TOTAL MUTLAK DARI POS
             paymentStatus: 'PENDING',
             updatedAt: new Date().getTime() 
         };
