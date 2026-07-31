@@ -824,10 +824,9 @@ body.sidebar-open {
         </div>
 
         <div class="nav-icon" :class="{'active': currentView === 'cds'}" @click="currentView = 'cds'" v-if="hasAccess('pos', 'read')">
-        <i class="bi bi-monitor"></i> CDS
+        <i class="bi bi-tv"></i> CDS
         </div>
         
-        <!-- Jika POS & Kasir adalah modul yang sama, biarkan ID-nya sama. Tapi jika beda baris di matriks, pisahkan! -->
         <div class="nav-icon" :class="{'active': currentView === 'cash_register'}" @click="currentView = 'cash_register'" v-if="hasAccess('pos', 'read')">
             <i class="bi bi-cash-coin"></i> Kasir
         </div>
@@ -844,7 +843,6 @@ body.sidebar-open {
             <i class="bi bi-box-seam"></i> Inventori
         </div>
 
-        <!-- 🌟 PERBAIKAN: Ganti 'inventory' jadi 'opname' atau ID yg sesuai di appModules -->
         <div class="nav-icon" :class="{'active': currentView === 'opname'}" @click="currentView = 'opname'" v-if="hasAccess('opname', 'read')">
             <i class="bi bi-clipboard2-check"></i> Opname
         </div>
@@ -854,7 +852,6 @@ body.sidebar-open {
             <i class="bi bi-arrow-left-right"></i> Transfer
         </div>
 
-        <!-- 🌟 PERBAIKAN: Ganti 'inventory' jadi 'barcode' -->
         <div class="nav-icon" :class="{'active': currentView === 'barcode'}" @click="currentView = 'barcode'" v-if="hasAccess('barcode', 'read')">
             <i class="bi bi-qr-code-scan"></i> Barcode
         </div>
@@ -875,7 +872,6 @@ body.sidebar-open {
             <i class="bi bi-truck"></i> Fulfillment
         </div>
         
-        <!-- 🌟 PERBAIKAN: Jika Payment beda baris di matriks, ganti 'sales' jadi 'payment' -->
         <div class="nav-icon" :class="{'active': currentView === 'payment'}" @click="currentView = 'payment'" v-if="hasAccess('payment', 'read')">
             <i class="bi bi-bank"></i> Payment
         </div>
@@ -10133,9 +10129,25 @@ body.sidebar-open {
                 chartInstance: null,
                 paymentChartInstance: null, 
                 
-                viewTitles: { 
-                    dashboard: 'Dashboard', cash_register: 'Manajemen Laci Kasir (Shift)', pos: 'Pos Kasir', purchase: 'Pembelian & Stok Masuk', catalog: 'Data Master Produk', inventory: 'Inventori & Cek Stok', opname: 'Stok Opname', transfer: 'Transfer Antar Cabang', barcode: 'Cetak Label Barcode', crm: 'Pelanggan (CRM)', outlets: 'Manajemen Cabang / Outlet', sales: 'Riwayat Penjualan', fulfillment: 'Order Fulfillment (Pengiriman)', payment: 'Manajemen Keuangan (AR/AP)', reports: 'Laporan Laba/Rugi & Analitik', settings: 'Setelan Sistem & Hak Akses'
-                },
+                viewTitles: {                    
+                dashboard: 'Dashboard', 
+                cash_register: 'Manajemen Laci Kasir (Shift)', 
+                pos: 'Pos Kasir', 
+                cds: 'Pengaturan Layar Pelanggan (CDS)',
+                purchase: 'Pembelian & Stok Masuk', 
+                catalog: 'Data Master Produk', 
+                inventory: 'Inventori & Cek Stok', 
+                opname: 'Stok Opname', 
+                transfer: 'Transfer Antar Cabang', 
+                barcode: 'Cetak Label Barcode', 
+                crm: 'Pelanggan (CRM)', 
+                outlets: 'Manajemen Cabang / Outlet', 
+                sales: 'Riwayat Penjualan', 
+                fulfillment: 'Order Fulfillment (Pengiriman)', 
+                payment: 'Manajemen Keuangan (AR/AP)', 
+                reports: 'Laporan Laba/Rugi & Analitik', 
+                settings: 'Setelan Sistem & Hak Akses'
+},
                     
                 paymentTab: 'sales_payment',
                 paymentSearchQuery: '',
