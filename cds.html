@@ -5,197 +5,207 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Layar Pelanggan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Menggunakan Font Awesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
     <style>
         body { background-color: #f8f9fa; overflow: hidden; margin: 0; }
         .split-screen { height: 100vh; display: flex; }
         
-        /* Area Promo Kiri */
-        .promo-area { flex: 7; background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
+        /* Area Kiri (Promo / Layar Bayar) */
+        .promo-area { flex: 6.5; background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
         .promo-area video, .promo-area img { width: 100%; height: 100%; object-fit: cover; }
         .welcome-text { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); color: white; padding: 15px; text-align: center; font-size: 1.5rem; font-weight: bold; }
+        
+        /* Tampilan Mode Pembayaran Overlay */
+        .payment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f4f6f9; z-index: 20; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Area Keranjang Kanan */
-        .cart-area { flex: 3; background-color: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; z-index: 2;}
-        .cart-items { flex-grow: 1; overflow-y: auto; padding: 20px; }
-        .cart-footer { background-color: #f1f3f5; padding: 25px; border-top: 2px dashed #dee2e6; }
+        /* Area Kanan (Keranjang) */
+        .cart-area { flex: 3.5; background-color: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; z-index: 2;}
+        .cart-items { flex-grow: 1; overflow-y: auto; padding: 15px 20px; }
+        .cart-footer { background-color: #f1f3f5; padding: 20px; border-top: 2px dashed #dee2e6; }
         
-        .item-name { font-size: 1.2rem; font-weight: bold; }
-        .item-price { font-size: 1.1rem; color: #495057; }
-        .total-text { font-size: 2.5rem; font-weight: 900; color: #d9534f; }
+        /* 🌟 Font Keranjang Diperkecil 🌟 */
+        .item-name { font-size: 0.95rem; font-weight: bold; }
+        .item-price { font-size: 0.85rem; color: #6c757d; }
+        .item-total { font-size: 1rem; font-weight: bold; }
         
-        .status-lunas { position: absolute; top: 40%; left: 70%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 5rem; color: rgba(40, 167, 69, 0.8); border: 10px solid rgba(40, 167, 69, 0.8); padding: 20px 40px; border-radius: 20px; font-weight: 900; z-index: 10; }
+        .status-lunas { position: absolute; top: 40%; left: 70%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 5rem; color: rgba(40, 167, 69, 0.9); border: 10px solid rgba(40, 167, 69, 0.9); padding: 15px 30px; border-radius: 20px; font-weight: 900; z-index: 10; }
     </style>
 </head>
 <body>
 
 <div id="cdsApp" class="split-screen" v-cloak>
     
-    <!-- KIRI: AREA PROMO DINAMIS DARI SETTINGAN -->
+    <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
     <div class="promo-area">
-        <!-- Tampil jika tipe Video -->
-        <video v-if="cdsSettings.mediaType === 'video' && cdsSettings.videoUrl" :src="cdsSettings.videoUrl" autoplay loop muted></video>
         
-        <!-- Tampil jika tipe Gambar Single atau Slide -->
-        <img v-else-if="currentImage" :src="currentImage" alt="Promo">
+        <!-- 🌟 LAYAR PEMBAYARAN (MUNCUL SAAT KLIK LANJUT BAYAR) 🌟 -->
+        <div v-if="isPaymentOpen" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
+            
+            <!-- Jika Kasir belum pilih metode di modal -->
+            <div v-if="!paymentMethod" class="text-center fade-in">
+                <i class="fas fa-cash-register fa-5x text-secondary mb-4"></i>
+                <h2 class="fw-bold">Menyiapkan Tagihan...</h2>
+                <p class="text-muted fs-5">Silakan tunggu kasir memilih metode pembayaran.</p>
+            </div>
+            
+            <!-- Jika metode QRIS terpilih -->
+            <div v-else-if="paymentMethod.toUpperCase().includes('QRIS')" class="text-center w-100 fade-in">
+                <div class="card shadow-lg border-0 mx-auto" style="max-width: 450px; border-radius: 24px;">
+                    <div class="card-body p-5">
+                        <div class="d-flex justify-content-center mb-3">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 40px;">
+                        </div>
+                        <h5 class="text-muted mb-1">Total Scan</h5>
+                        <h1 class="fw-bold text-dark mb-4" style="font-size: 2.8rem;">Rp {{ formatRupiah(total) }}</h1>
+                        
+                        <div class="bg-white p-3 rounded-4 border d-inline-block shadow-sm">
+                            <!-- Placeholder Gambar Barcode. Nanti bisa diganti link QR statis milik toko Anda -->
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=Menunggu+Scan+QRIS" alt="QRIS Code" style="width: 250px; height: 250px;">
+                        </div>
+                        <p class="text-secondary mt-4 mb-0 fw-bold fs-5">Arahkan kamera ke kode QR di atas</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Jika metode Tunai (CASH) atau Lainnya terpilih -->
+            <div v-else class="text-center fade-in">
+                <i class="fas fa-wallet fa-5x text-primary mb-4"></i>
+                <h2 class="fw-bold">Metode: {{ paymentMethod }}</h2>
+                <h1 class="fw-bold text-danger my-3" style="font-size: 4rem;">Rp {{ formatRupiah(total) }}</h1>
+                <p class="text-muted fs-4">Silakan selesaikan pembayaran dengan kasir.</p>
+            </div>
+            
+        </div>
 
-        <div class="welcome-text">{{ cdsSettings.welcomeText || 'Selamat Datang!' }}</div>
+        <!-- 🌟 PROMO NORMAL (MUNCUL SAAT KERANJANG BIASA) 🌟 -->
+        <template v-else>
+            <video v-if="cdsSettings.mediaType === 'video' && cdsSettings.videoUrl" :src="cdsSettings.videoUrl" autoplay loop muted></video>
+            <img v-else-if="currentImage" :src="currentImage" alt="Promo">
+            <div class="welcome-text">{{ cdsSettings.welcomeText || 'Terima kasih telah berbelanja!' }}</div>
+        </template>
     </div>
 
     <!-- KANAN: AREA KERANJANG REAL-TIME -->
-<div class="cart-area position-relative"> 
-    <div class="bg-danger text-white text-center py-3 shadow-sm">
-        <h3 class="mb-0 fw-bold">{{ storeName }}</h3>
-        <small v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</small>
-        <small v-else>Selamat Datang!</small>
-    </div>
-
-    <div v-if="paymentStatus === 'LUNAS'" class="status-lunas">LUNAS</div>
-
-    <!-- DAFTAR ITEM -->
-    <div class="cart-items">
-        <div v-if="!cartItems || cartItems.length === 0" class="text-center text-muted mt-5">
-            <h4 class="mt-4">Keranjang Kosong</h4>
-            <p>Silakan bawa barang belanjaan Anda ke kasir.</p>
-        </div>
+    <div class="cart-area position-relative"> 
         
-        <div v-for="(item, index) in cartItems" :key="index" class="d-flex justify-content-between mb-3 border-bottom pb-3">
-            <div>
-                <div class="item-name">{{ item.name }}</div>
-                
-                <!-- Tampilkan Catatan/Note jika ada -->
-                <div v-if="item.note" class="text-muted small fst-italic mb-1">
-                    📝 {{ item.note }}
-                </div>
-                
-                <!-- Detail Harga Satuan -->
-                <div class="item-price">
-                    {{ item.qty }} x 
-                    <span v-if="item.originalPrice && item.originalPrice > item.sellPrice" class="text-decoration-line-through text-muted me-1" style="font-size: 0.85em;">
-                        Rp {{ formatRupiah(item.originalPrice) }}
-                    </span>
-                    <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice) }}</span>
-                </div>
-            </div>
-            <div class="fw-bold fs-4 align-self-center text-dark">
-                Rp {{ formatRupiah(item.qty * item.sellPrice) }}
+        <!-- 🌟 HEADER BARU (Ada Invoice & Jam) 🌟 -->
+        <div class="bg-danger text-white text-center py-2 shadow-sm d-flex flex-column">
+            <h5 class="mb-0 fw-bold">{{ storeName }}</h5>
+            <small v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</small>
+            
+            <div class="d-flex justify-content-between px-3 mt-2 text-light" style="font-size: 0.75rem;">
+                <span class="fw-bold"><i class="fas fa-file-invoice"></i> {{ invoiceNumber || 'INV-...' }}</span>
+                <span class="fw-bold"><i class="fas fa-clock"></i> {{ currentTime }}</span>
             </div>
         </div>
-    </div>
 
-    <!-- FOOTER / RINGKASAN TAGIHAN -->
-    <div class="cart-footer">
-    <!-- Subtotal -->
-    <div class="d-flex justify-content-between mb-1 fs-6">
-        <span class="text-muted">Subtotal Produk</span>
-        <span class="fw-bold text-dark">Rp {{ formatRupiah(subtotal) }}</span>
-    </div>
+        <div v-if="paymentStatus === 'LUNAS'" class="status-lunas">LUNAS</div>
 
-    <!-- Extra Diskon -->
-    <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
-        <span><i class="fas fa-tag"></i> Extra Diskon</span>
-        <span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span>
-    </div>
-
-    <!-- Diskon Member -->
-    <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-success">
-        <span><i class="fas fa-user-check"></i> Diskon Member</span>
-        <span class="fw-bold">- Rp {{ formatRupiah(memberDiscountAmt) }}</span>
-    </div>
-
-    <!-- Diskon Invoice -->
-    <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
-        <span><i class="fas fa-tags"></i> Diskon Invoice (Manual)</span>
-        <span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span>
-    </div>
-
-    <!-- PPN -->
-    <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-1 fs-6 text-danger">
-        <span>PPN (11%)</span>
-        <span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span>
-    </div>
-
-    <!-- Ongkir -->
-    <div v-if="shippingFee > 0" class="d-flex justify-content-between mb-1 fs-6 text-info">
-        <span><i class="fas fa-truck"></i> Ongkir ({{ courier }})</span>
-        <span class="fw-bold">+ Rp {{ formatRupiah(shippingFee) }}</span>
-    </div>
-
-    <hr class="my-2">
-    
-    <!-- Total Tagihan -->
-    <div class="d-flex justify-content-between align-items-center mt-2">
-        <span class="fw-bold text-uppercase" style="font-size: 0.9rem;">Total Tagihan</span>
-        <span class="fw-bold text-danger" style="font-size: 1.8rem;">Rp {{ formatRupiah(total) }}</span>
-    </div>
-
-        <!-- 🌟 KOTAK INFO METODE PEMBAYARAN MUNCUL DI SINI 🌟 -->
-    <div v-if="paymentMethod && paymentStatus !== 'LUNAS'" class="mt-4 p-3 bg-primary text-white rounded-3 shadow text-center">
-        <h6 class="mb-1 text-light">Metode Pembayaran:</h6>
-        <h2 class="fw-bold mb-2">{{ paymentMethod }}</h2>
-        
-        <!-- Jika metode QRIS, tampilkan logo/instruksi scan -->
-        <div v-if="paymentMethod === 'QRIS' || paymentMethod === 'Qris'" class="bg-white text-dark p-2 rounded-3 d-inline-block mt-1 shadow-sm">
-            <h4 class="mb-0">📱 Silakan Scan QRIS</h4>
+        <div class="cart-items">
+            <div v-if="!cartItems || cartItems.length === 0" class="text-center text-muted mt-5">
+                <h5 class="mt-4">Keranjang Kosong</h5>
+                <p class="small">Silakan bawa barang belanjaan Anda ke kasir.</p>
+            </div>
+            
+            <div v-for="(item, index) in cartItems" :key="index" class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                <div>
+                    <div class="item-name">{{ item.name }}</div>
+                    <div v-if="item.note" class="text-muted small fst-italic mb-1">📝 {{ item.note }}</div>
+                    <div class="item-price">
+                        {{ item.qty }} x 
+                        <span v-if="item.originalPrice && item.originalPrice > item.sellPrice" class="text-decoration-line-through text-muted me-1" style="font-size: 0.85em;">
+                            Rp {{ formatRupiah(item.originalPrice) }}
+                        </span>
+                        <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice) }}</span>
+                    </div>
+                </div>
+                <div class="item-total align-self-center text-dark">
+                    Rp {{ formatRupiah(item.qty * item.sellPrice) }}
+                </div>
+            </div>
         </div>
-        
-        <!-- Jika metode CASH -->
-        <div v-else-if="paymentMethod === 'CASH' || paymentMethod === 'TUNAI'" class="mt-1">
-            <small>Silakan serahkan uang tunai ke kasir</small>
+
+        <!-- FOOTER / RINGKASAN TAGIHAN -->
+        <div class="cart-footer">
+            <div class="d-flex justify-content-between mb-1" style="font-size: 0.9rem;">
+                <span class="text-muted">Subtotal Produk</span>
+                <span class="fw-bold text-dark">Rp {{ formatRupiah(subtotal) }}</span>
+            </div>
+            <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-1 text-danger" style="font-size: 0.9rem;">
+                <span><i class="fas fa-tag"></i> Extra Diskon</span>
+                <span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span>
+            </div>
+            <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-1 text-success" style="font-size: 0.9rem;">
+                <span><i class="fas fa-user-check"></i> Diskon Member</span>
+                <span class="fw-bold">- Rp {{ formatRupiah(memberDiscountAmt) }}</span>
+            </div>
+            <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-1 text-danger" style="font-size: 0.9rem;">
+                <span><i class="fas fa-tags"></i> Diskon Manual</span>
+                <span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span>
+            </div>
+            <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-1 text-danger" style="font-size: 0.9rem;">
+                <span>PPN (11%)</span>
+                <span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span>
+            </div>
+            <div v-if="shippingFee > 0" class="d-flex justify-content-between mb-1 text-info" style="font-size: 0.9rem;">
+                <span><i class="fas fa-truck"></i> Ongkir ({{ courier }})</span>
+                <span class="fw-bold">+ Rp {{ formatRupiah(shippingFee) }}</span>
+            </div>
+
+            <hr class="my-2">
+            
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="fw-bold text-uppercase" style="font-size: 0.85rem;">Total Tagihan</span>
+                <span class="fw-bold text-danger" style="font-size: 1.6rem;">Rp {{ formatRupiah(total) }}</span>
+            </div>
         </div>
-        
-        <!-- Metode Lainnya (Transfer/Debit) -->
-        <div v-else class="mt-1">
-            <small>Mohon selesaikan pembayaran di kasir</small>
-        </div>
+
     </div>
 </div>
-</div>
-</div>
 
-<!-- Menggunakan Firebase Modular (Web v9) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-    // ⚠️ MASUKKAN CONFIG FIREBASE ANDA DI SINI ⚠️
     const firebaseConfig = { apiKey: "AIzaSyBvwkhhUoFOMoKTPL4TWTCJxlx0AXoA3t4", authDomain: "quinsahcollection-36926.firebaseapp.com", projectId: "quinsahcollection-36926" };
-
     const appFirebase = initializeApp(firebaseConfig);
     const db = getFirestore(appFirebase);
 
-    // Ambil company ID dari URL, atau ambil dari localStorage jika Anda menyimpannya di sana
     const urlParams = new URLSearchParams(window.location.search);
-    let companyId = urlParams.get('company');
-    // Tambahkan penangkapan outlet ID
+    let companyId = urlParams.get('company') || localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
     let outletId = urlParams.get('outlet') || 'global'; 
 
-    if (!companyId) {
-        companyId = localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
-    }
     const app = Vue.createApp({
-    data() {
-        return {
-            storeName: 'QUINSAH COLLECTION',
-            outletName: '',
-            cartItems: [],
-            subtotal: 0,
-            extraDiscountAmt: 0,
-            memberDiscountAmt: 0,
-            invoiceDiscountAmt: 0,
-            taxAmt: 0,
-            shippingFee: 0,      
-            courier: '',
-            total: 0,
-            changeAmount: 0,
-            paymentStatus: 'PENDING',
-            paymentMethod: null,
-            cdsSettings: { mediaType: 'video', videoUrl: '', imageUrls: '', welcomeText: '' },
-            currentImage: '',
-            imageIndex: 0,
-            slideInterval: null
-        }
-    },
+        data() {
+            return {
+                storeName: 'QUINSAH COLLECTION',
+                outletName: '',
+                invoiceNumber: '',
+                currentTime: '',
+                isPaymentOpen: false,
+                paymentMethod: null,
+                
+                cartItems: [],
+                subtotal: 0,
+                extraDiscountAmt: 0,
+                memberDiscountAmt: 0,
+                invoiceDiscountAmt: 0,
+                taxAmt: 0,
+                shippingFee: 0,      
+                courier: '',
+                total: 0,
+                paymentStatus: 'PENDING',
+                
+                cdsSettings: { mediaType: 'video', videoUrl: '', imageUrls: '', welcomeText: '' },
+                currentImage: '',
+                imageIndex: 0,
+                slideInterval: null
+            }
+        },
         methods: {
             formatRupiah(number) {
                 if(!number) return '0';
@@ -211,7 +221,7 @@
                             this.slideInterval = setInterval(() => {
                                 this.imageIndex = (this.imageIndex + 1) % images.length;
                                 this.currentImage = images[this.imageIndex].trim();
-                            }, 5000); // Ganti gambar setiap 5 detik
+                            }, 5000);
                         }
                     }
                 }
@@ -223,38 +233,44 @@
                 return;
             }
 
-            // Dengarkan Perubahan Keranjang spesifik untuk Cabang ini
+            // 🌟 JAM BERJALAN 🌟
+            setInterval(() => {
+                const now = new Date();
+                const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                this.currentTime = now.toLocaleDateString('id-ID', options).replace(',', ' -');
+            }, 1000);
+
             const docId = `${companyId}_${outletId}`;
-        onSnapshot(doc(db, "cds", docId), (docSnap) => {
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        this.storeName = data.storeName || 'QUINSAH COLLECTION';
-        this.outletName = data.outletName || ''; 
-        this.cartItems = data.cartItems || [];
-        
-        this.subtotal = data.subtotal || 0;
-        this.extraDiscountAmt = data.extraDiscountAmt || 0;
-        
-        // Tangkap data Diskon & Biaya tambahan
-        this.memberDiscountAmt = data.memberDiscountAmt || 0;
-        this.invoiceDiscountAmt = data.invoiceDiscountAmt || 0;
-        this.taxAmt = data.taxAmt || 0;
-        this.shippingFee = data.shippingFee || 0;
-        this.courier = data.courier || '';
+            onSnapshot(doc(db, "cds", docId), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    this.storeName = data.storeName || 'QUINSAH COLLECTION';
+                    this.outletName = data.outletName || ''; 
+                    
+                    // 🌟 Tangkap Variabel Baru 🌟
+                    this.invoiceNumber = data.invoiceNumber || '';
+                    this.isPaymentOpen = data.isPaymentOpen || false;
+                    this.paymentMethod = data.paymentMethod || null;
+                    
+                    this.cartItems = data.cartItems || [];
+                    this.subtotal = data.subtotal || 0;
+                    this.extraDiscountAmt = data.extraDiscountAmt || 0;
+                    this.memberDiscountAmt = data.memberDiscountAmt || 0;
+                    this.invoiceDiscountAmt = data.invoiceDiscountAmt || 0;
+                    this.taxAmt = data.taxAmt || 0;
+                    this.shippingFee = data.shippingFee || 0;
+                    this.courier = data.courier || '';
+                    this.total = data.total || 0;
+                    this.paymentStatus = data.paymentStatus || 'PENDING';
+                }
+            });
 
-        this.total = data.total || 0;
-        this.paymentStatus = data.paymentStatus || 'PENDING';
-        this.paymentMethod = data.paymentMethod || null;
-    }
-});
-
-            // 2. Dengarkan Perubahan Setelan Promo (Video/Gambar) secara Real-time
             onSnapshot(doc(db, "settings", companyId), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if (data.cdsSettings) {
                         this.cdsSettings = data.cdsSettings;
-                        this.startImageSlider(); // Eksekusi slider gambar jika dipilih
+                        this.startImageSlider(); 
                     }
                 }
             });
