@@ -12722,32 +12722,51 @@ parseDateStr(dateStr) {
     const namaToko = this.appSettings?.storeName || 'QUINSAH COLLECTION';
     const namaCabang = (typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : '') || 'Pusat';
 
-    // Format item keranjang - Pastikan TIDAK ADA nilai undefined
-    const formattedCart = (this.cart || []).map(item => ({
-        name: item.name || '',
-        qty: Number(item.qty || 1),
-        sellPrice: Number(item.sellPrice ?? item.price ?? 0),
-        originalPrice: Number(item.originalPrice ?? item.price ?? 0),
-        discount: Number(item.discount ?? 0),
-        note: item.note || '' // Mencegah note bernilai undefined jika item tidak punya catatan
-    }));
+    // 1. FORMAT ITEM KERANJANG - Menangkap variasi nama variabel Harga Akhir & Grosir
+    const formattedCart = (this.cart || []).map(item => {
+        // Otomatis mencari mana variabel yang menyimpan Harga Akhir / Harga Diskon
+        let hargaJual = item.finalPrice ?? item.netPrice ?? item.hargaAkhir ?? item.sellPrice ?? item.price ?? 0;
+        // Otomatis mencari mana variabel yang menyimpan Harga Sistem / Harga Awal
+        let hargaAsli = item.originalPrice ?? item.basePrice ?? item.hargaSistem ?? item.hargaAwal ?? item.price ?? 0;
+
+        return {
+            name: item.name || '',
+            qty: Number(item.qty || 1),
+            sellPrice: Number(hargaJual),
+            originalPrice: Number(hargaAsli),
+            discount: Number(item.discount ?? item.diskon ?? 0),
+            note: item.note || '' // Mencegah note bernilai undefined
+        };
+    });
 
     try {
         const docId = `${compId}_${outletId}`;
         
-        // Payload data dengan pengaman default value (0 atau '')
+        // 2. PAYLOAD CDS - Menangkap variasi nama variabel Diskon Bawah / Footer
         const cdsPayload = {
             storeName: namaToko || 'QUINSAH COLLECTION',
             outletName: namaCabang || 'Pusat',
             cartItems: formattedCart,
             
-            subtotal: Number(this.subTotal ?? this.subtotal ?? 0),
-            extraDiscountAmt: Number(this.extraDiscountAmt ?? 0),
-            memberDiscountAmt: Number(this.memberDiscountAmt ?? 0),
-            invoiceDiscountAmt: Number(this.invoiceDiscountAmt ?? this.globalDiscountAmt ?? 0),
-            taxAmt: Number(this.taxAmt ?? this.taxAmount ?? 0),
-            total: Number(this.grandTotal ?? this.total ?? 0),
+            // Subtotal
+            subtotal: Number(this.subTotal ?? this.subtotalProduk ?? this.subtotal ?? 0),
             
+            // Extra Diskon (Diskon Item / Nominal per item)
+            extraDiscountAmt: Number(this.extraDiscountAmt ?? this.extraDiskon ?? this.totalDiskonItem ?? 0),
+            
+            // Diskon Member
+            memberDiscountAmt: Number(this.memberDiscountAmt ?? this.diskonMember ?? 0),
+            
+            // Diskon Invoice (Global / Manual)
+            invoiceDiscountAmt: Number(this.invoiceDiscountAmt ?? this.globalDiscountAmt ?? this.diskonGlobal ?? this.diskonInvoice ?? 0),
+            
+            // PPN
+            taxAmt: Number(this.taxAmt ?? this.taxAmount ?? this.ppnAmount ?? this.ppn ?? 0),
+            
+            // Total Tagihan Akhir
+            total: Number(this.grandTotal ?? this.totalTagihan ?? this.total ?? 0),
+            
+            // Kembalian & Status
             changeAmount: Number(this.kembalian ?? this.changeAmount ?? 0),
             paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
             updatedAt: new Date().getTime() 
