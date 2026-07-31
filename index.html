@@ -12718,19 +12718,13 @@ parseDateStr(dateStr) {
     const compId = this.getMyCompanyId ? this.getMyCompanyId() : (this.companyId || localStorage.getItem('companyId'));
     if (!compId) return;
     
-    // Menggunakan variabel outlet aktif dari transaksi Anda
     const outletId = this.posActiveOutletId || this.appSettings?.selectedReceiptOutletId || 'global';
     const namaToko = this.appSettings?.storeName || 'QUINSAH COLLECTION';
     const namaCabang = (typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : '') || 'Pusat';
 
-    // 1. FORMAT ITEM KERANJANG (Menggunakan fungsi getFinalItemPrice bawaan sistem)
     const formattedCart = (this.cart || []).map(item => {
-        let hargaJual = typeof this.getFinalItemPrice === 'function' 
-            ? this.getFinalItemPrice(item) 
-            : (item.finalPrice || item.sellPrice || 0);
-            
+        let hargaJual = typeof this.getFinalItemPrice === 'function' ? this.getFinalItemPrice(item) : (item.finalPrice || item.sellPrice || 0);
         let hargaAsli = item.originalPrice || item.basePrice || item.price || hargaJual;
-
         return {
             name: item.name || '',
             qty: Number(item.qty || 1),
@@ -12744,30 +12738,35 @@ parseDateStr(dateStr) {
     try {
         const docId = `${compId}_${outletId}`;
         
-        // 2. MENANGKAP VARIABEL DISKON & ONGKIR SESUAI PROCESS TRANSACTION
-        let currentShippingCost = (this.posOrderType === 'delivery') ? (Number(this.posShippingCost) || 0) : 0;
-        let currentCourier = (this.posOrderType === 'delivery') ? (this.posCourier || '') : '';
+        // --- TANGKAP SEMUA BIAYA & DISKON SESUAI UI POS ---
+        // Extra diskon = gabungan diskon % dan diskon Rp per item
+        const extraDiskon = Number(this.discountAmount || 0) + Number(this.posDiscountAmount || 0);
         
-        let currentGlobalDiscountAmt = Math.round(this.globalDiscountAmount || 0);
-        let extraDiskon = Math.round((this.discountAmount || 0) + (this.posDiscountAmount || 0));
+        // Diskon Member (Tambahkan fallback penamaan variabel umum)
+        const diskonMember = Number(this.memberDiscountAmount || this.memberDiscountAmt || this.diskonMember || 0);
+        
+        // Diskon Global/Invoice
+        const diskonInvoice = Number(this.globalDiscountAmount || this.globalDiscountAmt || 0);
+        
+        // Ongkir & Kurir
+        const ongkir = Number(this.posShippingCost || this.shippingCost || 0);
+        const kurir = this.posCourier || this.courier || '';
 
-        // 3. PAYLOAD CDS
         const cdsPayload = {
-            storeName: namaToko || 'QUINSAH COLLECTION',
-            outletName: namaCabang || 'Pusat',
+            storeName: namaToko,
+            outletName: namaCabang,
             cartItems: formattedCart,
             
-            subtotal: Math.round(this.subtotalBase || 0),
+            subtotal: Number(this.subtotalBase || 0),
             extraDiscountAmt: extraDiskon,
-            invoiceDiscountAmt: currentGlobalDiscountAmt,
-            taxAmt: Math.round(this.taxAmount || 0),
+            memberDiscountAmt: diskonMember,     // Kunci variabel Member
+            invoiceDiscountAmt: diskonInvoice,   // Kunci variabel Invoice
+            taxAmt: Number(this.taxAmount || 0),
+            shippingFee: ongkir,
+            courier: kurir,
             
-            // Data Ongkir
-            shippingFee: currentShippingCost,
-            courier: currentCourier,
-            
-            total: Math.round(this.total || 0),
-            changeAmount: 0, 
+            total: Number(this.total || 0),
+            changeAmount: 0,
             paymentStatus: 'PENDING',
             updatedAt: new Date().getTime() 
         };
