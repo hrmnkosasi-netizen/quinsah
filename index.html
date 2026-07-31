@@ -12715,42 +12715,45 @@ parseDateStr(dateStr) {
     },
 
     async syncLiveCartToFirebase() {
-    const compId = this.getMyCompanyId();
+    const compId = this.getMyCompanyId ? this.getMyCompanyId() : (this.companyId || localStorage.getItem('companyId'));
     if (!compId) return;
     
     const outletId = this.appSettings?.selectedReceiptOutletId || 'global';
-    let namaToko = this.appSettings?.storeName || 'QUINSAH COLLECTION';
-    const namaCabang = typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : 'Pusat';
+    const namaToko = this.appSettings?.storeName || 'QUINSAH COLLECTION';
+    const namaCabang = (typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : '') || 'Pusat';
 
-    // Pastikan item keranjang membawa harga akhir (finalPrice / sellPrice) dan harga asli
+    // Format item keranjang - Pastikan TIDAK ADA nilai undefined
     const formattedCart = (this.cart || []).map(item => ({
-        name: item.name,
-        qty: item.qty,
-        sellPrice: item.sellPrice || item.price, // Harga satuan setelah diskon item
-        originalPrice: item.originalPrice || item.price, // Harga asli sebelum diskon
-        discount: item.discount || 0,
-        note: item.note || ''
+        name: item.name || '',
+        qty: Number(item.qty || 1),
+        sellPrice: Number(item.sellPrice ?? item.price ?? 0),
+        originalPrice: Number(item.originalPrice ?? item.price ?? 0),
+        discount: Number(item.discount ?? 0),
+        note: item.note || '' // Mencegah note bernilai undefined jika item tidak punya catatan
     }));
 
     try {
         const docId = `${compId}_${outletId}`;
-        await setDoc(doc(db, "cds", docId), {
-            storeName: namaToko,
-            outletName: namaCabang,
+        
+        // Payload data dengan pengaman default value (0 atau '')
+        const cdsPayload = {
+            storeName: namaToko || 'QUINSAH COLLECTION',
+            outletName: namaCabang || 'Pusat',
             cartItems: formattedCart,
             
-            // Mengirim seluruh ringkasan kalkulasi dari POS
-            subtotal: this.subTotal || 0,
-            extraDiscountAmt: this.extraDiscountAmt || 0,
-            memberDiscountAmt: this.memberDiscountAmt || 0,
-            invoiceDiscountAmt: this.invoiceDiscountAmt || this.globalDiscountAmt || 0,
-            taxAmt: this.taxAmt || this.taxAmount || 0,
-            total: this.grandTotal || this.total || 0,
+            subtotal: Number(this.subTotal ?? this.subtotal ?? 0),
+            extraDiscountAmt: Number(this.extraDiscountAmt ?? 0),
+            memberDiscountAmt: Number(this.memberDiscountAmt ?? 0),
+            invoiceDiscountAmt: Number(this.invoiceDiscountAmt ?? this.globalDiscountAmt ?? 0),
+            taxAmt: Number(this.taxAmt ?? this.taxAmount ?? 0),
+            total: Number(this.grandTotal ?? this.total ?? 0),
             
-            changeAmount: this.kembalian || 0,
+            changeAmount: Number(this.kembalian ?? this.changeAmount ?? 0),
             paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
             updatedAt: new Date().getTime() 
-        });
+        };
+
+        await setDoc(doc(db, "cds", docId), cdsPayload);
     } catch (error) {
         console.error("Gagal sinkronisasi CDS:", error);
     }
