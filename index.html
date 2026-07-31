@@ -12306,30 +12306,25 @@ financeAPList() {
         }
     },
 
-    // Memantau perubahan pada keranjang belanja (cart)
-    // deep: true digunakan agar Vue bisa melacak perubahan di dalam array/objek secara mendetail
     cart: {
         deep: true,
         handler() {
-            // Memanggil fungsi sinkronisasi jika fungsi tersebut tersedia
-            if (typeof this.syncLiveCartToFirebase === 'function') {
-                this.syncLiveCartToFirebase();
-            }
+            if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
         }
     },
-    
-    // Memantau perubahan pada grand total
+    // 2. Pantau perubahan pada Total (Memicu sync saat diskon/ongkir masuk)
+    total() {
+        if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
+    },
     grandTotal() {
-        if (typeof this.syncLiveCartToFirebase === 'function') {
-            this.syncLiveCartToFirebase();
-        }
+        if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
     },
-    
-    // Memantau perubahan status pembayaran (untuk menampilkan watermark "LUNAS")
-    isPaymentSuccess() {
-        if (typeof this.syncLiveCartToFirebase === 'function') {
-            this.syncLiveCartToFirebase();
-        }
+    // 3. Pantau jika ada perubahan nominal diskon/pajak secara manual
+    discountAmount() {
+        if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
+    },
+    taxAmount() {
+        if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
     },
             
     // ==========================================
@@ -12736,44 +12731,47 @@ parseDateStr(dateStr) {
     });
 
     try {
-        const docId = `${compId}_${outletId}`;
-        
-        // 🌟 TANGKAP DAN BULATKAN SEMUA VARIABEL MUTLAK DARI POS
-        const subtotalBase = Math.round(Number(this.subtotalBase || 0));
-        const extraDiskon = Math.round(Number(this.discountAmount || 0) + Number(this.posDiscountAmount || 0));
-        
-        // Coba semua kemungkinan penamaan variabel Member dari sistem Anda
-        const diskonMember = Math.round(Number(this.memberDiscountAmount || this.posMemberDiscountAmount || this.memberDiscountAmt || 0));
-        
-        const diskonInvoice = Math.round(Number(this.globalDiscountAmount || 0));
-        const ppn = Math.round(Number(this.taxAmount || 0));
-        const ongkir = Math.round(Number(this.posShippingCost || this.shippingCost || 0));
-        const kurir = this.posCourier || this.courier || '';
-        const grandTotal = Math.round(Number(this.total || 0));
-
-        const cdsPayload = {
-            storeName: namaToko,
-            outletName: namaCabang,
-            cartItems: formattedCart,
+            const docId = `${compId}_${outletId}`;
             
-            subtotal: subtotalBase,
-            extraDiscountAmt: extraDiskon,
-            memberDiscountAmt: diskonMember,
-            invoiceDiscountAmt: diskonInvoice,
-            taxAmt: ppn,
-            shippingFee: ongkir,
-            courier: kurir,
+            const subtotalBase = Math.round(Number(this.subtotalBase || this.subTotal || this.subtotal || 0));
+            const extraDiskon = Math.round(Number(this.discountAmount || 0) + Number(this.posDiscountAmount || 0));
             
-            total: grandTotal, // 🌟 TOTAL MUTLAK DARI POS
-            paymentStatus: 'PENDING',
-            updatedAt: new Date().getTime() 
-        };
+            // 🌟 DIPERKUAT: Tangkap semua kemungkinan nama variabel Diskon Member
+            const diskonMember = Math.round(Number(this.memberDiscountAmount || this.memberDiscount || this.memberDiscountAmt || 0));
+            
+            const diskonInvoice = Math.round(Number(this.globalDiscountAmount || 0));
+            const ppn = Math.round(Number(this.taxAmount || 0));
+            
+            // 🌟 DIPERKUAT: Tangkap semua kemungkinan nama variabel Ongkir
+            const ongkir = Math.round(Number(this.shippingFee || this.shippingCost || this.posShippingCost || this.ongkir || 0));
+            const kurir = this.posCourier || this.courier || '';
+            
+            // 🌟 DIPERKUAT: Prioritaskan grandTotal dari sistem POS
+            const grandTotal = Math.round(Number(this.grandTotal || this.total || 0));
 
-        await setDoc(doc(db, "cds", docId), cdsPayload);
-    } catch (error) {
-        console.error("Gagal sinkronisasi CDS:", error);
-    }
-},
+            const cdsPayload = {
+                storeName: namaToko,
+                outletName: namaCabang,
+                cartItems: formattedCart,
+                
+                subtotal: subtotalBase,
+                extraDiscountAmt: extraDiskon,
+                memberDiscountAmt: diskonMember,
+                invoiceDiscountAmt: diskonInvoice,
+                taxAmt: ppn,
+                shippingFee: ongkir,
+                courier: kurir,
+                
+                total: grandTotal, 
+                paymentStatus: 'PENDING',
+                updatedAt: new Date().getTime() 
+            };
+
+            await setDoc(doc(db, "cds", docId), cdsPayload);
+        } catch (error) {
+            console.error("Gagal sinkronisasi CDS:", error);
+        }
+    },
 
 // Fungsi untuk menentukan indikator warna dan label waktu
 getServiceTime(dateStr) {
