@@ -12715,47 +12715,46 @@ parseDateStr(dateStr) {
     },
 
     async syncLiveCartToFirebase() {
-        const compId = this.getMyCompanyId();
-        if (!compId) return;
-        
-        const outletId = this.appSettings?.selectedReceiptOutletId || 'global';
-        
-        let namaToko = 'Toko Kami';
-        if (this.appSettings?.outletReceipts && this.appSettings.outletReceipts[outletId]) {
-            namaToko = this.appSettings.outletReceipts[outletId].storeName || 'Toko Kami';
-        } else if (this.appSettings?.storeName) {
-            namaToko = this.appSettings.storeName;
-        }
+    const compId = this.getMyCompanyId();
+    if (!compId) return;
+    
+    const outletId = this.appSettings?.selectedReceiptOutletId || 'global';
+    let namaToko = this.appSettings?.storeName || 'QUINSAH COLLECTION';
+    const namaCabang = typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : 'Pusat';
 
-        const namaCabang = typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : 'Pusat';
+    // Pastikan item keranjang membawa harga akhir (finalPrice / sellPrice) dan harga asli
+    const formattedCart = (this.cart || []).map(item => ({
+        name: item.name,
+        qty: item.qty,
+        sellPrice: item.sellPrice || item.price, // Harga satuan setelah diskon item
+        originalPrice: item.originalPrice || item.price, // Harga asli sebelum diskon
+        discount: item.discount || 0,
+        note: item.note || ''
+    }));
 
-        try {
-            const docId = `${compId}_${outletId}`;
+    try {
+        const docId = `${compId}_${outletId}`;
+        await setDoc(doc(db, "cds", docId), {
+            storeName: namaToko,
+            outletName: namaCabang,
+            cartItems: formattedCart,
             
-            // Cek di console apakah fungsi ini dipanggil
-            console.log("Mengirim data ke CDS...", docId, this.cart);
-
-            await setDoc(doc(db, "cds", docId), {
-                storeName: namaToko,
-                outletName: namaCabang,
-                cartItems: this.cart || [], 
-                
-                // CEK NAMA VARIABEL INI. Jika bernilai 0 di CDS, mungkin di POS namanya this.subTotalProduk
-                subtotal: this.subTotal || 0, 
-                
-                // TAMBAHKAN KIRIMAN PPN/PAJAK KE FIREBASE
-                taxAmt: this.taxAmount || this.ppn || 0, // <--- Sesuaikan dengan nama variabel PPN di POS Anda
-                
-                total: this.grandTotal || 0,
-                discountAmt: this.discountAmt || 0,
-                changeAmount: this.kembalian || 0,
-                paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
-                updatedAt: new Date().getTime() 
-            });
-        } catch (error) {
-            console.error("Gagal sinkronisasi CDS:", error);
-        }
-    },
+            // Mengirim seluruh ringkasan kalkulasi dari POS
+            subtotal: this.subTotal || 0,
+            extraDiscountAmt: this.extraDiscountAmt || 0,
+            memberDiscountAmt: this.memberDiscountAmt || 0,
+            invoiceDiscountAmt: this.invoiceDiscountAmt || this.globalDiscountAmt || 0,
+            taxAmt: this.taxAmt || this.taxAmount || 0,
+            total: this.grandTotal || this.total || 0,
+            
+            changeAmount: this.kembalian || 0,
+            paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
+            updatedAt: new Date().getTime() 
+        });
+    } catch (error) {
+        console.error("Gagal sinkronisasi CDS:", error);
+    }
+},
 
 // Fungsi untuk menentukan indikator warna dan label waktu
 getServiceTime(dateStr) {
