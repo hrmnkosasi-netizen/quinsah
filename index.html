@@ -12738,9 +12738,14 @@ parseDateStr(dateStr) {
             await setDoc(doc(db, "cds", docId), {
                 storeName: namaToko,
                 outletName: namaCabang,
-                // Tambahkan || untuk mencegah nilai undefined masuk ke Firebase
                 cartItems: this.cart || [], 
+                
+                // CEK NAMA VARIABEL INI. Jika bernilai 0 di CDS, mungkin di POS namanya this.subTotalProduk
                 subtotal: this.subTotal || 0, 
+                
+                // TAMBAHKAN KIRIMAN PPN/PAJAK KE FIREBASE
+                taxAmt: this.taxAmount || this.ppn || 0, // <--- Sesuaikan dengan nama variabel PPN di POS Anda
+                
                 total: this.grandTotal || 0,
                 discountAmt: this.discountAmt || 0,
                 changeAmount: this.kembalian || 0,
