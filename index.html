@@ -823,9 +823,8 @@ body.sidebar-open {
             <i class="bi bi-display"></i> POS
         </div>
 
-        <!-- 🌟 MENU BARU: LAYAR PELANGGAN (CDS) 🌟 -->
         <div class="nav-icon" :class="{'active': currentView === 'cds'}" @click="currentView = 'cds'" v-if="hasAccess('pos', 'read')">
-            <i class="bi bi-monitor"></i> CDS
+        <i class="bi bi-monitor"></i> CDS
         </div>
         
         <!-- Jika POS & Kasir adalah modul yang sama, biarkan ID-nya sama. Tapi jika beda baris di matriks, pisahkan! -->
@@ -1396,7 +1395,7 @@ body.sidebar-open {
 <!-- ========================================== -->
 <!-- MENU: CUSTOMER DISPLAY SYSTEM (CDS)        -->
 <!-- ========================================== -->
-<div v-if="currentMenu === 'cds'" class="dashboard-card fade-in">
+<div v-if="currentView === 'cds'" class="dashboard-card fade-in">
     <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
         <div>
             <h4 class="fw-bold mb-1"><i class="bi bi-display text-primary me-2"></i>Pengaturan Layar Pelanggan</h4>
