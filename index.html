@@ -10154,7 +10154,6 @@ body.sidebar-open {
                 paymentSearchQuery: '',
                 paymentStartDate: '', 
                 paymentEndDate: '',
-                isPaymentModalOpen: false,
 
                 transactionStartDate: getLocalToday(),
                 transactionEndDate: getLocalToday(),
@@ -12758,7 +12757,7 @@ parseDateStr(dateStr) {
             // 🌟 DIPERKUAT: Prioritaskan grandTotal dari sistem POS
             const grandTotal = Math.round(Number(this.grandTotal || this.total || 0));
 
-                    const cdsPayload = {
+            const cdsPayload = {
             storeName: namaToko,
             outletName: namaCabang,
             cartItems: formattedCart,
@@ -12774,20 +12773,13 @@ parseDateStr(dateStr) {
             total: grandTotal, 
             paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
             
-            // 🌟 3 BARIS INI YANG MEMBUAT INVOICE & LAYAR PEMBAYARAN MUNCUL 🌟
-            // (Sistem akan otomatis mencari variabel mana yang menyimpan nomor Invoice Anda)
-            invoiceNumber: this.invoiceNumber || this.invoiceNo || this.posCustomInvoice || this.transactionId || '',
-            
-            // Mengirim sinyal ke CDS apakah modal sedang terbuka atau tidak
-            isPaymentOpen: this.isPaymentModalOpen === true,
-            
-            // Mengirim metode bayar yang sedang diklik kasir (CASH, QRIS, dll)
+            // 🌟 TAMBAHAN BARU: Kirim metode pembayaran yang sedang aktif
             paymentMethod: this.paymentData ? this.paymentData.method : null,
             
             updatedAt: new Date().getTime() 
         };
 
-        await setDoc(doc(db, "cds", docId), cdsPayload);
+            await setDoc(doc(db, "cds", docId), cdsPayload);
         } catch (error) {
             console.error("Gagal sinkronisasi CDS:", error);
         }
