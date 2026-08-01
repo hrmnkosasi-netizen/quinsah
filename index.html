@@ -12778,8 +12778,22 @@ parseDateStr(dateStr) {
             const currentInputAmt = Math.round(Number(this.paymentData && this.paymentData.amountReceived ? this.paymentData.amountReceived : 0));
             const currentInputTotal = Math.round(Number(typeof this.getTotalBayarDenganAdmin === 'function' ? this.getTotalBayarDenganAdmin() : currentInputAmt));
             
-            // Tangkap juga kembalian (jika ada) untuk dikirim ke CDS
-            const totalKembalian = Math.round(Number(this.changeAmount || this.kembalian || 0));
+            // 🌟 KODE BARU: Perhitungan Kembalian Ekstra Akurat untuk Split
+            let totalKembalian = Math.round(Number(this.changeAmount || this.kembalian || this.splitKembalian || 0));
+            
+            // Fallback: Jika kasir pakai nama variabel beda saat split, kita hitung otomatis (Total Pokok Masuk - Total Tagihan)
+            if (this.isSplitPayment === true && totalKembalian === 0 && Array.isArray(this.splitPayments)) {
+                let totalPokokMasuk = 0;
+                this.splitPayments.forEach(p => {
+                    // Mendeteksi nominal pokok uang yang masuk dari berbagai format data
+                    totalPokokMasuk += Number(p.amountReceived || p.cashReceived || p.pokok || p.baseAmount || p.amount || 0);
+                });
+                
+                // Jika total uang masuk lebih besar dari tagihan, itu adalah kembaliannya
+                if (totalPokokMasuk > grandTotal) {
+                    totalKembalian = Math.round(totalPokokMasuk - grandTotal);
+                }
+            }
             
             const cdsPayload = {
                 storeName: namaToko,
