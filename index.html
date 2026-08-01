@@ -12795,6 +12795,9 @@ parseDateStr(dateStr) {
                 }
             }
             
+            // 🌟 PASTIKAN STATUS MODAL BENAR-BENAR DIBACA
+            const isModalOpen = this.isPaymentModalOpen === true;
+
             const cdsPayload = {
                 storeName: namaToko,
                 outletName: namaCabang,
@@ -12812,22 +12815,18 @@ parseDateStr(dateStr) {
                 paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
                 invoiceNumber: this.invoiceNumber || this.invoiceNo || this.posCustomInvoice || this.transactionId || '',
                 
-                isPaymentOpen: this.isPaymentModalOpen === true,
-                paymentMethod: this.paymentData ? this.paymentData.method : null,
+                // 🌟 FILTER KETAT: Hanya kirim data pembayaran JIKA modal benar-benar terbuka
+                isPaymentOpen: isModalOpen,
+                paymentMethod: isModalOpen && this.paymentData ? this.paymentData.method : null,
+                paymentType: isModalOpen ? currentPaymentType : 'CASH',
                 
-                // 🌟 Data Pembayaran Lengkap untuk CDS
-                paymentType: currentPaymentType,
-                qrImageUrl: currentQrUrl,
+                isSplitPayment: isModalOpen ? (this.isSplitPayment === true) : false,
+                splitPayments: isModalOpen ? (this.splitPayments || []) : [],
+                remainingSplitTagihan: isModalOpen ? Math.round(Number(this.remainingSplitTagihan || 0)) : 0,
                 
-                // 🌟 Data Split Payment
-                isSplitPayment: this.isSplitPayment === true,
-                splitPayments: this.splitPayments || [],
-                remainingSplitTagihan: Math.round(Number(this.remainingSplitTagihan || 0)),
-                
-                // 🌟 PENGIRIMAN NOMINAL KE CDS AGAR TAMPILAN SESUAI INPUT KASIR
-                currentPaymentAmount: currentInputAmt,
-                currentPaymentTotal: currentInputTotal,
-                changeAmount: totalKembalian,
+                currentPaymentAmount: isModalOpen ? currentInputAmt : 0,
+                currentPaymentTotal: isModalOpen ? currentInputTotal : 0,
+                changeAmount: totalKembalian, 
                 
                 updatedAt: new Date().getTime() 
             };
