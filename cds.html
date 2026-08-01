@@ -242,12 +242,12 @@
                                         Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}
                                     </h1>
                                     
-                                    <div class="d-flex justify-content-center gap-4 mt-2 text-muted fs-4" v-if="currentPaymentAmount > 0 && (currentPaymentTotal - currentPaymentAmount) > 0">
-                                        <span>Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : remainingSplitTagihan) }}</span>
-                                        <span class="text-danger fw-bold bg-danger bg-opacity-10 px-3 py-1 rounded">Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}</span>
+                                    <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box w-100 mt-2 text-start">
+                                        <div class="text-uppercase fw-bold text-secondary mb-1" style="font-size: 0.8rem;">Transfer Ke:</div>
+                                        <h5 class="fw-bold text-primary mb-1">{{ bankName }}</h5>
+                                        <h4 class="fw-black text-dark mb-1" style="letter-spacing: 2px;">{{ accountNumber }}</h4>
+                                        <p class="text-muted mb-0" v-if="accountName">a.n {{ accountName }}</p>
                                     </div>
-                                    
-                                    <p class="text-muted mt-5 pt-4 border-top w-100 mb-0 fs-4">Silakan serahkan dana ke kasir.</p>
                                 </div>
                             </div>
                             
@@ -302,15 +302,13 @@
                         Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}
                     </h1>
                     
-                    <div class="d-flex justify-content-center gap-4 mt-2 text-muted fs-4" v-if="currentPaymentAmount > 0 && (currentPaymentTotal - currentPaymentAmount) > 0">
-                        <span>Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : total) }}</span>
-                        <span class="text-danger fw-bold bg-danger bg-opacity-10 px-4 py-2 rounded">Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}</span>
+                    <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box text-center shadow-sm">
+                        <h4 class="fw-bold text-primary mb-2">{{ bankName }}</h4>
+                        <h2 class="fw-black text-dark mb-1" style="letter-spacing: 3px;">{{ accountNumber }}</h2>
+                        <h5 class="text-muted mb-0" v-if="accountName">a.n {{ accountName }}</h5>
                     </div>
-
-                    <p class="text-muted mt-5 fs-3"><i class="fas fa-hand-holding-usd me-2"></i>Silakan selesaikan pembayaran dengan kasir.</p>
                 </div>
-            </template>
-            
+            </template>            
         </div>
 
         <template v-else>
@@ -440,6 +438,9 @@
                 paymentMethod: null,
                 paymentType: 'CASH',
                 qrImageUrl: '',
+                bankName: '',
+                accountNumber: '',
+                accountName: '',
                 
                 isSplitPayment: false,
                 splitPayments: [],
@@ -507,6 +508,9 @@
                     this.paymentMethod = data.paymentMethod || null;
                     this.paymentType = data.paymentType || 'CASH';
                     this.qrImageUrl = data.qrImageUrl || '';
+                    this.bankName = data.bankName || '';
+                    this.accountNumber = data.accountNumber || '';
+                    this.accountName = data.accountName || '';
                     
                     this.isSplitPayment = data.isSplitPayment || false;
                     this.splitPayments = data.splitPayments || [];
