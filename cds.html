@@ -8,62 +8,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
     <style>
-        [v-cloak] { display: none !important; }
+        body { background-color: #f8f9fa; overflow: hidden; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .split-screen { height: 100vh; display: flex; }
         
-        body { 
-            background-color: #f8f9fa; 
-            margin: 0; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        }
-
-        /* DEFAULT (TABLET & PC LANDSCAPE) */
-        @media (min-width: 769px) {
-            body { overflow: hidden; }
-            .split-screen { height: 100vh; display: flex; flex-direction: row; }
-            .promo-area { flex: 6.5; height: 100vh; }
-            .cart-area { flex: 3.5; height: 100vh; }
-        }
-
-        /* MOBILE / HP LAYOUT (PORTRAIT) */
-        @media (max-width: 768px) {
-            body { overflow-y: auto; background-color: #fff; }
-            .split-screen { display: flex; flex-direction: column; min-height: 100vh; }
-            
-            /* STATE 1: DEFAULT MOBILE (Keranjang Kosong) -> Tampilkan Promo Full 1 Layar */
-            .promo-area { display: flex !important; width: 100%; height: 100vh; }
-            .cart-area { display: none !important; }
-            
-            /* STATE 2: ADA BARANG DI KERANJANG -> Tampilkan Keranjang Saja */
-            .split-screen.mobile-cart-active .promo-area { display: none !important; }
-            .split-screen.mobile-cart-active .cart-area { display: flex !important; width: 100%; height: 100vh; }
-            
-            /* STATE 3: SAAT PEMBAYARAN / SUKSES -> Paksa Tampilkan Area Kiri (Pembayaran/Promo) */
-            .split-screen.mobile-payment-active .promo-area { display: flex !important; width: 100%; height: 100vh; }
-            .split-screen.mobile-payment-active .cart-area { display: none !important; }
-            
-            /* Penyesuaian Font di Mobile */
-            .qris-amount { font-size: 2.2rem !important; }
-            .success-card h1 { font-size: 2.2rem !important; }
-            .change-box h1 { font-size: 2.5rem !important; }
-            .welcome-text { font-size: 1.1rem !important; padding: 10px !important; }
-            .qris-card { max-width: 100% !important; }
-            .success-card { padding: 20px !important; margin: 15px; }
-            .checkmark-circle { width: 80px !important; height: 80px !important; }
-            .checkmark-circle i { font-size: 2.5rem !important; }
-        }
-
-        /* AREA KIRI: PROMO / PEMBAYARAN */
-        .promo-area { background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
+        /* AREA KIRI: PROMO */
+        .promo-area { flex: 6.5; background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
         .promo-area video, .promo-area img { width: 100%; height: 100%; object-fit: cover; }
-        .welcome-text { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); color: white; padding: 20px; text-align: center; font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; backdrop-filter: blur(5px); z-index: 2; }
+        .welcome-text { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); color: white; padding: 20px; text-align: center; font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; backdrop-filter: blur(5px); }
         
         /* OVERLAY PEMBAYARAN */
-        .payment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f4f7f6; z-index: 20; overflow-y: auto; padding: 15px; }
+        .payment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f4f7f6; z-index: 20; }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         /* AREA KANAN: KERANJANG */
-        .cart-area { background-color: #fff; box-shadow: -10px 0 25px rgba(0,0,0,0.08); display: flex; flex-direction: column; z-index: 2;}
+        .cart-area { flex: 3.5; background-color: #fff; box-shadow: -10px 0 25px rgba(0,0,0,0.08); display: flex; flex-direction: column; z-index: 2;}
         .cart-items { flex-grow: 1; overflow-y: auto; padding: 15px; }
         .cart-footer { background-color: #f8f9fa; padding: 20px; border-top: 2px dashed #dee2e6; }
         
@@ -75,13 +34,13 @@
         .product-img-placeholder { width: 60px; height: 60px; background: #f1f2f6; border-radius: 10px; border: 1px solid #dfe6e9; display: flex; align-items: center; justify-content: center; color: #a4b0be; flex-shrink: 0; }
         
         /* KARTU QRIS PREMIUM */
-        .qris-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); max-width: 420px; width: 100%; border: 1px solid #f1f2f6; margin: 0 auto; }
+        .qris-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); max-width: 420px; width: 100%; border: 1px solid #f1f2f6; }
         .qris-header { background: linear-gradient(135deg, #e84118 0%, #c23616 100%); padding: 18px; color: white; }
         .qris-qr-box { background: white; padding: 15px; border-radius: 20px; display: inline-block; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 1px solid #f1f2f6; }
-        .qris-amount { font-size: 3.2rem; font-weight: 900; letter-spacing: -1.5px; color: #2d3436; margin-top: 15px; margin-bottom: 5px; word-break: break-all; }
+        .qris-amount { font-size: 3.2rem; font-weight: 900; letter-spacing: -1.5px; color: #2d3436; margin-top: 15px; margin-bottom: 5px;}
         
         /* ANIMASI LUNAS & KONFETI */
-        .success-card { background: white; border-radius: 30px; padding: 40px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; z-index: 10; transform: scale(0.9); animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; border: 2px solid #eef2f3; max-width: 500px; width: 100%; }
+        .success-card { background: white; border-radius: 30px; padding: 40px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; z-index: 10; transform: scale(0.9); animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; border: 2px solid #eef2f3; }
         @keyframes popIn { to { transform: scale(1); } }
         
         .checkmark-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; background: linear-gradient(135deg, #10ac84 0%, #1dd1a1 100%); box-shadow: 0 10px 20px rgba(29, 209, 161, 0.3); animation: pulse 2s infinite; }
@@ -91,10 +50,11 @@
         
         .change-box { background: #f8f9fa; border: 2px dashed #1dd1a1; border-radius: 15px; padding: 20px; margin-top: 25px; }
         
-        /* Konfeti */
+        /* Konfeti CSS Murni */
         .confetti-container { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; overflow: hidden; z-index: 5; display: flex; justify-content: center; }
         .confetti { width: 15px; height: 15px; background-color: #f2d74e; position: absolute; top: -20px; animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+        
         .confetti:nth-child(1) { left: 10%; animation-duration: 3s; animation-delay: 0s; background-color: #95c3de; }
         .confetti:nth-child(2) { left: 20%; animation-duration: 2.5s; animation-delay: 0.2s; background-color: #ff9a91; }
         .confetti:nth-child(3) { left: 30%; animation-duration: 3.5s; animation-delay: 0.1s; background-color: #f2d74e; }
@@ -104,20 +64,24 @@
         .confetti:nth-child(7) { left: 70%; animation-duration: 2.7s; animation-delay: 0.1s; background-color: #95c3de; }
         .confetti:nth-child(8) { left: 80%; animation-duration: 3.8s; animation-delay: 0.6s; background-color: #ff9a91; }
         .confetti:nth-child(9) { left: 90%; animation-duration: 2.9s; animation-delay: 0.2s; background-color: #f2d74e; }
+        .confetti:nth-child(10) { left: 15%; animation-duration: 3.1s; animation-delay: 0.7s; background-color: #ff9a91; }
+        .confetti:nth-child(11) { left: 45%; animation-duration: 2.6s; animation-delay: 0.8s; background-color: #95c3de; }
+        .confetti:nth-child(12) { left: 75%; animation-duration: 3.4s; animation-delay: 0.4s; background-color: #f2d74e; }
     </style>
 </head>
 <body>
 
-<!-- Dinamis Class untuk HP: mobile-payment-active, mobile-cart-active, atau default promo -->
-<div id="cdsApp" class="split-screen" :class="{'mobile-payment-active': showPaymentView, 'mobile-cart-active': !showPaymentView && cartItems && cartItems.length > 0}" v-cloak>
+<div id="cdsApp" class="split-screen" v-cloak>
     
     <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
     <div class="promo-area">
-        <div v-if="showPaymentView" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
+        <div v-if="(isPaymentOpen && cartItems.length > 0) || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
             
             <!-- 🌟 ANIMASI TRANSAKSI SELESAI (LUNAS) -->
-            <div v-if="paymentStatus === 'LUNAS'" class="w-100 h-100 d-flex align-items-center justify-content-center position-relative my-auto">
+            <div v-if="paymentStatus === 'LUNAS'" class="w-100 h-100 d-flex align-items-center justify-content-center position-relative">
+                <!-- Efek Konfeti -->
                 <div class="confetti-container">
+                    <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
                     <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
                     <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
                     <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
@@ -127,12 +91,13 @@
                     <div class="checkmark-circle">
                         <i class="fas fa-check"></i>
                     </div>
-                    <h1 class="fw-black text-dark mb-1" style="font-size: 3rem; letter-spacing: -1px;">TRANSAKSI SUKSES!</h1>
-                    <p class="text-muted fs-6 fs-md-5 mb-0">Terima kasih telah berbelanja di {{ storeName }}.</p>
+                    <h1 class="fw-black text-dark mb-1" style="font-size: 3.5rem; letter-spacing: -1px;">TRANSAKSI SUKSES!</h1>
+                    <p class="text-muted fs-5 mb-0">Terima kasih telah berbelanja di {{ storeName }}.</p>
                     
+                    <!-- Kotak Kembalian -->
                     <div v-if="changeAmount > 0" class="change-box fade-in" style="animation-delay: 0.8s; opacity: 0; animation-fill-mode: forwards;">
                         <h6 class="text-secondary fw-bold text-uppercase tracking-wider mb-2">Uang Kembali Anda</h6>
-                        <h1 class="text-success fw-bold mb-0" style="font-size: 3.5rem; text-shadow: 0 2px 10px rgba(29,209,161,0.2);">
+                        <h1 class="text-success fw-bold mb-0" style="font-size: 4rem; text-shadow: 0 2px 10px rgba(29,209,161,0.2);">
                             Rp {{ formatRupiah(changeAmount) }}
                         </h1>
                     </div>
@@ -146,32 +111,34 @@
 
             <!-- TAMPILAN PROSES PEMBAYARAN (Belum Lunas) -->
             <template v-else>
-                <!-- Menunggu Metode -->
-                <div v-if="!paymentMethod && !isSplitPayment" class="text-center fade-in my-auto py-5">
-                    <i class="fas fa-cash-register fa-4x text-secondary mb-3"></i>
-                    <h3 class="fw-bold">Menyiapkan Tagihan...</h3>
-                    <p class="text-muted fs-6">Silakan tunggu kasir memilih metode pembayaran.</p>
+                <div v-if="!paymentMethod && !isSplitPayment" class="text-center fade-in">
+                    <i class="fas fa-cash-register fa-5x text-secondary mb-4"></i>
+                    <h2 class="fw-bold">Menyiapkan Tagihan...</h2>
+                    <p class="text-muted fs-5">Silakan tunggu kasir memilih metode pembayaran.</p>
                 </div>
                 
-                <!-- Split Payment -->
-                <div v-else-if="isSplitPayment" class="w-100 fade-in px-2 px-md-4 d-flex align-items-center justify-content-center my-auto py-3">
-                    <div class="row w-100 g-3" style="max-width: 900px;">
-                        <div class="col-12 col-md-5 d-flex flex-column">
+                <!-- Tampilan Split Payment (Berbagi Layar dengan QRIS) -->
+                <div v-else-if="isSplitPayment" class="w-100 fade-in px-4 d-flex align-items-center justify-content-center">
+                    
+                    <div class="row w-100" style="max-width: 900px;">
+                        
+                        <!-- KOTAK KIRI: Ringkasan Split -->
+                        <div class="col-md-5 d-flex flex-column">
                             <div class="card shadow-sm border-0 bg-white rounded-4 flex-grow-1" style="border: 1px solid #f1f2f6 !important;">
-                                <div class="card-body p-3 p-md-4 text-center d-flex flex-column">
-                                    <h5 class="fw-bold text-dark mb-3 border-bottom pb-2">Pembayaran Split</h5>
+                                <div class="card-body p-4 text-center d-flex flex-column">
+                                    <h5 class="fw-bold text-dark mb-4 border-bottom pb-3">Pembayaran Split</h5>
                                     
                                     <div class="mb-3 text-start flex-grow-1" v-if="splitPayments.length > 0">
-                                        <div v-for="(p, i) in splitPayments" :key="i" class="d-flex justify-content-between border-bottom pb-2 mb-2 fw-semibold text-secondary" style="font-size: 0.9rem;">
+                                        <div v-for="(p, i) in splitPayments" :key="i" class="d-flex justify-content-between border-bottom pb-2 mb-2 fw-semibold text-secondary" style="font-size: 0.95rem;">
                                             <span><i class="fas fa-check-circle text-success me-2"></i> {{ p.method }}</span>
                                             <span class="text-success">Rp {{ formatRupiah(p.cashReceived || p.amount) }}</span>
                                         </div>
                                     </div>
-                                    <div v-else class="text-muted small fst-italic flex-grow-1 d-flex align-items-center justify-content-center min-vh-10">Belum ada dana masuk</div>
+                                    <div v-else class="text-muted small fst-italic flex-grow-1 d-flex align-items-center justify-content-center">Belum ada dana masuk</div>
                                     
                                     <div class="mt-3 pt-3 border-top">
                                         <h6 class="text-muted mb-1 small text-uppercase fw-bold">Sisa Tagihan (Pokok)</h6>
-                                        <h2 class="fw-bold mb-0 text-danger" style="font-size: 2rem;">
+                                        <h2 class="fw-bold mb-0 text-danger" style="font-size: 2.5rem;">
                                             Rp {{ formatRupiah(remainingSplitTagihan) }}
                                         </h2>
                                     </div>
@@ -179,94 +146,112 @@
                             </div>
                         </div>
                         
-                        <div class="col-12 col-md-7 d-flex justify-content-center">
+                        <!-- KOTAK KANAN: Instruksi Pembayaran / QRIS Dinamis -->
+                        <div class="col-md-7 d-flex justify-content-center">
+                            <!-- JIKA SPLIT PILIH QRIS -->
                             <div v-if="paymentMethod && paymentType === 'QRIS'" class="qris-card fade-in w-100">
                                 <div class="qris-header d-flex justify-content-between align-items-center">
                                     <span class="fw-bold small" style="letter-spacing: 1px;">SCAN UNTUK MELUNASI SISA</span>
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 20px; filter: brightness(0) invert(1);">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 22px; filter: brightness(0) invert(1);">
                                 </div>
-                                <div class="card-body p-3 p-md-4 text-center">
+                                <div class="card-body p-4 text-center">
+                                    <!-- Angka Dinamis (Termasuk Surcharge) -->
                                     <div class="qris-amount">
                                         Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}
                                     </div>
-                                    <div class="d-flex justify-content-center gap-2 mb-3 text-muted flex-wrap" style="font-size: 0.85rem;">
+                                    
+                                    <div class="d-flex justify-content-center gap-3 mb-4 text-muted" style="font-size: 0.9rem;">
                                         <span class="fw-semibold"><i class="fas fa-box text-secondary"></i> Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : remainingSplitTagihan) }}</span>
                                         <span v-if="(currentPaymentTotal - currentPaymentAmount) > 0" class="fw-bold text-danger bg-danger bg-opacity-10 px-2 py-1 rounded">
                                             <i class="fas fa-tag"></i> Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}
                                         </span>
                                     </div>
+
                                     <div class="qris-qr-box">
-                                        <img :src="qrImageUrl || ('https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=PAY_' + (currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan))" alt="QRIS Code" style="width: 180px; height: 180px; object-fit: contain;">
+                                        <img :src="qrImageUrl || ('https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=PAY_' + (currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan))" alt="QRIS Code" style="width: 210px; height: 210px; object-fit: contain;">
                                     </div>
-                                    <p class="text-secondary mt-3 mb-0 fw-bold fs-6">Arahkan kamera ke layar ini</p>
+                                    <p class="text-secondary mt-4 mb-0 fw-bold fs-5">Arahkan kamera ke layar ini</p>
                                 </div>
                             </div>
                             
+                            <!-- JIKA SPLIT PILIH NON-QRIS -->
                             <div v-else-if="paymentMethod" class="card shadow-sm border-0 bg-white rounded-4 w-100 h-100" style="border: 1px solid #f1f2f6 !important;">
-                                <div class="card-body d-flex flex-column align-items-center justify-content-center text-center p-4">
-                                    <i v-if="paymentType === 'TRANSFER'" class="fas fa-university fa-3x text-info mb-3"></i>
-                                    <i v-else class="fas fa-wallet fa-3x text-primary mb-3"></i>
-                                    <h4 class="fw-bold text-dark">Metode: {{ paymentMethod }}</h4>
-                                    <h2 class="fw-bold text-danger my-2" style="font-size: 2.8rem; letter-spacing: -1px;">
+                                <div class="card-body d-flex flex-column align-items-center justify-content-center text-center p-5">
+                                    <i v-if="paymentType === 'TRANSFER'" class="fas fa-university fa-4x text-info mb-3"></i>
+                                    <i v-else class="fas fa-wallet fa-4x text-primary mb-3"></i>
+                                    <h3 class="fw-bold text-dark">Metode: {{ paymentMethod }}</h3>
+                                    
+                                    <!-- Nominal Split (Termasuk Admin jika ada) -->
+                                    <h1 class="fw-bold text-danger my-2" style="font-size: 3.8rem; letter-spacing: -1px;">
                                         Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}
-                                    </h2>
-                                    <div class="d-flex justify-content-center gap-2 mt-2 text-muted flex-wrap" style="font-size: 0.85rem;" v-if="(currentPaymentTotal - currentPaymentAmount) > 0">
+                                    </h1>
+                                    
+                                    <div class="d-flex justify-content-center gap-3 mt-2 text-muted" style="font-size: 0.95rem;" v-if="(currentPaymentTotal - currentPaymentAmount) > 0">
                                         <span>Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : remainingSplitTagihan) }}</span>
                                         <span class="text-danger fw-bold bg-danger bg-opacity-10 px-2 py-1 rounded">Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}</span>
                                     </div>
-                                    <p class="text-muted mt-3 pt-3 border-top w-100 mb-0 fs-6">Silakan serahkan dana ke kasir.</p>
+                                    
+                                    <p class="text-muted mt-4 pt-4 border-top w-100 mb-0 fs-5">Silakan serahkan dana ke kasir.</p>
                                 </div>
                             </div>
                             
-                            <div v-else class="w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
-                                <div class="spinner-border text-secondary mb-3" role="status"></div>
-                                <p class="text-muted fs-6 fst-italic">Menunggu kasir memilih metode selanjutnya...</p>
+                            <div v-else class="w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                                <div class="spinner-border text-secondary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                                <p class="text-muted fs-5 fst-italic">Menunggu kasir memilih metode selanjutnya...</p>
                             </div>
                         </div>
+
                     </div>
                 </div>
                 
-                <!-- QRIS Non-Split -->
-                <div v-else-if="paymentType === 'QRIS'" class="text-center w-100 fade-in d-flex justify-content-center my-auto py-3">
+                <!-- Tampilan QRIS PREMIUM (Non-Split) -->
+                <div v-else-if="paymentType === 'QRIS'" class="text-center w-100 fade-in d-flex justify-content-center">
                     <div class="qris-card">
                         <div class="qris-header d-flex justify-content-between align-items-center">
                             <span class="fw-bold small" style="letter-spacing: 1.5px;">TOTAL TAGIHAN</span>
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 20px; filter: brightness(0) invert(1);">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 22px; filter: brightness(0) invert(1);">
                         </div>
-                        <div class="card-body p-4 text-center">
-                            <span class="badge bg-light text-dark border mb-2 px-3 py-1 fs-6 shadow-sm">{{ paymentMethod }}</span>
+                        <div class="card-body p-4 p-md-5 text-center">
+                            <span class="badge bg-light text-dark border mb-3 px-3 py-2 fs-6 shadow-sm">{{ paymentMethod }}</span>
+                            
+                            <!-- Angka Dinamis (Total) -->
                             <div class="qris-amount">
                                 Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}
                             </div>
-                            <div class="d-flex justify-content-center gap-2 mb-3 text-muted flex-wrap" style="font-size: 0.85rem;">
+
+                            <!-- Detail Rincian Admin -->
+                            <div class="d-flex justify-content-center gap-3 mb-4 text-muted" style="font-size: 0.95rem;">
                                 <span class="fw-semibold"><i class="fas fa-box text-secondary"></i> Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : total) }}</span>
                                 <span v-if="(currentPaymentTotal - currentPaymentAmount) > 0" class="fw-bold text-danger bg-danger bg-opacity-10 px-2 py-1 rounded">
                                     <i class="fas fa-tag"></i> Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}
                                 </span>
                             </div>
+                            
                             <div class="qris-qr-box">
-                                <img :src="qrImageUrl || ('https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PAY_' + (currentPaymentTotal > 0 ? currentPaymentTotal : total))" alt="QRIS Code" style="width: 200px; height: 200px; object-fit: contain;">
+                                <img :src="qrImageUrl || ('https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PAY_' + (currentPaymentTotal > 0 ? currentPaymentTotal : total))" alt="QRIS Code" style="width: 240px; height: 240px; object-fit: contain;">
                             </div>
-                            <p class="text-secondary mt-3 mb-0 fw-bold fs-6">Arahkan kamera ke layar ini</p>
+                            <p class="text-secondary mt-4 mb-1 fw-bold fs-5">Arahkan kamera ke layar ini</p>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Tunai / Transfer (Non-Split) -->
-                <div v-else class="text-center fade-in my-auto py-5 px-3">
-                    <i v-if="paymentType === 'TRANSFER'" class="fas fa-university fa-4x text-info mb-3"></i>
-                    <i v-else class="fas fa-wallet fa-4x text-primary mb-3"></i>
+                <!-- Jika metode Tunai / Transfer (Non-Split) -->
+                <div v-else class="text-center fade-in">
+                    <i v-if="paymentType === 'TRANSFER'" class="fas fa-university fa-5x text-info mb-4" style="filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));"></i>
+                    <i v-else class="fas fa-wallet fa-5x text-primary mb-4" style="filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));"></i>
                     
-                    <h3 class="fw-bold text-dark">Metode: {{ paymentMethod }}</h3>
-                    <h1 class="fw-black text-danger my-3" style="font-size: 3.2rem; letter-spacing: -1px; word-break: break-all;">Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}</h1>
+                    <h2 class="fw-bold text-dark">Metode: {{ paymentMethod }}</h2>
+                    <h1 class="fw-black text-danger my-3" style="font-size: 4.5rem; letter-spacing: -2px;">Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}</h1>
                     
-                    <div class="d-flex justify-content-center gap-2 mt-2 text-muted fs-6 flex-wrap" v-if="(currentPaymentTotal - currentPaymentAmount) > 0">
+                    <div class="d-flex justify-content-center gap-3 mt-2 text-muted fs-5" v-if="(currentPaymentTotal - currentPaymentAmount) > 0">
                         <span>Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : total) }}</span>
-                        <span class="text-danger fw-bold bg-danger bg-opacity-10 px-2 py-1 rounded">Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}</span>
+                        <span class="text-danger fw-bold bg-danger bg-opacity-10 px-3 py-1 rounded">Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}</span>
                     </div>
-                    <p class="text-muted fs-6 mt-4">Silakan selesaikan pembayaran dengan kasir.</p>
+
+                    <p class="text-muted fs-4 mt-5">Silakan selesaikan pembayaran dengan kasir.</p>
                 </div>
             </template>
+            
         </div>
 
         <template v-else>
@@ -278,24 +263,28 @@
 
     <!-- KANAN: AREA KERANJANG REAL-TIME -->
     <div class="cart-area position-relative"> 
+        
         <div class="bg-danger text-white text-center py-3 shadow-sm d-flex flex-column">
             <h4 class="mb-0 fw-bold">{{ storeName }}</h4>
             <small v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</small>
             
-            <div class="d-flex justify-content-between px-3 mt-2 text-light" style="font-size: 0.8rem;">
-                <span class="fw-bold"><i class="fas fa-file-invoice me-1"></i> {{ invoiceNumber || 'INV-...' }}</span>
-                <span class="fw-bold"><i class="fas fa-clock me-1"></i> {{ currentTime }}</span>
+            <div class="d-flex justify-content-between px-3 mt-3 text-light" style="font-size: 0.8rem;">
+                <span class="fw-bold"><i class="fas fa-file-invoice"></i> {{ invoiceNumber || 'INV-...' }}</span>
+                <span class="fw-bold"><i class="fas fa-clock"></i> {{ currentTime }}</span>
             </div>
         </div>
 
         <div class="cart-items">
-            <div v-if="!cartItems || cartItems.length === 0" class="text-center text-muted my-auto py-5">
-                <i class="fas fa-shopping-basket fa-3x text-light mb-3"></i>
+            <div v-if="!cartItems || cartItems.length === 0" class="text-center text-muted mt-5">
+                <i class="fas fa-shopping-basket fa-4x text-light mb-3"></i>
                 <h5 class="mt-2 text-secondary">Keranjang Kosong</h5>
-                <p class="small mb-0">Silakan bawa barang belanjaan Anda ke kasir.</p>
+                <p class="small">Silakan bawa barang belanjaan Anda ke kasir.</p>
             </div>
             
+            <!-- Daftar Item dengan Foto & Diskon -->
             <div v-for="(item, index) in cartItems" :key="index" class="d-flex gap-3 mb-3 border-bottom pb-3">
+                
+                <!-- Gambar Produk -->
                 <div v-if="item.imageBase64" class="product-img-container">
                     <img :src="item.imageBase64" class="product-img" alt="Produk">
                 </div>
@@ -303,6 +292,7 @@
                     <i class="fas fa-box"></i>
                 </div>
                 
+                <!-- Detail Produk -->
                 <div class="flex-grow-1">
                     <div class="item-name">{{ item.name }}</div>
                     <div v-if="item.note" class="text-muted small fst-italic mb-1" style="font-size: 0.75rem;">📝 {{ item.note }}</div>
@@ -320,6 +310,7 @@
                         </div>
                     </div>
                     
+                    <!-- Badge Diskon Item (Jika Ada) -->
                     <div v-if="item.itemDiscountAmt > 0" class="mt-2">
                         <span class="badge bg-danger bg-opacity-10 text-danger border border-danger fw-bold px-2 py-1" style="font-size: 0.65rem;">
                             Hemat Rp {{ formatRupiah(item.itemDiscountAmt * item.qty) }}
@@ -329,37 +320,41 @@
             </div>
         </div>
 
+        <!-- FOOTER / RINGKASAN TAGIHAN -->
         <div class="cart-footer">
-            <div class="d-flex justify-content-between mb-2" style="font-size: 0.85rem;">
+            <div class="d-flex justify-content-between mb-2" style="font-size: 0.9rem;">
                 <span class="text-muted">Subtotal Produk</span>
                 <span class="fw-bold text-dark">Rp {{ formatRupiah(subtotal) }}</span>
             </div>
-            <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger" style="font-size: 0.85rem;">
-                <span><i class="fas fa-tag me-1"></i> Extra Diskon</span>
+            <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger" style="font-size: 0.9rem;">
+                <span><i class="fas fa-tag"></i> Extra Diskon</span>
                 <span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span>
             </div>
-            <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-success" style="font-size: 0.85rem;">
-                <span><i class="fas fa-user-check me-1"></i> Diskon Member</span>
+            <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-success" style="font-size: 0.9rem;">
+                <span><i class="fas fa-user-check"></i> Diskon Member</span>
                 <span class="fw-bold">- Rp {{ formatRupiah(memberDiscountAmt) }}</span>
             </div>
-            <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger" style="font-size: 0.85rem;">
-                <span><i class="fas fa-tags me-1"></i> Diskon Manual</span>
+            <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger" style="font-size: 0.9rem;">
+                <span><i class="fas fa-tags"></i> Diskon Manual</span>
                 <span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span>
             </div>
-            <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-2 text-danger" style="font-size: 0.85rem;">
-                <span>PPN</span>
+            <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-2 text-danger" style="font-size: 0.9rem;">
+                <span>PPN (11%)</span>
                 <span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span>
             </div>
-            <div v-if="shippingFee > 0" class="d-flex justify-content-between mb-2 text-info" style="font-size: 0.85rem;">
-                <span><i class="fas fa-truck me-1"></i> Ongkir ({{ courier }})</span>
+            <div v-if="shippingFee > 0" class="d-flex justify-content-between mb-2 text-info" style="font-size: 0.9rem;">
+                <span><i class="fas fa-truck"></i> Ongkir ({{ courier }})</span>
                 <span class="fw-bold">+ Rp {{ formatRupiah(shippingFee) }}</span>
             </div>
-            <hr class="my-2 border-secondary border-opacity-25">
+
+            <hr class="my-3 border-secondary border-opacity-25">
+            
             <div class="d-flex justify-content-between align-items-center mt-2">
                 <span class="fw-bold text-uppercase" style="font-size: 0.85rem; letter-spacing: 0.5px;">Total Tagihan</span>
-                <span class="fw-black text-danger fs-3" style="letter-spacing: -1px;">Rp {{ formatRupiah(total) }}</span>
+                <span class="fw-black text-danger" style="font-size: 1.8rem; letter-spacing: -1px;">Rp {{ formatRupiah(total) }}</span>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -411,11 +406,6 @@
                 slideInterval: null
             }
         },
-        computed: {
-            showPaymentView() {
-                return this.isPaymentOpen || !!this.paymentMethod || this.isSplitPayment || this.paymentStatus === 'LUNAS';
-            }
-        },
         methods: {
             formatRupiah(number) {
                 if(!number) return '0';
@@ -447,7 +437,6 @@
             }, 1000);
 
             const docId = `${companyId}_${outletId}`;
-            
             onSnapshot(doc(db, "cds", docId), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
