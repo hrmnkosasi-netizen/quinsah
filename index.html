@@ -12718,93 +12718,102 @@ parseDateStr(dateStr) {
     },
 
     async syncLiveCartToFirebase() {
-    const compId = this.getMyCompanyId ? this.getMyCompanyId() : (this.companyId || localStorage.getItem('companyId'));
-    if (!compId) return;
-    
-    const outletId = this.posActiveOutletId || this.appSettings?.selectedReceiptOutletId || 'global';
-    const namaToko = this.appSettings?.storeName || 'QUINSAH COLLECTION';
-    const namaCabang = (typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : '') || 'Pusat';
+        const compId = this.getMyCompanyId ? this.getMyCompanyId() : (this.companyId || localStorage.getItem('companyId'));
+        if (!compId) return;
+        
+        const outletId = this.posActiveOutletId || this.appSettings?.selectedReceiptOutletId || 'global';
+        const namaToko = this.appSettings?.storeName || 'QUINSAH COLLECTION';
+        const namaCabang = (typeof this.getOutletName === 'function' ? this.getOutletName(outletId) : '') || 'Pusat';
 
-    const formattedCart = (this.cart || []).map(item => {
-        let hargaJual = typeof this.getFinalItemPrice === 'function' ? this.getFinalItemPrice(item) : (item.finalPrice || item.sellPrice || 0);
-        let hargaAsli = item.originalPrice || item.basePrice || item.price || hargaJual;
-        
-        // Cek diskon per item (jika harga jual lebih rendah dari harga asli)
-        let itemDiscount = hargaAsli - hargaJual;
-        
-        return {
-            name: item.name || '',
-            qty: Number(item.qty || 1),
-            sellPrice: Math.round(Number(hargaJual)),
-            originalPrice: Math.round(Number(hargaAsli)),
-            itemDiscountAmt: Math.round(Number(itemDiscount > 0 ? itemDiscount : 0)), // 🌟 Tambahan rincian diskon item
-            discount: Math.round(Number(item.discount || item.diskon || 0)),
-            note: item.note || '',
-            // 🌟 Tambahkan Gambar Produk
-            imageBase64: item.imageBase64 || ''
-        };
-    });
+        const formattedCart = (this.cart || []).map(item => {
+            let hargaJual = typeof this.getFinalItemPrice === 'function' ? this.getFinalItemPrice(item) : (item.finalPrice || item.sellPrice || 0);
+            let hargaAsli = item.originalPrice || item.basePrice || item.price || hargaJual;
+            
+            // Cek diskon per item (jika harga jual lebih rendah dari harga asli)
+            let itemDiscount = hargaAsli - hargaJual;
+            
+            return {
+                name: item.name || '',
+                qty: Number(item.qty || 1),
+                sellPrice: Math.round(Number(hargaJual)),
+                originalPrice: Math.round(Number(hargaAsli)),
+                itemDiscountAmt: Math.round(Number(itemDiscount > 0 ? itemDiscount : 0)), // 🌟 Tambahan rincian diskon item
+                discount: Math.round(Number(item.discount || item.diskon || 0)),
+                note: item.note || '',
+                // 🌟 Tambahkan Gambar Produk
+                imageBase64: item.imageBase64 || ''
+            };
+        });
 
-    try {
-        const docId = `${compId}_${outletId}`;
-        
-        const subtotalBase = Math.round(Number(this.subtotalBase || this.subTotal || this.subtotal || 0));
-        const extraDiskon = Math.round(Number(this.discountAmount || 0) + Number(this.posDiscountAmount || 0));
-        const diskonMember = Math.round(Number(this.memberDiscountAmount || this.memberDiscount || this.memberDiscountAmt || 0));
-        const diskonInvoice = Math.round(Number(this.globalDiscountAmount || 0));
-        const ppn = Math.round(Number(this.taxAmount || 0));
-        const ongkir = Math.round(Number(this.shippingFee || this.shippingCost || this.posShippingCost || this.ongkir || 0));
-        const kurir = this.posCourier || this.courier || '';
-        const grandTotal = Math.round(Number(this.grandTotal || this.total || 0));
-        
-        // 🌟 Identifikasi Tipe Pembayaran (QRIS, CASH, TRANSFER, dll)
-        let currentPaymentType = 'CASH';
-        let currentQrUrl = '';
-        if (this.selectedPaymentMethodData) {
-            currentPaymentType = this.selectedPaymentMethodData.type;
-            currentQrUrl = this.selectedPaymentMethodData.qrImageUrl || '';
-        } else if (this.paymentData && this.paymentData.method) {
-            // Fallback jika tidak ada data lengkap, cek dari nama
-            let methodName = String(this.paymentData.method).toUpperCase();
-            if (methodName.includes('QRIS') || methodName.includes('SHOPEE') || methodName.includes('GOPAY') || methodName.includes('DANA') || methodName.includes('OVO')) {
-                currentPaymentType = 'QRIS';
-            } else if (methodName.includes('TRANSFER') || methodName.includes('BCA') || methodName.includes('MANDIRI') || methodName.includes('BNI')) {
-                currentPaymentType = 'TRANSFER';
+        try {
+            const docId = `${compId}_${outletId}`;
+            
+            const subtotalBase = Math.round(Number(this.subtotalBase || this.subTotal || this.subtotal || 0));
+            const extraDiskon = Math.round(Number(this.discountAmount || 0) + Number(this.posDiscountAmount || 0));
+            const diskonMember = Math.round(Number(this.memberDiscountAmount || this.memberDiscount || this.memberDiscountAmt || 0));
+            const diskonInvoice = Math.round(Number(this.globalDiscountAmount || 0));
+            const ppn = Math.round(Number(this.taxAmount || 0));
+            const ongkir = Math.round(Number(this.shippingFee || this.shippingCost || this.posShippingCost || this.ongkir || 0));
+            const kurir = this.posCourier || this.courier || '';
+            const grandTotal = Math.round(Number(this.grandTotal || this.total || 0));
+            
+            // 🌟 Identifikasi Tipe Pembayaran (QRIS, CASH, TRANSFER, dll)
+            let currentPaymentType = 'CASH';
+            let currentQrUrl = '';
+            if (this.selectedPaymentMethodData) {
+                currentPaymentType = this.selectedPaymentMethodData.type;
+                currentQrUrl = this.selectedPaymentMethodData.qrImageUrl || '';
+            } else if (this.paymentData && this.paymentData.method) {
+                // Fallback jika tidak ada data lengkap, cek dari nama
+                let methodName = String(this.paymentData.method).toUpperCase();
+                if (methodName.includes('QRIS') || methodName.includes('SHOPEE') || methodName.includes('GOPAY') || methodName.includes('DANA') || methodName.includes('OVO')) {
+                    currentPaymentType = 'QRIS';
+                } else if (methodName.includes('TRANSFER') || methodName.includes('BCA') || methodName.includes('MANDIRI') || methodName.includes('BNI')) {
+                    currentPaymentType = 'TRANSFER';
+                }
             }
-        }
 
-        const cdsPayload = {
-            storeName: namaToko,
-            outletName: namaCabang,
-            cartItems: formattedCart,
-            
-            subtotal: subtotalBase,
-            extraDiscountAmt: extraDiskon,
-            memberDiscountAmt: diskonMember,
-            invoiceDiscountAmt: diskonInvoice,
-            taxAmt: ppn,
-            shippingFee: ongkir,
-            courier: kurir,
-            
-            total: grandTotal, 
-            paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
-            invoiceNumber: this.invoiceNumber || this.invoiceNo || this.posCustomInvoice || this.transactionId || '',
-            
-            isPaymentOpen: this.isPaymentModalOpen === true,
-            paymentMethod: this.paymentData ? this.paymentData.method : null,
-            // 🌟 Data Pembayaran Lengkap untuk CDS
-            paymentType: currentPaymentType,
-            qrImageUrl: currentQrUrl,
-            
-            // 🌟 Data Split Payment
-            isSplitPayment: this.isSplitPayment === true,
-            splitPayments: this.splitPayments || [],
-            remainingSplitTagihan: Math.round(Number(this.remainingSplitTagihan || 0)),
-            
-            updatedAt: new Date().getTime() 
-        };
+            // 🌟 PENANGKAP NOMINAL INPUT & BIAYA ADMIN UNTUK SPLIT (DITAMBAHKAN DI SINI) 🌟
+            const currentInputAmt = this.paymentData && this.paymentData.amountReceived ? Number(this.paymentData.amountReceived) : 0;
+            const currentInputTotal = typeof this.getTotalBayarDenganAdmin === 'function' ? this.getTotalBayarDenganAdmin() : currentInputAmt;
 
-        await setDoc(doc(db, "cds", docId), cdsPayload);
+            const cdsPayload = {
+                storeName: namaToko,
+                outletName: namaCabang,
+                cartItems: formattedCart,
+                
+                subtotal: subtotalBase,
+                extraDiscountAmt: extraDiskon,
+                memberDiscountAmt: diskonMember,
+                invoiceDiscountAmt: diskonInvoice,
+                taxAmt: ppn,
+                shippingFee: ongkir,
+                courier: kurir,
+                
+                total: grandTotal, 
+                paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
+                invoiceNumber: this.invoiceNumber || this.invoiceNo || this.posCustomInvoice || this.transactionId || '',
+                
+                isPaymentOpen: this.isPaymentModalOpen === true,
+                paymentMethod: this.paymentData ? this.paymentData.method : null,
+                
+                // 🌟 Data Pembayaran Lengkap untuk CDS
+                paymentType: currentPaymentType,
+                qrImageUrl: currentQrUrl,
+                
+                // 🌟 Data Split Payment
+                isSplitPayment: this.isSplitPayment === true,
+                splitPayments: this.splitPayments || [],
+                remainingSplitTagihan: Math.round(Number(this.remainingSplitTagihan || 0)),
+                
+                // 🌟 PENGIRIMAN NOMINAL KE CDS AGAR TAMPILAN SESUAI INPUT KASIR
+                currentPaymentAmount: currentInputAmt,
+                currentPaymentTotal: currentInputTotal,
+                
+                updatedAt: new Date().getTime() 
+            };
+
+            await setDoc(doc(db, "cds", docId), cdsPayload);
         } catch (error) {
             console.error("Gagal sinkronisasi CDS:", error);
         }
