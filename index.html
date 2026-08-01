@@ -12820,6 +12820,7 @@ parseDateStr(dateStr) {
                 isPaymentOpen: isModalOpen,
                 paymentMethod: isModalOpen && this.paymentData ? this.paymentData.method : null,
                 paymentType: isModalOpen ? currentPaymentType : 'CASH',
+                qrImageUrl: currentQrUrl,
                 
                 isSplitPayment: isModalOpen ? (this.isSplitPayment === true) : false,
                 splitPayments: isModalOpen ? (this.splitPayments || []) : [],
