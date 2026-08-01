@@ -155,11 +155,8 @@
                             <div v-if="remainingSplitTagihan <= 0" class="card shadow border-0 bg-white rounded-4 w-100 h-100" style="border: 2px solid #1dd1a1 !important;">
                                 <div class="card-body d-flex flex-column align-items-center justify-content-center text-center p-5 fade-in">
                                     <i class="fas fa-check-circle text-success mb-3" style="font-size: 6rem;"></i>
+                                    <h1 class="fw-black text-success mb-2">Pembayaran Pas!</h1>
                                     
-                                    <!-- Judul otomatis berubah tergantung ada kembalian atau tidak -->
-                                    <h1 class="fw-black text-success mb-2">{{ changeAmount > 0 ? 'Pembayaran Lunas!' : 'Pembayaran Pas!' }}</h1>
-                                    
-                                    <!-- Kotak Kembalian -->
                                     <div v-if="changeAmount > 0" class="mt-4 p-4 bg-success bg-opacity-10 rounded-4 w-100 border border-success">
                                         <h5 class="text-success fw-bold text-uppercase mb-1 tracking-wider">Kembalian</h5>
                                         <h1 class="text-success fw-black mb-0" style="font-size: 4rem;">Rp {{ formatRupiah(changeAmount) }}</h1>
