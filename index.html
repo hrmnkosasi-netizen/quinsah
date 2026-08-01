@@ -8723,10 +8723,9 @@ body.sidebar-open {
                     </div> 
 
                     <div class="mt-4 pt-3 d-flex gap-2 w-100 border-top flex-shrink-0">
-                    <button class="btn btn-light border fw-bold w-50 py-2 py-md-3 shadow-sm" @click="batalPembayaran" :disabled="isProcessing">
-                   Batal
-    </button>
-                    </div>
+                        <button class="btn btn-light border fw-bold w-50 py-2 py-md-3 shadow-sm" data-bs-dismiss="modal" :disabled="isProcessing">
+                            Batal
+                        </button>
                         
                         <button class="btn btn-primary-custom fw-bold w-50 py-2 py-md-3 shadow-sm" @click="processTransaction" 
                                 :disabled="isProcessing || (!isSplitPayment && !paymentData.method) || (!selectedCustomer?.id && ((!isSplitPayment && paymentData.amountReceived < getTotalBayarDenganAdmin()) || (isSplitPayment && remainingSplitTagihan > 0)))">
@@ -20670,34 +20669,10 @@ let item = {
             },
 
 
-                openPaymentModal() {
-        // 1. Kosongkan metode bayar di awal agar CDS menampilkan status "Menyiapkan Tagihan..."
-        this.paymentData = { method: null, amountReceived: this.total };
-        
-        // 2. Beri sinyal bahwa layar pembayaran sedang terbuka
-        this.isPaymentModalOpen = true; 
-        
-        // 3. Paksa sinkronisasi seketika itu juga ke Firebase
-        if (typeof this.syncLiveCartToFirebase === 'function') {
-            this.syncLiveCartToFirebase();
-        }
-        
-        // 4. Buka modal di layar kasir
-        this.showModal('paymentModal');
-    },
-
-                batalPembayaran() {
-        // 1. Matikan mode pembayaran (Sinyal untuk CDS agar kembali ke layar Promo)
-        this.isPaymentModalOpen = false;
-        
-        // 2. Paksa sinkronisasi ke Firebase seketika itu juga!
-        if (typeof this.syncLiveCartToFirebase === 'function') {
-            this.syncLiveCartToFirebase();
-        }
-        
-        // 3. Tutup modal secara manual menggunakan script
-        this.hideModal('paymentModal'); 
-    },
+            openPaymentModal() {
+                this.paymentData = { method: 'CASH', amountReceived: this.total };
+                this.showModal('paymentModal');
+            },
 
            async processTransaction() {
     // Cegah klik ganda
