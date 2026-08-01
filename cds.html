@@ -405,8 +405,19 @@
     const appFirebase = initializeApp(firebaseConfig);
     const db = getFirestore(appFirebase);
 
+        // Ambil parameter dari URL
     const urlParams = new URLSearchParams(window.location.search);
-    let companyId = urlParams.get('company') || localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
+    
+    // 🌟 PERBAIKAN 1: Pengaman Anti-Crash LocalStorage 🌟
+    let companyId = urlParams.get('company');
+    if (!companyId) {
+        try {
+            // Coba ambil dari memori. Jika HP memblokir fitur ini, sistem tidak akan mati (crash).
+            companyId = localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
+        } catch (error) {
+            console.warn("Akses memori lokal diblokir oleh browser HP.");
+        }
+    }
     let outletId = urlParams.get('outlet') || 'global'; 
 
     const app = Vue.createApp({
@@ -449,6 +460,7 @@
                 slideInterval: null
             }
         },
+        
         computed: {
             currentMobileView() {
                 if (this.paymentStatus === 'LUNAS' || (this.isPaymentOpen && this.cartItems && this.cartItems.length > 0)) {
@@ -462,6 +474,7 @@
                 }
             }
         },
+        
         methods: {
             formatRupiah(number) {
                 if(!number) return '0';
@@ -483,8 +496,13 @@
                 }
             }
         },
+        
         mounted() {
-            if (!companyId) return;
+            // 🌟 PERBAIKAN 2: Tampilkan pesan di layar jika identitas toko tetap tidak ditemukan 🌟
+            if (!companyId) {
+                this.cdsSettings.welcomeText = "Mohon buka link dengan menyertakan parameter toko (?company=...).";
+                return;
+            }
 
             setInterval(() => {
                 const now = new Date();
