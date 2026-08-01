@@ -20730,35 +20730,39 @@ let item = {
             },
 
 
-            openPaymentModal() {
+           openPaymentModal() {
         // 1. Kosongkan metode bayar di awal agar CDS menampilkan status "Menunggu Kasir"
         this.paymentData = { method: null, amountReceived: this.total }; 
         
         // 2. Beri sinyal bahwa layar pembayaran sedang terbuka
         this.isPaymentModalOpen = true; 
         
-        // 3. Paksa sinkronisasi seketika itu juga
-        if (typeof this.syncLiveCartToFirebase === 'function') {
-            this.syncLiveCartToFirebase();
-        }
-        
-        // 4. Buka modal di layar kasir
+        // 3. Buka modal di layar kasir
         this.showModal('paymentModal');
+        
+        // 🌟 PERBAIKAN: Gunakan $nextTick atau setTimeout agar variabel ter-update dulu
+        this.$nextTick(() => {
+            if (typeof this.syncLiveCartToFirebase === 'function') {
+                this.syncLiveCartToFirebase();
+            }
+        });
     },
 
     batalPembayaran() {
         // 1. Matikan mode pembayaran (Sinyal untuk CDS agar kembali ke layar Promo)
         this.isPaymentModalOpen = false;
         
-        // 2. Paksa sinkronisasi ke Firebase seketika itu juga!
-        if (typeof this.syncLiveCartToFirebase === 'function') {
-            this.syncLiveCartToFirebase();
-        }
-        
-        // 3. Tutup modal secara manual menggunakan script
+        // 2. Tutup modal secara manual menggunakan script
         this.hideModal('paymentModal'); 
-    },
 
+        // 🌟 PERBAIKAN: Gunakan setTimeout agar transisi modal selesai dulu sebelum sinkronisasi
+        setTimeout(() => {
+            if (typeof this.syncLiveCartToFirebase === 'function') {
+                this.syncLiveCartToFirebase();
+            }
+        }, 100); 
+    },
+            
            async processTransaction() {
     // Cegah klik ganda
     if (this.isProcessing) return;
