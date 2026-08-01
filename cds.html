@@ -26,10 +26,16 @@
 
         /* MOBILE / HP LAYOUT (PORTRAIT) */
         @media (max-width: 768px) {
-            body { overflow-y: auto; }
+            body { overflow-y: auto; background-color: #fff; }
             .split-screen { display: flex; flex-direction: column; min-height: 100vh; }
-            .promo-area { min-height: 300px; width: 100%; }
+            
+            /* DEFAULT MOBILE: Tampilkan Keranjang Saja, Sembunyikan Promo */
+            .promo-area { display: none !important; }
             .cart-area { width: 100%; flex-grow: 1; }
+            
+            /* JIKA PEMBAYARAN AKTIF MOBILE: Tampilkan Pembayaran, Sembunyikan Keranjang */
+            .mobile-payment-active .promo-area { display: flex !important; width: 100%; height: 100vh; }
+            .mobile-payment-active .cart-area { display: none !important; }
             
             /* Penyesuaian Font di Mobile */
             .qris-amount { font-size: 2.2rem !important; }
@@ -102,11 +108,12 @@
 </head>
 <body>
 
-<div id="cdsApp" class="split-screen" v-cloak>
+<!-- Perhatikan class dynamic di bawah ini yang memicu perpindahan layar HP -->
+<div id="cdsApp" class="split-screen" :class="{'mobile-payment-active': showPaymentView}" v-cloak>
     
     <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
     <div class="promo-area">
-        <div v-if="(isPaymentOpen && cartItems.length > 0) || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
+        <div v-if="showPaymentView" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
             
             <!-- 🌟 ANIMASI TRANSAKSI SELESAI (LUNAS) -->
             <div v-if="paymentStatus === 'LUNAS'" class="w-100 h-100 d-flex align-items-center justify-content-center position-relative my-auto">
@@ -431,6 +438,12 @@
                 currentImage: '',
                 imageIndex: 0,
                 slideInterval: null
+            }
+        },
+        computed: {
+            // Computed property untuk mempermudah pengecekan apakah layar bayar sedang aktif
+            showPaymentView() {
+                return (this.isPaymentOpen && this.cartItems.length > 0) || this.paymentStatus === 'LUNAS';
             }
         },
         methods: {
