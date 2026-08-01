@@ -12772,7 +12772,9 @@ parseDateStr(dateStr) {
             total: grandTotal, 
             paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
             
-            // 🌟 TAMBAHAN BARU: Kirim metode pembayaran yang sedang aktif
+            // 🌟 3 DATA BARU INI WAJIB DITAMBAHKAN
+            invoiceNumber: this.posCustomInvoice || '',
+            isPaymentOpen: this.isPaymentModalOpen || false,
             paymentMethod: this.paymentData ? this.paymentData.method : null,
             
             updatedAt: new Date().getTime() 
@@ -20670,9 +20672,20 @@ let item = {
 
 
             openPaymentModal() {
-                this.paymentData = { method: 'CASH', amountReceived: this.total };
-                this.showModal('paymentModal');
-            },
+        // 1. Kosongkan metode bayar di awal agar CDS menampilkan status "Menunggu Kasir"
+        this.paymentData = { method: null, amountReceived: this.total }; 
+        
+        // 2. Beri sinyal bahwa layar pembayaran sedang terbuka
+        this.isPaymentModalOpen = true; 
+        
+        // 3. Paksa sinkronisasi seketika itu juga
+        if (typeof this.syncLiveCartToFirebase === 'function') {
+            this.syncLiveCartToFirebase();
+        }
+        
+        // 4. Buka modal di layar kasir
+        this.showModal('paymentModal');
+    },
 
            async processTransaction() {
     // Cegah klik ganda
