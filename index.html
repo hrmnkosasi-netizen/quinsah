@@ -12773,10 +12773,12 @@ parseDateStr(dateStr) {
                 }
             }
 
-            // 🌟 PENANGKAP NOMINAL INPUT & BIAYA ADMIN UNTUK SPLIT (DITAMBAHKAN DI SINI) 🌟
-            const currentInputAmt = this.paymentData && this.paymentData.amountReceived ? Number(this.paymentData.amountReceived) : 0;
-            const currentInputTotal = typeof this.getTotalBayarDenganAdmin === 'function' ? this.getTotalBayarDenganAdmin() : currentInputAmt;
-
+            const currentInputAmt = Math.round(Number(this.paymentData && this.paymentData.amountReceived ? this.paymentData.amountReceived : 0));
+            const currentInputTotal = Math.round(Number(typeof this.getTotalBayarDenganAdmin === 'function' ? this.getTotalBayarDenganAdmin() : currentInputAmt));
+            
+            // Tangkap juga kembalian (jika ada) untuk dikirim ke CDS
+            const totalKembalian = Math.round(Number(this.changeAmount || this.kembalian || 0));
+            
             const cdsPayload = {
                 storeName: namaToko,
                 outletName: namaCabang,
@@ -12809,6 +12811,7 @@ parseDateStr(dateStr) {
                 // 🌟 PENGIRIMAN NOMINAL KE CDS AGAR TAMPILAN SESUAI INPUT KASIR
                 currentPaymentAmount: currentInputAmt,
                 currentPaymentTotal: currentInputTotal,
+                changeAmount: totalKembalian,
                 
                 updatedAt: new Date().getTime() 
             };
