@@ -12815,10 +12815,15 @@ parseDateStr(dateStr) {
                 paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
                 invoiceNumber: this.invoiceNumber || this.invoiceNo || this.posCustomInvoice || this.transactionId || '',
                 
-                // 🌟 FILTER KETAT: Hanya kirim data pembayaran JIKA modal benar-benar terbuka
                 isPaymentOpen: isModalOpen,
-                paymentMethod: isModalOpen && this.paymentData ? this.paymentData.method : null,
-                paymentType: isModalOpen ? currentPaymentType : 'CASH',
+                paymentMethod: isModalOpen && this.paymentData ? this.paymentData.name : null,
+                paymentType: isModalOpen && this.paymentData ? this.paymentData.type : 'CASH',
+                
+                // 🌟 PERBAIKAN 1: Kirim Detail Bank dan Link Gambar QRIS
+                qrImageUrl: isModalOpen && this.paymentData ? this.paymentData.qrImageUrl || '' : '',
+                bankName: isModalOpen && this.paymentData ? this.paymentData.bankName || '' : '',
+                accountNumber: isModalOpen && this.paymentData ? this.paymentData.accountNumber || '' : '',
+                accountName: isModalOpen && this.paymentData ? this.paymentData.accountName || '' : '',
                 
                 isSplitPayment: isModalOpen ? (this.isSplitPayment === true) : false,
                 splitPayments: isModalOpen ? (this.splitPayments || []) : [],
@@ -12826,7 +12831,10 @@ parseDateStr(dateStr) {
                 
                 currentPaymentAmount: isModalOpen ? currentInputAmt : 0,
                 currentPaymentTotal: isModalOpen ? currentInputTotal : 0,
-                changeAmount: totalKembalian, 
+                
+                // 🌟 PERBAIKAN 2: Jangan dihitung ulang! Ambil langsung variabel kembalian dari UI Kasir.
+                // (Sesuaikan "this.kembalian" dengan nama variabel yang Anda gunakan di script POS)
+                changeAmount: isModalOpen || this.isPaymentSuccess ? (this.kembalian || 0) : 0, 
                 
                 updatedAt: new Date().getTime() 
             };
