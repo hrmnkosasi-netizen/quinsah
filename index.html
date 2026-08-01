@@ -8723,8 +8723,8 @@ body.sidebar-open {
                     </div> 
 
                     <div class="mt-4 pt-3 d-flex gap-2 w-100 border-top flex-shrink-0">
-                        <button class="btn btn-light border fw-bold w-50 py-2 py-md-3 shadow-sm" data-bs-dismiss="modal" :disabled="isProcessing">
-                            Batal
+                        <button class="btn btn-light border fw-bold w-50 py-2 py-md-3 shadow-sm" @click="batalPembayaran" :disabled="isProcessing">
+                        Batal
                         </button>
                         
                         <button class="btn btn-primary-custom fw-bold w-50 py-2 py-md-3 shadow-sm" @click="processTransaction" 
@@ -12773,9 +12773,14 @@ parseDateStr(dateStr) {
             total: grandTotal, 
             paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
             
-            // 🌟 3 DATA BARU INI WAJIB DITAMBAHKAN
-            invoiceNumber: this.posCustomInvoice || '',
-            isPaymentOpen: this.isPaymentModalOpen || false,
+            // 🌟 3 BARIS INI YANG MEMBUAT INVOICE & LAYAR PEMBAYARAN MUNCUL 🌟
+            // (Sistem akan otomatis mencari variabel mana yang menyimpan nomor Invoice Anda)
+            invoiceNumber: this.invoiceNumber || this.invoiceNo || this.posCustomInvoice || this.transactionId || '',
+            
+            // Mengirim sinyal ke CDS apakah modal sedang terbuka atau tidak
+            isPaymentOpen: this.isPaymentModalOpen === true,
+            
+            // Mengirim metode bayar yang sedang diklik kasir (CASH, QRIS, dll)
             paymentMethod: this.paymentData ? this.paymentData.method : null,
             
             updatedAt: new Date().getTime() 
@@ -20686,6 +20691,19 @@ let item = {
         
         // 4. Buka modal di layar kasir
         this.showModal('paymentModal');
+    },
+
+    batalPembayaran() {
+        // 1. Matikan mode pembayaran (Sinyal untuk CDS agar kembali ke layar Promo)
+        this.isPaymentModalOpen = false;
+        
+        // 2. Paksa sinkronisasi ke Firebase seketika itu juga!
+        if (typeof this.syncLiveCartToFirebase === 'function') {
+            this.syncLiveCartToFirebase();
+        }
+        
+        // 3. Tutup modal secara manual menggunakan script
+        this.hideModal('paymentModal'); 
     },
 
            async processTransaction() {
