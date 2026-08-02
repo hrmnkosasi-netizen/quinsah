@@ -12315,27 +12315,35 @@ financeAPList() {
             if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
         }
     },
-    // 2. Pantau perubahan pada Total (Memicu sync saat diskon/ongkir masuk)
     total() {
         if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
     },
     grandTotal() {
         if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
     },
-    // 3. Pantau jika ada perubahan nominal diskon/pajak secara manual
     discountAmount() {
         if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
     },
     taxAmount() {
         if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
     },
-
     paymentData: {
         deep: true,
         handler() {
             if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
         }
-    }, 
+    },
+    
+    // 🌟 TAMBAHKAN KODE INI 🌟
+    // Ganti "isPaymentModalOpen" jika nama variabel Anda untuk membuka modal pembayaran itu berbeda
+    isPaymentModalOpen(newValue) {
+        if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
+    },
+    // Jika ada variabel lain penanda sukses pembayaran, tambahkan juga (opsional):
+    isPaymentSuccess(newValue) {
+        if (typeof this.syncLiveCartToFirebase === 'function') this.syncLiveCartToFirebase();
+    }
+},
             
     // ==========================================
     // 🌟 CCTV PEMBERSIH OTOMATIS MODAL IMPORT & EXPORT
