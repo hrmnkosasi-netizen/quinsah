@@ -487,6 +487,13 @@
                 }
             }
         },
+
+        computed: {
+            showPaymentView() {
+                return (this.isPaymentOpen && this.cartItems && this.cartItems.length > 0) || this.paymentStatus === 'LUNAS';
+            }
+        },
+        
         mounted() {
             if (!companyId) return;
 
