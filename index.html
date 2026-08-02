@@ -12823,7 +12823,7 @@ parseDateStr(dateStr) {
                 paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
                 invoiceNumber: this.invoiceNumber || this.invoiceNo || this.posCustomInvoice || this.transactionId || '',
                 isPaymentOpen: isModalOpen,
-                paymentMethod: isModalOpen && this.paymentData ? this.paymentData.name : null,
+                paymentMethod: isModalOpen && this.paymentData ? (this.paymentData.name || this.paymentData.method || null) : null,
                 paymentType: isModalOpen && this.paymentData ? this.paymentData.type : 'CASH',
                 
                 // 🌟 PERBAIKAN 1: Kirim Detail Bank dan Link Gambar QRIS
@@ -20847,32 +20847,38 @@ let item = {
             },
 
 
-            openPaymentModal() {
+                async openPaymentModal() {
         // 1. Kosongkan metode bayar di awal agar CDS menampilkan status "Menunggu Kasir"
         this.paymentData = { method: null, amountReceived: this.total }; 
         
         // 2. Beri sinyal bahwa layar pembayaran sedang terbuka
         this.isPaymentModalOpen = true; 
         
-        // 3. Paksa sinkronisasi seketika itu juga
+        // 3. Tunggu sistem merender perubahan variabel
+        await this.$nextTick();
+
+        // 4. Paksa sinkronisasi seketika itu juga
         if (typeof this.syncLiveCartToFirebase === 'function') {
             this.syncLiveCartToFirebase();
         }
         
-        // 4. Buka modal di layar kasir
+        // 5. Buka modal di layar kasir
         this.showModal('paymentModal');
     },
 
-    batalPembayaran() {
+    async batalPembayaran() {
         // 1. Matikan mode pembayaran (Sinyal untuk CDS agar kembali ke layar Promo)
         this.isPaymentModalOpen = false;
         
-        // 2. Paksa sinkronisasi ke Firebase seketika itu juga!
+        // 2. Tunggu sistem merender perubahan variabel
+        await this.$nextTick();
+
+        // 3. Paksa sinkronisasi ke Firebase seketika itu juga!
         if (typeof this.syncLiveCartToFirebase === 'function') {
             this.syncLiveCartToFirebase();
         }
         
-        // 3. Tutup modal secara manual menggunakan script
+        // 4. Tutup modal secara manual menggunakan script
         this.hideModal('paymentModal'); 
     },
 
