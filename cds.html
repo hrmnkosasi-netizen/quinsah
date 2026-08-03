@@ -112,8 +112,7 @@
 </head>
 <body>
 
-<!-- 🌟 PERBAIKAN: Memanggil mobileClasses yang sudah dievaluasi dengan sempurna oleh Vue -->
-<div id="cdsApp" class="split-screen" :class="mobileClasses" v-cloak>
+<div id="cdsApp" class="split-screen" :class="{'mobile-payment-active': isPaymentOpen || paymentStatus === 'LUNAS', 'mobile-cart-active': !(isPaymentOpen || paymentStatus === 'LUNAS') && cartItems && cartItems.length > 0}" v-cloak>
     
     <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
     <div class="promo-area">
@@ -435,18 +434,6 @@
                 
                 cdsSettings: { mediaType: 'video', videoUrl: '', imageUrls: '', welcomeText: '' },
                 currentImage: '', imageIndex: 0, slideInterval: null
-            }
-        },
-        // 🌟 PERBAIKAN: Logika kelas mobile diisolasi di sini agar 100% aman dieksekusi Vue
-        computed: {
-            mobileClasses() {
-                const isPayment = this.isPaymentOpen === true || this.paymentStatus === 'LUNAS';
-                const hasCart = this.cartItems && this.cartItems.length > 0;
-                
-                return {
-                    'mobile-payment-active': isPayment,
-                    'mobile-cart-active': !isPayment && hasCart
-                };
             }
         },
         methods: {
