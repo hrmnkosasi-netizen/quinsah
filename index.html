@@ -12796,9 +12796,11 @@ parseDateStr(dateStr) {
                 }
     }
             
-                        // 🌟 PASTIKAN STATUS MODAL BENAR-BENAR DIBACA
-            // 🌟 PASTIKAN STATUS MODAL BENAR-BENAR DIBACA
+             // 🌟 PASTIKAN STATUS MODAL BENAR-BENAR DIBACA
             const isModalOpen = this.isPaymentModalOpen === true;
+            
+            // 🌟 KUNCI PERBAIKAN: Tangkap detail Bank/QRIS dari data master yang sedang dipilih
+            const detailMetode = this.selectedPaymentMethodData || this.paymentData || {};
 
             const cdsPayload = {
                 storeName: namaToko,
@@ -12819,14 +12821,14 @@ parseDateStr(dateStr) {
                 
                 isPaymentOpen: isModalOpen,
                 
-                // 🌟 OBAT ANTI-CRASH: Tambahkan || null dan || 'CASH' untuk mencegah undefined
                 paymentMethod: isModalOpen && this.paymentData ? (this.paymentData.name || this.paymentData.method || null) : null,
-                paymentType: isModalOpen && this.paymentData ? (this.paymentData.type || currentPaymentType || 'CASH') : 'CASH',
+                paymentType: isModalOpen ? (detailMetode.type || currentPaymentType || 'CASH') : 'CASH',
                 
-                qrImageUrl: isModalOpen && this.paymentData ? (this.paymentData.qrImageUrl || currentQrUrl || '') : '',
-                bankName: isModalOpen && this.paymentData ? (this.paymentData.bankName || '') : '',
-                accountNumber: isModalOpen && this.paymentData ? (this.paymentData.accountNumber || '') : '',
-                accountName: isModalOpen && this.paymentData ? (this.paymentData.accountName || '') : '',
+                // 🌟 MENGGUNAKAN DETAIL METODE UNTUK INFO BANK & QRIS
+                qrImageUrl: isModalOpen ? (detailMetode.qrImageUrl || currentQrUrl || '') : '',
+                bankName: isModalOpen ? (detailMetode.bankName || '') : '',
+                accountNumber: isModalOpen ? (detailMetode.accountNumber || '') : '',
+                accountName: isModalOpen ? (detailMetode.accountName || '') : '',
                 
                 isSplitPayment: isModalOpen ? (this.isSplitPayment === true) : false,
                 splitPayments: isModalOpen ? (this.splitPayments || []) : [],
@@ -12840,7 +12842,6 @@ parseDateStr(dateStr) {
                 updatedAt: new Date().getTime() 
             };
 
-            // Jika berhasil lewat sini tanpa error, Firebase tidak akan crash
             await setDoc(doc(db, "cds", docId), cdsPayload);
         } catch (error) {
             console.error("Gagal sinkronisasi CDS:", error);
