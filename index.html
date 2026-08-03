@@ -12797,6 +12797,7 @@ parseDateStr(dateStr) {
     }
             
                         // 🌟 PASTIKAN STATUS MODAL BENAR-BENAR DIBACA
+            // 🌟 PASTIKAN STATUS MODAL BENAR-BENAR DIBACA
             const isModalOpen = this.isPaymentModalOpen === true;
 
             const cdsPayload = {
@@ -12815,15 +12816,17 @@ parseDateStr(dateStr) {
                 total: grandTotal, 
                 paymentStatus: this.isPaymentSuccess ? 'LUNAS' : 'PENDING',
                 invoiceNumber: this.invoiceNumber || this.invoiceNo || this.posCustomInvoice || this.transactionId || '',
-                isPaymentOpen: isModalOpen,
-                paymentMethod: isModalOpen && this.paymentData ? this.paymentData.name : null,
-                paymentType: isModalOpen && this.paymentData ? this.paymentData.type : 'CASH',
                 
-                // 🌟 PERBAIKAN 1: Kirim Detail Bank dan Link Gambar QRIS
-                qrImageUrl: isModalOpen && this.paymentData ? this.paymentData.qrImageUrl || '' : '',
-                bankName: isModalOpen && this.paymentData ? this.paymentData.bankName || '' : '',
-                accountNumber: isModalOpen && this.paymentData ? this.paymentData.accountNumber || '' : '',
-                accountName: isModalOpen && this.paymentData ? this.paymentData.accountName || '' : '',
+                isPaymentOpen: isModalOpen,
+                
+                // 🌟 OBAT ANTI-CRASH: Tambahkan || null dan || 'CASH' untuk mencegah undefined
+                paymentMethod: isModalOpen && this.paymentData ? (this.paymentData.name || this.paymentData.method || null) : null,
+                paymentType: isModalOpen && this.paymentData ? (this.paymentData.type || currentPaymentType || 'CASH') : 'CASH',
+                
+                qrImageUrl: isModalOpen && this.paymentData ? (this.paymentData.qrImageUrl || currentQrUrl || '') : '',
+                bankName: isModalOpen && this.paymentData ? (this.paymentData.bankName || '') : '',
+                accountNumber: isModalOpen && this.paymentData ? (this.paymentData.accountNumber || '') : '',
+                accountName: isModalOpen && this.paymentData ? (this.paymentData.accountName || '') : '',
                 
                 isSplitPayment: isModalOpen ? (this.isSplitPayment === true) : false,
                 splitPayments: isModalOpen ? (this.splitPayments || []) : [],
@@ -12832,13 +12835,12 @@ parseDateStr(dateStr) {
                 currentPaymentAmount: isModalOpen ? currentInputAmt : 0,
                 currentPaymentTotal: isModalOpen ? currentInputTotal : 0,
                 
-                // 🌟 PERBAIKAN 2: Jangan dihitung ulang! Ambil langsung variabel kembalian dari UI Kasir.
-                // (Sesuaikan "this.kembalian" dengan nama variabel yang Anda gunakan di script POS)
-                changeAmount: isModalOpen || this.isPaymentSuccess ? (this.kembalian || 0) : 0, 
+                changeAmount: isModalOpen || this.isPaymentSuccess ? Math.round(Number(this.changeAmount || this.kembalian || totalKembalian || 0)) : 0, 
                 
                 updatedAt: new Date().getTime() 
             };
 
+            // Jika berhasil lewat sini tanpa error, Firebase tidak akan crash
             await setDoc(doc(db, "cds", docId), cdsPayload);
         } catch (error) {
             console.error("Gagal sinkronisasi CDS:", error);
@@ -20730,35 +20732,39 @@ let item = {
             },
 
 
-            openPaymentModal() {
-        // 1. Kosongkan metode bayar di awal agar CDS menampilkan status "Menunggu Kasir"
+           openPaymentModal() {
+        // 1. Kosongkan metode bayar awal
         this.paymentData = { method: null, amountReceived: this.total }; 
         
-        // 2. Beri sinyal bahwa layar pembayaran sedang terbuka
+        // 2. Beri sinyal layar pembayaran terbuka
         this.isPaymentModalOpen = true; 
         
-        // 3. Paksa sinkronisasi seketika itu juga
-        if (typeof this.syncLiveCartToFirebase === 'function') {
-            this.syncLiveCartToFirebase();
-        }
-        
-        // 4. Buka modal di layar kasir
+        // 3. Buka modal di layar kasir
         this.showModal('paymentModal');
+        
+        // 🌟 PERBAIKAN: Beri jeda 0.1 detik agar Vue memproses pembukaan modal sebelum kirim ke Firebase
+        setTimeout(() => {
+            if (typeof this.syncLiveCartToFirebase === 'function') {
+                this.syncLiveCartToFirebase();
+            }
+        }, 100);
     },
 
     batalPembayaran() {
-        // 1. Matikan mode pembayaran (Sinyal untuk CDS agar kembali ke layar Promo)
+        // 1. Sinyal layar kembali ke Promo
         this.isPaymentModalOpen = false;
         
-        // 2. Paksa sinkronisasi ke Firebase seketika itu juga!
-        if (typeof this.syncLiveCartToFirebase === 'function') {
-            this.syncLiveCartToFirebase();
-        }
-        
-        // 3. Tutup modal secara manual menggunakan script
+        // 2. Tutup modal
         this.hideModal('paymentModal'); 
+        
+        // 🌟 PERBAIKAN: Beri jeda 0.1 detik agar transisi penutupan selesai sebelum sinkronisasi
+        setTimeout(() => {
+            if (typeof this.syncLiveCartToFirebase === 'function') {
+                this.syncLiveCartToFirebase();
+            }
+        }, 100);
     },
-
+            
            async processTransaction() {
     // Cegah klik ganda
     if (this.isProcessing) return;
