@@ -12796,10 +12796,18 @@ parseDateStr(dateStr) {
                 }
     }
             
-             // 🌟 PASTIKAN STATUS MODAL BENAR-BENAR DIBACA
-            const isModalOpen = this.isPaymentModalOpen === true;
+             // 🌟 OBAT ANTI-NYANGKUT: Deteksi langsung apakah modal BENAR-BENAR terbuka di layar secara fisik
+            const modalEl = document.getElementById('paymentModal');
+            const isModalPhysicallyOpen = modalEl ? (modalEl.classList.contains('show') || modalEl.style.display === 'block') : false;
             
-            // 🌟 KUNCI PERBAIKAN: Tangkap detail Bank/QRIS dari data master yang sedang dipilih
+            // Evaluasi ganda: State aplikasi harus true, DAN modal harus secara fisik terlihat
+            const isModalOpen = (this.isPaymentModalOpen === true) && isModalPhysicallyOpen;
+            
+            // Auto-koreksi jika aplikasi "lupa" menutup status saat transaksi baru dimulai
+            if (!isModalPhysicallyOpen && this.isPaymentModalOpen) {
+                this.isPaymentModalOpen = false;
+            }
+
             const detailMetode = this.selectedPaymentMethodData || this.paymentData || {};
 
             const cdsPayload = {
