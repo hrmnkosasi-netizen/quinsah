@@ -112,7 +112,6 @@
 </head>
 <body>
 
-<!-- 🌟 PERBAIKAN: Menggunakan Computed Property (mobileViewClass) untuk menentukan mode layar secara cerdas -->
 <div id="cdsApp" class="split-screen" :class="mobileViewClass" v-cloak>
     
     <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
@@ -438,14 +437,12 @@
             }
         },
         computed: {
-            // 🌟 PERBAIKAN: Penentuan mode secara absolut dan prioritas
+            // 🌟 PERBAIKAN LOGIKA: Keranjang akan selalu tampil sebagai default di layar HP, KECUALI sedang proses bayar
             mobileViewClass() {
                 if (this.isPaymentOpen || this.paymentStatus === 'LUNAS') {
                     return 'mobile-payment-active';
-                } else if (this.cartItems && this.cartItems.length > 0) {
-                    return 'mobile-cart-active';
                 } else {
-                    return 'mobile-promo-active';
+                    return 'mobile-cart-active';
                 }
             }
         },
