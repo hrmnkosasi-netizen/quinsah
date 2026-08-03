@@ -193,10 +193,9 @@
                                 <div v-else-if="paymentMethod && paymentType === 'QRIS'" class="h-100 d-flex flex-column fade-in">
                                     <!-- 🌟 PERBAIKAN 2: Margin dihapus agar warna merah menempel sempurna ke sudut -->
                                     <div class="qris-header d-flex justify-content-between align-items-center py-3 px-4">
-                                        <span class="fw-bold fs-5" style="letter-spacing: 1px;">SCAN UNTUK SISA TAGIHAN</span>
-                                        <!-- 🌟 PERBAIKAN 1: URL gambar menggunakan format PNG agar tidak hancur jadi kotak putih -->
-                                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_QRIS.svg/320px-Logo_QRIS.svg.png" alt="QRIS" style="height: 28px; filter: brightness(0) invert(1);">
-                                    </div>
+                                    <span class="fw-bold fs-5" style="letter-spacing: 1px;">SCAN UNTUK SISA TAGIHAN</span>
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 28px; filter: brightness(0) invert(1);">
+                                </div>
                                     <div class="p-4 text-center flex-grow-1 d-flex flex-column justify-content-center align-items-center">
                                         <div class="qris-amount mb-3" style="font-size: 3rem;">
                                             Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}
@@ -240,10 +239,9 @@
                     
                     <div class="qris-card" style="max-width: 780px;">
                         <div class="qris-header d-flex justify-content-between align-items-center py-3 px-4">
-                            <span class="fw-bold fs-5" style="letter-spacing: 2px;">TOTAL TAGIHAN</span>
-                            <!-- 🌟 PERBAIKAN 1: Menggunakan file PNG untuk Logo -->
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_QRIS.svg/320px-Logo_QRIS.svg.png" alt="QRIS" style="height: 28px; filter: brightness(0) invert(1);">
-                        </div>
+                        <span class="fw-bold fs-5" style="letter-spacing: 2px;">TOTAL TAGIHAN</span>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 28px; filter: brightness(0) invert(1);">
+                    </div>
                         
                         <!-- Flex-row untuk tampilan menyamping di layar PC -->
                         <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-around text-center text-md-start">
