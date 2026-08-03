@@ -12779,8 +12779,8 @@ parseDateStr(dateStr) {
             const currentInputTotal = Math.round(Number(typeof this.getTotalBayarDenganAdmin === 'function' ? this.getTotalBayarDenganAdmin() : currentInputAmt));
             
             // Tangkap juga kembalian (jika ada) untuk dikirim ke CDS
-            // 🌟 KODE BARU: Perhitungan Kembalian Ekstra Akurat untuk Split
-            let totalKembalian = Math.round(Number(this.changeAmount || 0));
+                        // 🌟 KODE BARU: Perhitungan Kembalian Ekstra Akurat untuk Split
+            let totalKembalian = Math.round(Number(this.changeAmount || this.kembalian || this.splitKembalian || 0));
             
             // Fallback: Jika kasir pakai nama variabel beda saat split, kita hitung otomatis (Total Pokok Masuk - Total Tagihan)
             if (this.isSplitPayment === true && totalKembalian === 0 && Array.isArray(this.splitPayments)) {
@@ -12842,7 +12842,7 @@ parseDateStr(dateStr) {
                 currentPaymentAmount: isModalOpen ? currentInputAmt : 0,
                 currentPaymentTotal: isModalOpen ? currentInputTotal : 0,
                 
-                changeAmount: isModalOpen || this.isPaymentSuccess ? (this.kembalian || 0) : 0, 
+                changeAmount: isModalOpen || this.isPaymentSuccess ? Math.round(Number(this.kembalian || 0)) : 0, 
                 
                 updatedAt: new Date().getTime() 
             };
