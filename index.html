@@ -12780,7 +12780,7 @@ parseDateStr(dateStr) {
             
             // Tangkap juga kembalian (jika ada) untuk dikirim ke CDS
             // 🌟 KODE BARU: Perhitungan Kembalian Ekstra Akurat untuk Split
-            let totalKembalian = Math.round(Number(this.kembalian || 0));
+            let totalKembalian = Math.round(Number(this.changeAmount || 0));
             
             // Fallback: Jika kasir pakai nama variabel beda saat split, kita hitung otomatis (Total Pokok Masuk - Total Tagihan)
             if (this.isSplitPayment === true && totalKembalian === 0 && Array.isArray(this.splitPayments)) {
