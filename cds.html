@@ -132,13 +132,13 @@
                     <h1 class="fw-black text-dark mb-2" style="font-size: 4rem; letter-spacing: -1.5px;">TRANSAKSI SUKSES!</h1>
                     <p class="text-muted fs-4 mb-0">Terima kasih telah berbelanja di {{ storeName }}.</p>
                     
-                    <div v-if="changeAmount > 0" class="change-box fade-in" style="animation-delay: 0.8s; opacity: 0; animation-fill-mode: forwards;">
+                    <div v-if="effectiveChange > 0" class="change-box fade-in" style="animation-delay: 0.8s; animation-fill-mode: both;">
                         <h5 class="text-secondary fw-bold text-uppercase tracking-wider mb-2">Uang Kembali Anda</h5>
                         <h1 class="text-success fw-black mb-0" style="font-size: 4.5rem; text-shadow: 0 4px 15px rgba(29,209,161,0.25);">
-                            Rp {{ formatRupiah(changeAmount) }}
+                            Rp {{ formatRupiah(effectiveChange) }}
                         </h1>
                     </div>
-                    <div v-else class="mt-4 pt-4 border-top fade-in" style="animation-delay: 0.8s; opacity: 0; animation-fill-mode: forwards;">
+                    <div v-else class="mt-4 pt-4 border-top fade-in" style="animation-delay: 0.8s; animation-fill-mode: both;">
                         <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-5 py-3 fs-5">
                             Pembayaran Pas / Lunas
                         </span>
@@ -186,14 +186,14 @@
                             <div class="col-md-7 d-flex flex-column position-relative bg-white">
                                 
                                 <div v-if="remainingSplitTagihan <= 0" class="d-flex flex-column align-items-center justify-content-center text-center p-5 h-100 fade-in">
-                                    <i class="fas fa-check-circle text-success mb-3" style="font-size: 6rem;"></i>
-                                    <h2 class="fw-black text-success mb-2">{{ changeAmount > 0 ? 'Pembayaran Lunas!' : 'Pembayaran Pas!' }}</h2>
-                                    <div v-if="changeAmount > 0" class="mt-4 p-4 bg-success bg-opacity-10 rounded-4 w-100 border border-success">
-                                        <h6 class="text-success fw-bold text-uppercase mb-1 tracking-wider">Kembalian</h6>
-                                        <h1 class="text-success fw-black mb-0" style="font-size: 3.5rem;">Rp {{ formatRupiah(changeAmount) }}</h1>
-                                    </div>
-                                    <p class="text-muted mt-5 mb-0 fs-5"><i class="fas fa-print me-2"></i>Menunggu kasir mencetak struk...</p>
-                                </div>
+    <i class="fas fa-check-circle text-success mb-3" style="font-size: 6rem;"></i>
+    <h2 class="fw-black text-success mb-2">{{ effectiveChange > 0 ? 'Pembayaran Lunas!' : 'Pembayaran Pas!' }}</h2>
+    <div v-if="effectiveChange > 0" class="mt-4 p-4 bg-success bg-opacity-10 rounded-4 w-100 border border-success">
+        <h6 class="text-success fw-bold text-uppercase mb-1 tracking-wider">Uang Kembali Anda</h6>
+        <h1 class="text-success fw-black mb-0" style="font-size: 3.5rem;">Rp {{ formatRupiah(effectiveChange) }}</h1>
+    </div>
+    <p class="text-muted mt-5 mb-0 fs-5"><i class="fas fa-print me-2"></i>Menunggu kasir mencetak struk...</p>
+</div>
 
                                 <div v-else-if="paymentMethod && paymentType === 'QRIS'" class="h-100 d-flex flex-column fade-in">
                                     <div class="qris-header d-flex justify-content-between align-items-center py-3 px-4">
@@ -449,6 +449,20 @@
                 }
             }
         },
+        effectiveChange() {
+        if (this.changeAmount > 0) return this.changeAmount;
+        
+        // Jika Split Payment & Sisa Tagihan sudah Lunas (<= 0)
+        if (this.isSplitPayment && this.remainingSplitTagihan <= 0) {
+            let totalMasuk = 0;
+            this.splitPayments.forEach(p => {
+                totalMasuk += Number(p.amount || p.cashReceived || 0);
+            });
+            const sisa = totalMasuk - this.total;
+            return sisa > 0 ? sisa : 0;
+        }
+        return 0;
+    },
         methods: {
             formatRupiah(number) {
                 if(!number) return '0';
