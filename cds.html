@@ -194,7 +194,7 @@
                                     <!-- 🌟 PERBAIKAN 2: Margin dihapus agar warna merah menempel sempurna ke sudut -->
                                     <div class="qris-header d-flex justify-content-between align-items-center py-3 px-4">
                                     <span class="fw-bold fs-5" style="letter-spacing: 1px;">SCAN UNTUK SISA TAGIHAN</span>
-                                    <span class="text-white fst-italic" style="font-family: 'Arial Black', Impact, sans-serif; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; white-space: nowrap;">QRIS</span>
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 28px; filter: brightness(0) invert(1);">
                                 </div>
                                     <div class="p-4 text-center flex-grow-1 d-flex flex-column justify-content-center align-items-center">
                                         <div class="qris-amount mb-3" style="font-size: 3rem;">
@@ -237,9 +237,10 @@
                 <!-- 🌟 TAMPILAN QRIS PREMIUM (NON-SPLIT) - MELEBAR (HORIZONTAL) -->
                 <div v-else-if="paymentType === 'QRIS'" class="text-center w-100 h-100 fade-in d-flex justify-content-center align-items-center p-4">
                     
-                    <div class="qris-header d-flex justify-content-between align-items-center py-3 px-4">
-                    <span class="fw-bold fs-5" style="letter-spacing: 2px;">TOTAL TAGIHAN</span>
-                    <span class="text-white fst-italic" style="font-family: 'Arial Black', Impact, sans-serif; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; white-space: nowrap;">QRIS</span>
+                    <div class="qris-card" style="max-width: 780px;">
+                        <div class="qris-header d-flex justify-content-between align-items-center py-3 px-4">
+                        <span class="fw-bold fs-5" style="letter-spacing: 2px;">TOTAL TAGIHAN</span>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 28px; filter: brightness(0) invert(1);">
                     </div>
                         
                         <!-- Flex-row untuk tampilan menyamping di layar PC -->
