@@ -20757,18 +20757,25 @@ let item = {
     },
 
     batalPembayaran() {
-        // 1. Sinyal layar kembali ke Promo
+        // 1. Matikan mode pembayaran (Sinyal untuk CDS agar kembali ke layar Promo)
         this.isPaymentModalOpen = false;
         
-        // 2. Tutup modal
-        this.hideModal('paymentModal'); 
+        // 2. 🌟 WAJIB: Reset semua data split dan metode agar tidak nyangkut
+        this.isSplitPayment = false;
+        this.paymentData = { method: null, amountReceived: 0 };
+        this.selectedPaymentMethodData = null;
         
-        // 🌟 PERBAIKAN: Beri jeda 0.1 detik agar transisi penutupan selesai sebelum sinkronisasi
+        // 3. Tutup modal menggunakan script bawaan Anda
+        this.hideModal('paymentModal'); 
+
+        // 4. 🌟 PERBAIKAN: Ubah jeda waktu menjadi 400ms (0.4 detik) 
+        // Ini memastikan animasi penutupan modal benar-benar sudah rata dengan layar 
+        // sebelum sistem memotret dan mengirim datanya ke Firebase.
         setTimeout(() => {
             if (typeof this.syncLiveCartToFirebase === 'function') {
                 this.syncLiveCartToFirebase();
             }
-        }, 100);
+        }, 400); 
     },
             
            async processTransaction() {
