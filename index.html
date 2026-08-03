@@ -12794,12 +12794,17 @@ parseDateStr(dateStr) {
                 if (totalPokokMasuk > grandTotal) {
                     totalKembalian = Math.round(totalPokokMasuk - grandTotal);
                 }
-    }
+    },
             
-             // 🌟 PASTIKAN STATUS MODAL BENAR-BENAR DIBACA
-            const isModalOpen = this.isPaymentModalOpen === true;
+             // 🌟 PERBAIKAN: Pengecekan cerdas
+            // Jika state Vue bernilai true (kasir baru klik Lanjut Bayar), kita prioritaskan state tersebut
+            // Pengecekan fisik elemen modal hanya digunakan sebagai fallback/tambahan
+            const modalEl = document.getElementById('paymentModal');
+            const isModalPhysicallyOpen = modalEl ? (modalEl.classList.contains('show') || modalEl.style.display === 'block' || modalEl.offsetHeight > 0) : false;
             
-            // 🌟 KUNCI PERBAIKAN: Tangkap detail Bank/QRIS dari data master yang sedang dipilih
+            // Modal dianggap terbuka jika state Vue true ATAU elemen fisiknya terlihat
+            const isModalOpen = (this.isPaymentModalOpen === true) || isModalPhysicallyOpen;
+
             const detailMetode = this.selectedPaymentMethodData || this.paymentData || {};
 
             const cdsPayload = {
