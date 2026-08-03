@@ -112,6 +112,7 @@
 </head>
 <body>
 
+<!-- 🌟 PERBAIKAN: Memanggil mobileClasses yang sudah dievaluasi dengan sempurna oleh Vue -->
 <div id="cdsApp" class="split-screen" :class="mobileClasses" v-cloak>
     
     <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
@@ -436,14 +437,15 @@
                 currentImage: '', imageIndex: 0, slideInterval: null
             }
         },
+        // 🌟 PERBAIKAN: Logika kelas mobile diisolasi di sini agar 100% aman dieksekusi Vue
         computed: {
             mobileClasses() {
                 const isPayment = this.isPaymentOpen === true || this.paymentStatus === 'LUNAS';
+                const hasCart = this.cartItems && this.cartItems.length > 0;
                 
                 return {
                     'mobile-payment-active': isPayment,
-                    // 🌟 PERBAIKAN: Jika kasir TIDAK sedang memproses bayar, layar yang tampil SELALU layar kanan (Keranjang)
-                    'mobile-cart-active': !isPayment
+                    'mobile-cart-active': !isPayment && hasCart
                 };
             }
         },
