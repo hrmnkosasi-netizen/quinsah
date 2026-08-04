@@ -7002,10 +7002,11 @@ body.sidebar-open {
                 <span class="fw-bold fs-6">Total Tagihan</span><span class="fw-bold fs-5 text-primary-custom">Rp {{ formatNumber(total) }}</span>
             </div>
             
-            <button class="btn btn-primary-custom w-100 py-2 fw-bold shadow-sm" @click="openPaymentModal" :disabled="cart.length===0 || !selectedCustomer || !posActiveOutletId || !posCustomInvoice || isProcessing">
-                <span v-if="isProcessing" class="spinner-border spinner-border-sm"></span>
-                <span v-else><i class="bi bi-wallet2 me-1"></i> LANJUT BAYAR</span>
-            </button>
+            <button class="btn btn-primary-custom w-100 py-2 fw-bold shadow-sm" @click="openPaymentModal" :disabled="cart.length===0 || (posOrderType !== 'direct' && !selectedCustomer) || !posActiveOutletId || !posCustomInvoice || isProcessing">
+    <span v-if="isProcessing" class="spinner-border spinner-border-sm"></span>
+    <span v-else><i class="bi bi-wallet2 me-1"></i> LANJUT BAYAR</span>
+</button>
+
             
             <div v-if="!posActiveOutletId && cart.length > 0" class="text-danger text-center mt-1 pb-1" style="font-size: 0.65rem;">*Pilih Cabang (Outlet) Terlebih Dahulu</div>
         </div>
@@ -20750,7 +20751,19 @@ let item = {
             },
 
 
-           openPaymentModal() {
+               openPaymentModal() {
+        // =================================================================
+        // 🌟 TAMBAHAN: Cegah paksa jika tipe bukan bawa pulang tapi pelanggan kosong
+        // =================================================================
+        if (this.posOrderType !== 'direct' && !this.selectedCustomer) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Data Pelanggan Kosong',
+                text: 'Untuk pesanan Delivery atau Pre-Order, nama pelanggan wajib diisi!'
+            });
+            return;
+        }
+
         // 1. Kosongkan metode bayar awal
         this.paymentData = { method: null, amountReceived: this.total }; 
         
