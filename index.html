@@ -18883,35 +18883,39 @@ async fetchRolesFromDatabase() {
             },
             
             // MEMPERBAIKI resetPos (Tombol Tong Sampah di Kasir)
-        resetPos() {
-            if (this.cart.length === 0) return;
+resetPos() {
+    // 🌟 PERBAIKAN: Tombol reset hanya dicegah jika keranjang kosong DAN tidak ada pelanggan DAN tidak ada tukar tambah
+    if (this.cart.length === 0 && !this.selectedCustomer && !this.pendingTradeIn) return;
+    
+    // Tambahkan Notifikasi Konfirmasi sebelum menghapus
+    Swal.fire({
+        title: 'Batalkan Transaksi?',
+        text: "Semua pesanan di keranjang akan dihapus dan tidak bisa dikembalikan.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Batalkan!',
+        cancelButtonText: 'Tidak'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            this.cart = [];
             
-            // Tambahkan Notifikasi Konfirmasi sebelum menghapus
-            Swal.fire({
-                title: 'Batalkan Transaksi?',
-                text: "Semua pesanan di keranjang akan dihapus dan tidak bisa dikembalikan.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Ya, Batalkan!',
-                cancelButtonText: 'Tidak'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.cart = [];
-                    
-                    // 🌟 TAMBAHKAN BARIS INI: Sapu bersih memori Tukar Tambah
-                    this.pendingTradeIn = null; 
-                    
-                    this.selectedCustomer = null;
-                    this.globalDiscountValue = 0;
-                    this.globalDiscountType = 'none';
-                    this.posCustomInvoice = this.generateInvoiceNumber('pos');
-                    this.isEditingInvoice = false;
-                    this.originalEditTrx = null;
-                }
-            });
-        },
+            // Sapu bersih memori Tukar Tambah
+            this.pendingTradeIn = null; 
+            
+            // 🌟 Ini sekarang akan tereksekusi dengan benar meskipun keranjang kosong
+            this.selectedCustomer = null;
+            this.customerSearchQuery = ''; // Opsional: bersihkan juga kolom pencarian pelanggan jika ada
+            
+            this.globalDiscountValue = 0;
+            this.globalDiscountType = 'none';
+            this.posCustomInvoice = this.generateInvoiceNumber('pos');
+            this.isEditingInvoice = false;
+            this.originalEditTrx = null;
+        }
+    });
+}
 
             addBarcodeItem(id, sku, name, variantName, originalPrice, finalPrice) {
         if (!this.barcodeSelectedItems) {
