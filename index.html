@@ -12166,10 +12166,8 @@ financeAPList() {
             taxAmount() { if(!this.posActiveOutlet) return 0; return this.netSubtotal * ((this.posActiveOutlet.taxPercent || 0) / 100); },
             serviceAmount() { if(!this.posActiveOutlet) return 0; return this.netSubtotal * ((this.posActiveOutlet.serviceChargePercent || 0) / 100); },
             total() {
-    // 1. Hitung dasar murni tanpa ongkir
-    let hitungTotal = (Number(this.subtotalBase) || 0) 
-                    - (Number(this.discountAmount) || 0) 
-                    - (Number(this.globalDiscountAmount) || 0) 
+    // 1. Gunakan netSubtotal agar SEMUA diskon (item, member, global) otomatis terpotong
+    let hitungTotal = (Number(this.netSubtotal) || 0) 
                     + (Number(this.taxAmount) || 0) 
                     + (Number(this.serviceAmount) || 0);
 
@@ -12181,7 +12179,8 @@ financeAPList() {
         hitungTotal += Number(this.posShippingCost);
     }
 
-    return Math.max(0, hitungTotal);
+    // Gunakan Math.round agar angkanya bulat dan tidak ada desimal aneh
+    return Math.max(0, Math.round(hitungTotal));
 }
 },
         
@@ -20881,7 +20880,11 @@ let item = {
         let currentGlobalDiscountType = this.globalDiscountType || 'none';
         let currentGlobalDiscountValue = Number(this.globalDiscountValue || 0);
         let currentGlobalDiscountAmt = Math.round(this.globalDiscountAmount || 0);
-        let currentDiscountAmt = Math.round((this.discountAmount + this.posDiscountAmount + currentGlobalDiscountAmt) || 0);
+        let currentDiscountAmt = Math.round(
+        (Number(this.discountAmount || 0)) + 
+        (Number(this.posDiscountAmount || 0)) + 
+        (Number(currentGlobalDiscountAmt || 0))
+        );
         let currentTaxAmt = Math.round(this.taxAmount || 0);
         let currentServiceAmt = Math.round(this.serviceAmount || 0);
         
