@@ -22,7 +22,7 @@
             .split-screen { height: 100vh; display: flex; flex-direction: row; }
             .promo-area { flex: 6.5; height: 100vh; }
             .cart-area { flex: 3.5; height: 100vh; }
-            .border-end-md { border-right: 2px dashed #dee2e6; } /* Garis pemisah tengah untuk split payment */
+            .border-end-md { border-right: 2px dashed #dee2e6; } 
         }
 
         /* 🌟 PERBAIKAN: MOBILE / HP LAYOUT & TABLET PORTRAIT */
@@ -30,15 +30,14 @@
             body { overflow-y: auto; background-color: #fff; }
             .split-screen { display: flex; flex-direction: column; min-height: 100vh; width: 100vw; }
             
-            /* Secara default sembunyikan semua area agar tidak bentrok */
-            .promo-area, .cart-area { display: none !important; width: 100%; min-height: 100vh; }
+            /* Tampilan Default di HP: KERANJANG LANGSUNG MUNCUL, PROMO DISEMBUNYIKAN */
+            .promo-area { display: none !important; }
+            .cart-area { display: flex !important; width: 100%; min-height: 100vh; }
             
-            /* Paksa tampil sesuai dengan state/kondisi aplikasi saat ini */
-            .split-screen.mobile-promo-active .promo-area { display: flex !important; }
-            .split-screen.mobile-cart-active .cart-area { display: flex !important; }
-            .split-screen.mobile-payment-active .promo-area { display: flex !important; }
+            /* Jika Kasir menekan Pembayaran: PROMO MUNCUL, KERANJANG DISEMBUNYIKAN */
+            .split-screen.mobile-payment-active .promo-area { display: flex !important; width: 100%; min-height: 100vh; }
+            .split-screen.mobile-payment-active .cart-area { display: none !important; }
             
-            /* Penyesuaian Ukuran Font & Elemen di Layar Kecil */
             .qris-amount { font-size: 2.2rem !important; }
             .success-card h1 { font-size: 2.2rem !important; }
             .change-box h1 { font-size: 2.5rem !important; }
@@ -118,7 +117,7 @@
     <div class="promo-area">
         <div v-if="(isPaymentOpen && cartItems.length > 0) || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
             
-            <!-- ANIMASI TRANSAKSI SELESAI (LUNAS FULL) -->
+            <!-- ANIMASI TRANSAKSI SELESAI (LUNAS FULL + SUDAH DI CETAK) -->
             <div v-if="paymentStatus === 'LUNAS'" class="w-100 h-100 d-flex align-items-center justify-content-center position-relative">
                 <div class="confetti-container">
                     <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
@@ -145,7 +144,7 @@
                 </div>
             </div>
 
-            <!-- TAMPILAN PROSES PEMBAYARAN -->
+            <!-- TAMPILAN PROSES PEMBAYARAN (PENDING/MENUNGGU CETAK) -->
             <template v-else>
                 <div v-if="!paymentMethod && !isSplitPayment" class="text-center fade-in">
                     <i class="fas fa-cash-register fa-6x text-secondary mb-4 opacity-50"></i>
@@ -153,7 +152,7 @@
                     <p class="text-muted fs-4 mt-2">Silakan tunggu kasir memilih metode pembayaran.</p>
                 </div>
                 
-                <!-- TAMPILAN SPLIT PAYMENT (UI DIGABUNG MENJADI 1 KARTU BESAR) -->
+                <!-- TAMPILAN SPLIT PAYMENT -->
                 <div v-else-if="isSplitPayment" class="w-100 h-100 fade-in p-4 d-flex align-items-center justify-content-center">
                     
                     <div class="card shadow-lg border-0 w-100" style="max-width: 950px; border-radius: 24px; overflow: hidden;">
@@ -233,7 +232,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- ANIMASI LOADING MODERN (Jika Menunggu Kasir) -->
                                 <div v-else class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-center p-5 fade-in">
                                     <div class="modern-loader"></div>
                                     <h4 class="text-dark fw-bold mt-2">Memproses...</h4>
@@ -245,7 +243,7 @@
                     </div>
                 </div>
                 
-                <!-- TAMPILAN QRIS PREMIUM (NON-SPLIT) - MELEBAR (HORIZONTAL) -->
+                <!-- TAMPILAN QRIS PREMIUM (NON-SPLIT) -->
                 <div v-else-if="paymentType === 'QRIS'" class="text-center w-100 h-100 fade-in d-flex justify-content-center align-items-center p-4">
                     
                     <div class="qris-card" style="max-width: 780px;">
@@ -254,10 +252,8 @@
                             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Logo_QRIS.svg/320px-Logo_QRIS.svg.png" alt="QRIS" style="height: 28px; filter: brightness(0) invert(1);">
                         </div>
                         
-                        <!-- Flex-row untuk tampilan menyamping di layar PC -->
                         <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-around text-center text-md-start">
                             
-                            <!-- KIRI: Informasi Harga -->
                             <div class="mb-4 mb-md-0 pe-md-4 border-end-md w-100">
                                 <span class="badge bg-light text-dark border mb-3 px-4 py-2 fs-5 shadow-sm">{{ paymentMethod }}</span>
                                 
@@ -273,7 +269,6 @@
                                 </div>
                             </div>
                             
-                            <!-- KANAN: Gambar QR -->
                             <div class="ps-md-4 text-center">
                                 <div class="qris-qr-box">
                                     <img :src="qrImageUrl || ('https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=PAY_' + (currentPaymentTotal > 0 ? currentPaymentTotal : total))" alt="QRIS Code" style="width: 250px; height: 250px; object-fit: contain;">
@@ -286,22 +281,48 @@
 
                 </div>
                 
-                <!-- Jika metode Tunai / Transfer (Non-Split) -->
-                <div v-else class="text-center fade-in">
-                    <i v-if="paymentType === 'TRANSFER' || paymentType === 'VA'" class="fas fa-university fa-6x text-info mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
-                    <i v-else class="fas fa-wallet fa-6x text-primary mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
+                <!-- METODE TUNAI / TRANSFER (BAYAR PENUH) TAMPIL KEMBALIAN REAL-TIME -->
+                <div v-else class="text-center w-100 h-100 d-flex flex-column align-items-center justify-content-center fade-in">
                     
-                    <h1 class="fw-bold text-dark mb-2">Metode: {{ paymentMethod }}</h1>
-                    <h1 class="fw-black text-danger my-4" style="font-size: 5.5rem; letter-spacing: -3px; text-shadow: 0 5px 15px rgba(232,65,24,0.15);">
-                        Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}
-                    </h1>
-                    
-                    <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box text-center shadow-sm" style="max-width: 600px;">
-                        <div class="text-uppercase fw-bold text-secondary mb-2" style="font-size: 1rem;">Mohon Transfer Ke:</div>
-                        <h3 class="fw-bold text-primary mb-2">{{ bankName }}</h3>
-                        <h1 class="fw-black text-dark mb-2" style="letter-spacing: 3px; font-size: 3rem;">{{ accountNumber }}</h1>
-                        <h4 class="text-muted mb-0" v-if="accountName">a.n {{ accountName }}</h4>
-                    </div>
+                    <!-- SKENARIO 1: JIKA UANG YANG DIMASUKKAN SUDAH CUKUP/LEBIH (MENAMPILKAN KEMBALIAN) -->
+                    <template v-if="(currentPaymentAmount >= total && total > 0) || changeAmount > 0">
+                        <i class="fas fa-check-circle text-success mb-3" style="font-size: 6rem; filter: drop-shadow(0 10px 10px rgba(29,209,161,0.2));"></i>
+                        <h2 class="fw-black text-success mb-2" style="font-size: 2.5rem;">{{ changeAmount > 0 ? 'Pembayaran Lunas!' : 'Pembayaran Pas!' }}</h2>
+                        
+                        <div v-if="changeAmount > 0" class="mt-4 p-4 bg-success bg-opacity-10 rounded-4 mx-auto border border-success w-100 shadow-sm" style="max-width: 500px;">
+                            <h6 class="text-success fw-bold text-uppercase mb-2 tracking-wider">Kembalian</h6>
+                            <h1 class="text-success fw-black mb-0" style="font-size: 4.5rem; letter-spacing: -2px;">Rp {{ formatRupiah(changeAmount) }}</h1>
+                        </div>
+                        
+                        <div class="text-muted fw-bold mt-4 pt-3 border-top w-50 mx-auto" style="font-size: 1.1rem;">
+                            <i class="fas fa-hand-holding-usd me-2 text-secondary"></i>Uang Diterima: Rp {{ formatRupiah(currentPaymentAmount) }}
+                        </div>
+                        
+                        <p class="text-muted mt-4 mb-0 fs-5"><i class="fas fa-print me-2"></i>Menunggu kasir mencetak struk...</p>
+                    </template>
+
+                    <!-- SKENARIO 2: JIKA KASIR BELUM MENGISI UANG / UANG MASIH KURANG -->
+                    <template v-else>
+                        <i v-if="paymentType === 'TRANSFER' || paymentType === 'VA'" class="fas fa-university fa-6x text-info mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
+                        <i v-else class="fas fa-wallet fa-6x text-primary mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
+                        
+                        <h1 class="fw-bold text-dark mb-2">Metode: {{ paymentMethod }}</h1>
+                        <h1 class="fw-black text-danger my-4" style="font-size: 5.5rem; letter-spacing: -3px; text-shadow: 0 5px 15px rgba(232,65,24,0.15);">
+                            Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}
+                        </h1>
+                        
+                        <div v-if="currentPaymentAmount > 0" class="badge bg-secondary bg-opacity-10 text-dark border px-4 py-2 fs-5 fw-bold mt-3 shadow-sm rounded-pill">
+                            <i class="fas fa-hand-holding-usd me-2 text-secondary"></i>Uang Diterima: Rp {{ formatRupiah(currentPaymentAmount) }}
+                        </div>
+                        
+                        <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box text-center shadow-sm mx-auto" style="max-width: 600px;">
+                            <div class="text-uppercase fw-bold text-secondary mb-2" style="font-size: 1rem;">Mohon Transfer Ke:</div>
+                            <h3 class="fw-bold text-primary mb-2">{{ bankName }}</h3>
+                            <h1 class="fw-black text-dark mb-2" style="letter-spacing: 3px; font-size: 3rem;">{{ accountNumber }}</h1>
+                            <h4 class="text-muted mb-0" v-if="accountName">a.n {{ accountName }}</h4>
+                        </div>
+                    </template>
+
                 </div>
             </template>            
         </div>
@@ -437,7 +458,6 @@
             }
         },
         computed: {
-            // 🌟 PERBAIKAN LOGIKA: Keranjang akan selalu tampil sebagai default di layar HP, KECUALI sedang proses bayar
             mobileViewClass() {
                 if (this.isPaymentOpen || this.paymentStatus === 'LUNAS') {
                     return 'mobile-payment-active';
