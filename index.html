@@ -6768,14 +6768,14 @@ body.sidebar-open {
         
         <div class="d-flex flex-nowrap align-items-center gap-1 ms-auto">
             
-            <!-- 🌟 Pilih Tipe Pesanan (Kompak & Hemat Tempat) -->
-            <select class="form-select form-select-sm border-0 bg-light fw-bold text-primary" 
-                    v-model="posOrderType" 
-                    style="width: 100px; font-size: 0.7rem; cursor: pointer;">
-                <option value="direct">🛍️ Bawa Pulang</option>
-                <option value="delivery">🚚 Kirim</option>
-                <option value="pre_order">⏳ PO</option>
-            </select>
+            <!-- 🌟 Pilih Tipe Pesanan (Sudah Disesuaikan Lebarnya) -->
+<select class="form-select form-select-sm border-0 bg-light fw-bold text-primary ps-2 pe-3" 
+        v-model="posOrderType" 
+        style="min-width: 120px; font-size: 0.7rem; cursor: pointer;">
+    <option value="direct">🛍️ Bawa Pulang</option>
+    <option value="delivery">🚚 Kirim</option>
+    <option value="pre_order">⏳ PO</option>
+</select>
             
             <button class="btn btn-sm btn-outline-info border p-1 px-2 position-relative" @click="openModal('holdModal')" title="Lihat Daftar Hold">
                 <i class="bi bi-card-list"></i>
@@ -6953,16 +6953,19 @@ body.sidebar-open {
     <div class="mt-auto bg-white pt-2 border-top shadow-lg z-3">
                         
         <div class="mb-2 p-2 bg-danger bg-opacity-10 border border-danger rounded mx-2 mt-2">
-            <label class="form-label small fw-bold text-danger mb-1"><i class="bi bi-tag-fill me-1"></i>Diskon Global (Per Invoice)</label>
-            <div class="input-group input-group-sm">
-                <select class="form-select bg-white fw-semibold" style="max-width: 45%;" v-model="globalDiscountType" @change="globalDiscountValue = 0">
-                    <option value="none">Tanpa Diskon</option>
-                    <option value="percent">% Persen</option>
-                    <option value="nominal">Rp Nominal</option>
-                </select>
-                <input type="number" class="form-control text-end fw-bold text-danger" v-model.number="globalDiscountValue" :disabled="globalDiscountType === 'none'" placeholder="0">
-            </div>
-        </div>
+    <label class="form-label small fw-bold text-danger mb-1"><i class="bi bi-tag-fill me-1"></i>Diskon Global (Per Invoice)</label>
+    <div class="input-group input-group-sm">
+        <select class="form-select bg-white fw-semibold ps-2 pe-3" 
+                style="width: 50%; max-width: 50%; font-size: 0.75rem;" 
+                v-model="globalDiscountType" 
+                @change="globalDiscountValue = 0">
+            <option value="none">Tanpa Diskon</option>
+            <option value="percent">% Persen</option>
+            <option value="nominal">Rp Nominal</option>
+        </select>
+        <input type="number" class="form-control text-end fw-bold text-danger" style="font-size: 0.8rem;" v-model.number="globalDiscountValue" :disabled="globalDiscountType === 'none'" placeholder="0">
+    </div>
+</div>
 
         <div class="border-top pt-2 pb-3 px-3" style="font-size: 0.8rem;">
             <div class="d-flex justify-content-between mb-1 text-muted fw-semibold"><span>Subtotal Produk</span><span>Rp {{ formatNumber(subtotalBase) }}</span></div>
