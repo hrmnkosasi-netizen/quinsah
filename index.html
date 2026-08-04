@@ -6807,7 +6807,7 @@ body.sidebar-open {
             <!-- Input Text Pengganti Select -->
             <input type="text" 
                    class="form-control fw-semibold border-danger" 
-                   placeholder="Ketik Nama atau No Telp..." 
+                   :placeholder="posOrderType === 'direct' ? 'Otomatis terisi (Opsional)' : 'Ketik Nama atau No Telp...'" 
                    v-model="customerSearchQuery" 
                    @input="showCustomerDropdown = true"
                    @focus="showCustomerDropdown = true" 
@@ -21016,14 +21016,35 @@ let item = {
         // 5. PENYUSUNAN DATA TRANSAKSI UTAMA
         // =================================================================
         let fStatus = (this.posOrderType === 'delivery' || this.posOrderType === 'pre_order') ? 'NEW' : 'COMPLETED';
-        let finalCustomerPhone = this.selectedCustomer && this.selectedCustomer.phone ? this.selectedCustomer.phone : (this.selectedCustomer && this.selectedCustomer.no_hp ? this.selectedCustomer.no_hp : '-');
         
+        // 🌟 LOGIKA NAMA PELANGGAN OTOMATIS
+        let finalCustomerName = 'Umum';
+        let finalCustomerId = null;
+        let finalCustomerPhone = '-';
+
+        if (this.selectedCustomer) {
+            // Jika kasir secara sadar memilih pelanggan, gunakan data tersebut
+            finalCustomerName = this.selectedCustomer.name || 'Umum';
+            finalCustomerId = this.selectedCustomer.id || null;
+            finalCustomerPhone = this.selectedCustomer.phone || this.selectedCustomer.no_hp || '-';
+        } else if (this.posOrderType === 'direct') {
+            // 🌟 SMART LOGIC: Pecah nomor invoice berdasarkan tanda strip "-"
+            // Misal: "INV-20260804-18707" akan menjadi array ["INV", "20260804", "18707"]
+            let invoiceParts = currentInvoiceId.split('-');
+            
+            // Ambil bagian paling terakhir dari array tersebut (yaitu "18707")
+            let uniqueCode = invoiceParts[invoiceParts.length - 1]; 
+            
+            // Jadikan sebagai nama pelanggan
+            finalCustomerName = 'Cust-' + uniqueCode;
+        }
+
         let trxRaw = {
             id: currentInvoiceId,
             companyId: this.userProfile?.companyId || '',
             dateStr: new Date().toLocaleString('id-ID'),
-            customerId: this.selectedCustomer ? (this.selectedCustomer.id || null) : null,
-            customer: this.selectedCustomer ? (this.selectedCustomer.name || 'Umum') : 'Umum',
+            customerId: finalCustomerId,
+            customer: finalCustomerName,
             outletId: this.posActiveOutletId || '',
             cashierId: finalCashierId,
             cashierName: finalCashierName,
