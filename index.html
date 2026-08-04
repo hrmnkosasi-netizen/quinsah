@@ -8733,11 +8733,12 @@ body.sidebar-open {
                         Batal
                         </button>
                         
-                        <button class="btn btn-primary-custom fw-bold w-50 py-2 py-md-3 shadow-sm" @click="processTransaction" 
-                                :disabled="isProcessing || (!isSplitPayment && !paymentData.method) || (!selectedCustomer?.id && ((!isSplitPayment && paymentData.amountReceived < getTotalBayarDenganAdmin()) || (isSplitPayment && remainingSplitTagihan > 0)))">
-                            <span v-if="isProcessing" class="spinner-border spinner-border-sm"></span>
-                            <span v-else><i class="bi bi-printer me-2"></i>Cetak</span>
-                        </button>
+                        <!-- 🌟 TOMBOL CETAK DENGAN KUNCIAN LONGGAR (AGAR BISA MUNCULKAN NOTIFIKASI) -->
+<button class="btn btn-primary-custom fw-bold w-50 py-2 py-md-3 shadow-sm" @click="processTransaction" 
+        :disabled="isProcessing || (!isSplitPayment && !paymentData.method)">
+    <span v-if="isProcessing" class="spinner-border spinner-border-sm"></span>
+    <span v-else><i class="bi bi-printer me-2"></i>Cetak</span>
+</button>
                     </div>
                 </div> <!-- PENUTUP col-md-5 -->
                 
@@ -20806,6 +20807,43 @@ let item = {
            async processTransaction() {
     // Cegah klik ganda
     if (this.isProcessing) return;
+
+    // =================================================================
+    // 🌟 BLOK VALIDASI PINTAR (MEMUNCULKAN NOTIFIKASI KASIR)
+    // =================================================================
+
+    // 1. Cek Data Pelanggan untuk tipe Kirim / PO
+    if (this.posOrderType !== 'direct' && !this.selectedCustomer) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Data Pelanggan Kosong',
+            text: 'Untuk pesanan Delivery atau Pre-Order, nama pelanggan wajib diisi!'
+        });
+        return; // Hentikan proses
+    }
+
+    // 2. Cek Bayar Penuh tapi Uang Kurang
+    let inputUang = Number(this.paymentData.amountReceived) || 0;
+    if (!this.isSplitPayment && inputUang < this.total) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Uang Tidak Cukup!',
+            html: `Transaksi <b>Bayar Penuh</b> tidak boleh kurang dari total tagihan.<br><br>Kurang: <b>Rp ${typeof this.formatNumber === 'function' ? this.formatNumber(this.total - inputUang) : (this.total - inputUang)}</b><br><br><i>Jika pelanggan ingin berhutang, silakan gunakan tab Split/Hutang.</i>`
+        });
+        return; // Hentikan proses
+    }
+
+    // 3. Cek Hutang (Split) tapi Pelanggan Kosong
+    if (this.isSplitPayment && this.remainingSplitTagihan > 0 && !this.selectedCustomer) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Data Pelanggan Diperlukan',
+            text: 'Transaksi ini memiliki sisa tagihan (Hutang). Anda wajib memasukkan Nama dan Nomor Telepon pelanggan di layar kasir terlebih dahulu.'
+        });
+        return; // Hentikan proses
+    }
+
+    // Jika semua validasi lolos, kunci tombol agar tidak terklik 2x
     this.isProcessing = true;
 
     try {
