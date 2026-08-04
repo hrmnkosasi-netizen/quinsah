@@ -21074,19 +21074,12 @@ let item = {
         let finalCustomerPhone = '-';
 
         if (this.selectedCustomer) {
-            // Jika kasir secara sadar memilih pelanggan, gunakan data tersebut
             finalCustomerName = this.selectedCustomer.name || 'Umum';
             finalCustomerId = this.selectedCustomer.id || null;
             finalCustomerPhone = this.selectedCustomer.phone || this.selectedCustomer.no_hp || '-';
         } else if (this.posOrderType === 'direct') {
-            // 🌟 SMART LOGIC: Pecah nomor invoice berdasarkan tanda strip "-"
-            // Misal: "INV-20260804-18707" akan menjadi array ["INV", "20260804", "18707"]
             let invoiceParts = currentInvoiceId.split('-');
-            
-            // Ambil bagian paling terakhir dari array tersebut (yaitu "18707")
             let uniqueCode = invoiceParts[invoiceParts.length - 1]; 
-            
-            // Jadikan sebagai nama pelanggan
             finalCustomerName = 'Cust-' + uniqueCode;
         }
 
@@ -21108,7 +21101,7 @@ let item = {
             fulfillmentStatus: fStatus,
             fulfillmentUpdatedAt: new Date().toLocaleString('id-ID'),
             
-            // 🌟 DATA PENGIRIMAN
+            // DATA PENGIRIMAN
             courier: this.posOrderType === 'delivery' ? (this.posCourier || '') : '',
             shippingCost: currentShippingCost,
             isCOD: this.posOrderType === 'delivery' ? (String(this.posIsCOD) === 'true') : false,
@@ -21117,9 +21110,13 @@ let item = {
             splitPayments: finalSplitPayments,
             totalDebt: sisaHutang,
             isDebt: sisaHutang > 0,
-            amountReceived: uangDiterima > grandTotal ? grandTotal : uangDiterima,
+            
+            // 🌟 KODE YANG DIPERBAIKI (Baris amountReceived)
+            // Dibiarkan tanpa batas agar sistem nota membaca uang Rp 150.000 sepenuhnya
+            amountReceived: uangDiterima, 
             cashSubmitted: uangDiterima, 
             changeAmount: uangDiterima > grandTotal ? (uangDiterima - grandTotal) : 0,
+            
             paymentStatus: finalPaymentStatus,
             sisaTagihan: sisaHutang,
             
