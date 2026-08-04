@@ -25,16 +25,14 @@
             .border-end-md { border-right: 2px dashed #dee2e6; } 
         }
 
-        /* 🌟 PERBAIKAN: MOBILE / HP LAYOUT & TABLET PORTRAIT */
+        /* MOBILE / HP LAYOUT & TABLET PORTRAIT */
         @media (max-width: 991px) {
             body { overflow-y: auto; background-color: #fff; }
             .split-screen { display: flex; flex-direction: column; min-height: 100vh; width: 100vw; }
             
-            /* Tampilan Default di HP: KERANJANG LANGSUNG MUNCUL, PROMO DISEMBUNYIKAN */
             .promo-area { display: none !important; }
             .cart-area { display: flex !important; width: 100%; min-height: 100vh; }
             
-            /* Jika Kasir menekan Pembayaran: PROMO MUNCUL, KERANJANG DISEMBUNYIKAN */
             .split-screen.mobile-payment-active .promo-area { display: flex !important; width: 100%; min-height: 100vh; }
             .split-screen.mobile-payment-active .cart-area { display: none !important; }
             
@@ -281,15 +279,15 @@
 
                 </div>
                 
-                <!-- METODE TUNAI / TRANSFER (BAYAR PENUH) TAMPIL KEMBALIAN REAL-TIME -->
+                <!-- 🌟 PERBAIKAN: METODE TUNAI / TRANSFER (BAYAR PENUH) -->
                 <div v-else class="text-center w-100 h-100 d-flex flex-column align-items-center justify-content-center fade-in">
                     
-                    <!-- SKENARIO 1: JIKA UANG YANG DIMASUKKAN SUDAH CUKUP/LEBIH (MENAMPILKAN KEMBALIAN) -->
-                    <template v-if="(currentPaymentAmount >= total && total > 0) || changeAmount > 0">
+                    <!-- SKENARIO 1: JIKA KASIR MENGETIK UANG LEBIH (MENAMPILKAN KEMBALIAN) -->
+                    <template v-if="changeAmount > 0">
                         <i class="fas fa-check-circle text-success mb-3" style="font-size: 6rem; filter: drop-shadow(0 10px 10px rgba(29,209,161,0.2));"></i>
-                        <h2 class="fw-black text-success mb-2" style="font-size: 2.5rem;">{{ changeAmount > 0 ? 'Pembayaran Lunas!' : 'Pembayaran Pas!' }}</h2>
+                        <h2 class="fw-black text-success mb-2" style="font-size: 2.5rem;">Pembayaran Lunas!</h2>
                         
-                        <div v-if="changeAmount > 0" class="mt-4 p-4 bg-success bg-opacity-10 rounded-4 mx-auto border border-success w-100 shadow-sm" style="max-width: 500px;">
+                        <div class="mt-4 p-4 bg-success bg-opacity-10 rounded-4 mx-auto border border-success w-100 shadow-sm" style="max-width: 500px;">
                             <h6 class="text-success fw-bold text-uppercase mb-2 tracking-wider">Kembalian</h6>
                             <h1 class="text-success fw-black mb-0" style="font-size: 4.5rem; letter-spacing: -2px;">Rp {{ formatRupiah(changeAmount) }}</h1>
                         </div>
@@ -301,21 +299,21 @@
                         <p class="text-muted mt-4 mb-0 fs-5"><i class="fas fa-print me-2"></i>Menunggu kasir mencetak struk...</p>
                     </template>
 
-                    <!-- SKENARIO 2: JIKA KASIR BELUM MENGISI UANG / UANG MASIH KURANG -->
+                    <!-- SKENARIO 2: JIKA UANG PAS ATAU BELUM KLIK CETAK (MENCEGAH MISLEADING UANG SUDAH DITERIMA) -->
                     <template v-else>
                         <i v-if="paymentType === 'TRANSFER' || paymentType === 'VA'" class="fas fa-university fa-6x text-info mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
                         <i v-else class="fas fa-wallet fa-6x text-primary mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
                         
-                        <h1 class="fw-bold text-dark mb-2">Metode: {{ paymentMethod }}</h1>
+                        <h1 class="fw-bold text-dark mb-2">Total Tagihan</h1>
                         <h1 class="fw-black text-danger my-4" style="font-size: 5.5rem; letter-spacing: -3px; text-shadow: 0 5px 15px rgba(232,65,24,0.15);">
                             Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}
                         </h1>
                         
-                        <div v-if="currentPaymentAmount > 0" class="badge bg-secondary bg-opacity-10 text-dark border px-4 py-2 fs-5 fw-bold mt-3 shadow-sm rounded-pill">
-                            <i class="fas fa-hand-holding-usd me-2 text-secondary"></i>Uang Diterima: Rp {{ formatRupiah(currentPaymentAmount) }}
-                        </div>
+                        <h4 class="text-muted mt-2">Metode: {{ paymentMethod }}</h4>
                         
-                        <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box text-center shadow-sm mx-auto" style="max-width: 600px;">
+                        <!-- Dihapus: div "Uang Diterima" agar pelanggan tidak merasa uangnya sudah diinput jika mereka belum memberikan cash -->
+
+                        <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box text-center shadow-sm mx-auto mt-4" style="max-width: 600px;">
                             <div class="text-uppercase fw-bold text-secondary mb-2" style="font-size: 1rem;">Mohon Transfer Ke:</div>
                             <h3 class="fw-bold text-primary mb-2">{{ bankName }}</h3>
                             <h1 class="fw-black text-dark mb-2" style="letter-spacing: 3px; font-size: 3rem;">{{ accountNumber }}</h1>
