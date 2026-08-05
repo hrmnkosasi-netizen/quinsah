@@ -109,12 +109,11 @@
 </head>
 <body>
 
-<div id="cdsApp" class="split-screen" :class="(isPaymentOpen || paymentStatus === 'LUNAS') ? 'mobile-payment-active' : 'mobile-cart-active'" v-cloak>
+<div id="cdsApp" class="split-screen" :class="mobileViewClass" v-cloak>
     
     <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
     <div class="promo-area">
-        <!-- 🌟 Kuncian (cartItems.length > 0) dihapus agar layar tidak freeze di HP -->
-        <div v-if="isPaymentOpen || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
+        <div v-if="(isPaymentOpen && cartItems.length > 0) || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
             
             <!-- ANIMASI TRANSAKSI SELESAI (LUNAS FULL + SUDAH DI CETAK) -->
             <div v-if="paymentStatus === 'LUNAS'" class="w-100 h-100 d-flex align-items-center justify-content-center position-relative">
@@ -456,7 +455,15 @@
                 currentImage: '', imageIndex: 0, slideInterval: null
             }
         },
-        // 🌟 Blok Computed (mobileViewClass) DIHAPUS karena logika dipindah langsung ke HTML agar bebas bug di HP
+        computed: {
+            mobileViewClass() {
+                if (this.isPaymentOpen || this.paymentStatus === 'LUNAS') {
+                    return 'mobile-payment-active';
+                } else {
+                    return 'mobile-cart-active';
+                }
+            }
+        },
         methods: {
             formatRupiah(number) {
                 if(!number) return '0';
@@ -495,10 +502,7 @@
                     this.outletName = data.outletName || ''; 
                     this.invoiceNumber = data.invoiceNumber || '';
                     
-                    // 🌟 PERBAIKAN: Memaksa pembacaan sinyal kasir secara mutlak
-                    let signalOpen = data.isPaymentOpen !== undefined ? data.isPaymentOpen : data.isPaymentModalOpen;
-                    this.isPaymentOpen = (signalOpen === true || signalOpen === "true");
-                    
+                    this.isPaymentOpen = data.isPaymentOpen || false;
                     this.paymentMethod = data.paymentMethod || null;
                     this.paymentType = data.paymentType || 'CASH';
                     this.qrImageUrl = data.qrImageUrl || '';
@@ -513,7 +517,7 @@
                     this.currentPaymentTotal = data.currentPaymentTotal || 0;
                     this.changeAmount = data.changeAmount || 0; 
                     
-                    this.cartItems = data.cartItems || data.cart || [];
+                    this.cartItems = data.cartItems || [];
                     this.subtotal = data.subtotal || 0;
                     this.extraDiscountAmt = data.extraDiscountAmt || 0;
                     this.memberDiscountAmt = data.memberDiscountAmt || 0;
@@ -540,3 +544,5 @@
 
     app.mount('#cdsApp');
 </script>
+</body>
+</html>
