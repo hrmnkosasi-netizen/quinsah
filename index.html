@@ -1417,30 +1417,43 @@ body.sidebar-open {
                     <h6 class="fw-bold mb-0">Media Promosi (Layar Kiri)</h6>
                 </div>
                 <div class="card-body p-4">
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label small fw-bold">Pilih Tipe Tampilan</label>
-                        <select class="form-select" v-model="cdsSettings.mediaType">
-                            <option value="video">Video (Looping)</option>
-                            <option value="image_single">1 Gambar Statis</option>
-                            <option value="image_slider">Gambar Berjalan (Slide)</option>
+                        <select class="form-select border-primary border-opacity-25 shadow-sm" v-model="cdsSettings.mediaType">
+                            <option value="youtube">Video YouTube (Paling Mudah & Gratis)</option>
+                            <option value="image_single">1 Gambar Statis (Promo Tetap)</option>
+                            <option value="image_slider">Gambar Berjalan (Slide Promo)</option>
+                            <option value="video">Link Video MP4 (Lanjutan / Hosting Sendiri)</option>
                         </select>
                     </div>
 
-                    <!-- Jika pilih Video -->
-                    <div v-if="cdsSettings.mediaType === 'video'" class="mb-3 p-3 bg-light rounded-3 border">
-                        <label class="form-label small fw-bold text-dark">URL Link Video Promosi (MP4)</label>
-                        <input type="text" class="form-control" v-model="cdsSettings.videoUrl" placeholder="Contoh: https://link-video.com/promo.mp4">
-                        <div class="small text-muted mt-1">Gunakan link video langsung (.mp4) berukuran kecil agar ringan saat diload di tablet.</div>
+                    <!-- 1. JIKA PILIH YOUTUBE -->
+                    <div v-if="cdsSettings.mediaType === 'youtube'" class="mb-3 p-3 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25 fade-in">
+                        <label class="form-label small fw-bold text-danger"><i class="bi bi-youtube me-1"></i>Link Video YouTube</label>
+                        <input type="text" class="form-control" v-model="cdsSettings.youtubeUrl" placeholder="Contoh: https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+                        <div class="small text-muted mt-2">
+                            <i class="bi bi-info-circle me-1"></i>Tinggal copy-paste link YouTube promosi Anda di sini. Video akan otomatis diputar berulang tanpa suara (mute).
+                        </div>
                     </div>
 
-                    <!-- Jika pilih Gambar -->
-                    <div v-if="cdsSettings.mediaType === 'image_single' || cdsSettings.mediaType === 'image_slider'" class="mb-3 p-3 bg-light rounded-3 border">
-                        <label class="form-label small fw-bold text-dark">URL Gambar Promosi</label>
-                        <textarea class="form-control" v-model="cdsSettings.imageUrls" rows="3" placeholder="Contoh: https://link-gambar.com/promo1.jpg&#10;Gunakan enter untuk memisahkan jika lebih dari 1 gambar."></textarea>
+                    <!-- 2. JIKA PILIH GAMBAR -->
+                    <div v-if="cdsSettings.mediaType === 'image_single' || cdsSettings.mediaType === 'image_slider'" class="mb-3 p-3 bg-light rounded-3 border fade-in">
+                        <label class="form-label small fw-bold text-dark"><i class="bi bi-image me-1"></i>URL Link Gambar (JPG/PNG)</label>
+                        <textarea class="form-control" v-model="cdsSettings.imageUrls" rows="3" placeholder="Contoh: https://i.postimg.cc/gambar-promo.jpg&#10;Gunakan enter untuk baris baru jika mode Slide."></textarea>
+                        <div class="small text-muted mt-2">
+                            <i class="bi bi-lightbulb text-warning me-1"></i><b>Tips:</b> Upload foto Anda ke <a href="https://postimages.org/" target="_blank" class="text-decoration-none">Postimages.org</a> atau <a href="https://imgur.com/" target="_blank" class="text-decoration-none">Imgur.com</a> secara gratis, lalu salin <i>Direct Link</i>-nya ke sini.
+                        </div>
+                    </div>
+
+                    <!-- 3. JIKA PILIH VIDEO MP4 -->
+                    <div v-if="cdsSettings.mediaType === 'video'" class="mb-3 p-3 bg-light rounded-3 border fade-in">
+                        <label class="form-label small fw-bold text-dark"><i class="bi bi-film me-1"></i>URL Link Video Promosi (MP4)</label>
+                        <input type="text" class="form-control" v-model="cdsSettings.videoUrl" placeholder="Contoh: https://domain-anda.com/promo.mp4">
+                        <div class="small text-muted mt-1">Hanya gunakan ini jika Anda memiliki server/hosting sendiri untuk menyimpan file MP4.</div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Teks Selamat Datang (Bawah Layar)</label>
+                    <div class="mb-3 pt-3 border-top">
+                        <label class="form-label small fw-bold"><i class="bi bi-chat-text me-1"></i>Teks Selamat Datang (Bawah Layar)</label>
                         <input type="text" class="form-control" v-model="cdsSettings.welcomeText" placeholder="Terima kasih telah berbelanja di tempat kami!">
                     </div>
                 </div>
