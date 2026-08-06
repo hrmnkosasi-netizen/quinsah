@@ -109,11 +109,11 @@
 </head>
 <body>
 
-<div id="cdsApp" class="split-screen" :class="mobileViewClass" v-cloak>
+<div id="cdsApp" class="split-screen" :class="(isPaymentOpen || paymentStatus === 'LUNAS') ? 'mobile-payment-active' : 'mobile-cart-active'" v-cloak>
     
     <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
     <div class="promo-area">
-        <div v-if="(isPaymentOpen && cartItems.length > 0) || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
+        <div v-if="isPaymentOpen || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
             
             <!-- ANIMASI TRANSAKSI SELESAI (LUNAS FULL + SUDAH DI CETAK) -->
             <div v-if="paymentStatus === 'LUNAS'" class="w-100 h-100 d-flex align-items-center justify-content-center position-relative">
@@ -279,7 +279,7 @@
 
                 </div>
                 
-                <!-- 🌟 PERBAIKAN: METODE TUNAI / TRANSFER (BAYAR PENUH) -->
+                <!-- METODE TUNAI / TRANSFER (BAYAR PENUH) -->
                 <div v-else class="text-center w-100 h-100 d-flex flex-column align-items-center justify-content-center fade-in">
                     
                     <!-- SKENARIO 1: JIKA KASIR MENGETIK UANG LEBIH (MENAMPILKAN KEMBALIAN) -->
@@ -299,7 +299,7 @@
                         <p class="text-muted mt-4 mb-0 fs-5"><i class="fas fa-print me-2"></i>Menunggu kasir mencetak struk...</p>
                     </template>
 
-                    <!-- SKENARIO 2: JIKA UANG PAS ATAU BELUM KLIK CETAK (MENCEGAH MISLEADING UANG SUDAH DITERIMA) -->
+                    <!-- SKENARIO 2: JIKA UANG PAS ATAU BELUM KLIK CETAK -->
                     <template v-else>
                         <i v-if="paymentType === 'TRANSFER' || paymentType === 'VA'" class="fas fa-university fa-6x text-info mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
                         <i v-else class="fas fa-wallet fa-6x text-primary mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
@@ -310,8 +310,6 @@
                         </h1>
                         
                         <h4 class="text-muted mt-2">Metode: {{ paymentMethod }}</h4>
-                        
-                        <!-- Dihapus: div "Uang Diterima" agar pelanggan tidak merasa uangnya sudah diinput jika mereka belum memberikan cash -->
 
                         <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box text-center shadow-sm mx-auto mt-4" style="max-width: 600px;">
                             <div class="text-uppercase fw-bold text-secondary mb-2" style="font-size: 1rem;">Mohon Transfer Ke:</div>
@@ -326,8 +324,21 @@
         </div>
 
         <template v-else>
-            <video v-if="cdsSettings.mediaType === 'video' && cdsSettings.videoUrl" :src="cdsSettings.videoUrl" autoplay loop muted></video>
-            <img v-else-if="currentImage" :src="currentImage" alt="Promo">
+            <!-- 1. Render YouTube -->
+            <iframe v-if="cdsSettings.mediaType === 'youtube' && cdsSettings.youtubeUrl" 
+                    :src="getYouTubeEmbedUrl(cdsSettings.youtubeUrl)" 
+                    frameborder="0" 
+                    allow="autoplay; encrypted-media" 
+                    allowfullscreen 
+                    style="width: 100%; height: 100%; pointer-events: none;">
+            </iframe>
+
+            <!-- 2. Render MP4 Biasa -->
+            <video v-else-if="cdsSettings.mediaType === 'video' && cdsSettings.videoUrl" :src="cdsSettings.videoUrl" autoplay loop muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+            
+            <!-- 3. Render Gambar -->
+            <img v-else-if="currentImage" :src="currentImage" alt="Promo" style="width: 100%; height: 100%; object-fit: cover;">
+            
             <div class="welcome-text">{{ cdsSettings.welcomeText || 'Terima kasih telah berbelanja!' }}</div>
         </template>
     </div>
@@ -451,23 +462,28 @@
                 invoiceDiscountAmt: 0, taxAmt: 0, shippingFee: 0, courier: '', total: 0,
                 paymentStatus: 'PENDING',
                 
-                cdsSettings: { mediaType: 'video', videoUrl: '', imageUrls: '', welcomeText: '' },
+                cdsSettings: { mediaType: 'video', videoUrl: '', youtubeUrl: '', imageUrls: '', welcomeText: '' },
                 currentImage: '', imageIndex: 0, slideInterval: null
-            }
-        },
-        computed: {
-            mobileViewClass() {
-                if (this.isPaymentOpen || this.paymentStatus === 'LUNAS') {
-                    return 'mobile-payment-active';
-                } else {
-                    return 'mobile-cart-active';
-                }
             }
         },
         methods: {
             formatRupiah(number) {
                 if(!number) return '0';
                 return Number(number).toLocaleString('id-ID');
+            },
+            getYouTubeEmbedUrl(url) {
+                if (!url) return '';
+                let videoId = '';
+                // Mengambil ID Video dari berbagai jenis link YouTube
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = url.match(regExp);
+                if (match && match[2].length === 11) {
+                    videoId = match[2];
+                } else {
+                    return '';
+                }
+                // Parameter: autoplay (putar otomatis), mute (tanpa suara), controls=0 (hilangkan tombol YouTube), loop (putar ulang)
+                return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}`;
             },
             startImageSlider() {
                 clearInterval(this.slideInterval);
@@ -502,7 +518,10 @@
                     this.outletName = data.outletName || ''; 
                     this.invoiceNumber = data.invoiceNumber || '';
                     
-                    this.isPaymentOpen = data.isPaymentOpen || false;
+                    // Memaksa pembacaan sinyal kasir secara mutlak (Anti-Freeze HP)
+                    let signalOpen = data.isPaymentOpen !== undefined ? data.isPaymentOpen : data.isPaymentModalOpen;
+                    this.isPaymentOpen = (signalOpen === true || signalOpen === "true");
+                    
                     this.paymentMethod = data.paymentMethod || null;
                     this.paymentType = data.paymentType || 'CASH';
                     this.qrImageUrl = data.qrImageUrl || '';
@@ -517,7 +536,8 @@
                     this.currentPaymentTotal = data.currentPaymentTotal || 0;
                     this.changeAmount = data.changeAmount || 0; 
                     
-                    this.cartItems = data.cartItems || [];
+                    // Jaga-jaga jika Kasir mengirim data dengan nama 'cart' alih-alih 'cartItems'
+                    this.cartItems = data.cartItems || data.cart || [];
                     this.subtotal = data.subtotal || 0;
                     this.extraDiscountAmt = data.extraDiscountAmt || 0;
                     this.memberDiscountAmt = data.memberDiscountAmt || 0;
