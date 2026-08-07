@@ -25,39 +25,92 @@
             .border-end-md { border-right: 2px dashed #dee2e6; } 
         }
 
-        /* MOBILE / HP LAYOUT */
+        /* MOBILE / TABLET LAYOUT */
         @media (max-width: 991px) {
             body { overflow-y: auto; background-color: #fff; }
             .split-screen { display: flex; flex-direction: column; min-height: 100vh; width: 100vw; }
             .promo-area { display: none !important; }
             .cart-area { display: flex !important; width: 100%; min-height: 100vh; }
-            .split-screen.mobile-payment-active .promo-area { display: flex !important; width: 100%; min-height: 100vh; position: relative; }
+            
+            .split-screen.mobile-payment-active .promo-area { 
+                display: flex !important; 
+                width: 100%; 
+                min-height: 100vh; 
+                position: relative; 
+            }
             .split-screen.mobile-payment-active .cart-area { display: none !important; }
+            
             .qris-amount { font-size: 2.2rem !important; }
             .success-card h1 { font-size: 2.2rem !important; }
             .change-box h1 { font-size: 2.5rem !important; }
-            .welcome-text { font-size: 1.1rem !important; padding: 10px !important; }
-            .qris-card { max-width: 95% !important; margin: 15px auto; }
-            .success-card { padding: 25px 15px !important; margin: 15px auto; width: 92%; }
         }
 
-        .promo-area { background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
-        .promo-area video, .promo-area img { width: 100%; height: 100%; object-fit: cover; }
-        .welcome-text { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); color: white; padding: 20px; text-align: center; font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; backdrop-filter: blur(5px); z-index: 2; }
+        .promo-area { 
+            background-color: #000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            position: relative;
+        }
+        .promo-area video, .promo-area img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        .welcome-text { 
+            position: absolute; 
+            bottom: 0; 
+            width: 100%; 
+            background: rgba(0,0,0,0.7); 
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+            font-size: 1.6rem; 
+            font-weight: bold; 
+            letter-spacing: 1px; 
+            backdrop-filter: blur(5px); 
+            z-index: 2; 
+        }
         
-        .payment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f4f7f6; z-index: 20; overflow-y: auto; padding: 15px; }
+        .payment-overlay { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: #f4f7f6; 
+            z-index: 20; 
+            overflow-y: auto; 
+            padding: 15px; 
+        }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
 
-        .cart-area { background-color: #fff; box-shadow: -10px 0 25px rgba(0,0,0,0.08); display: flex; flex-direction: column; z-index: 2;}
-        .cart-items { flex-grow: 1; overflow-y: auto; padding: 15px; }
-        .cart-footer { background-color: #f8f9fa; padding: 20px; border-top: 2px dashed #dee2e6; }
+        /* 🌟 AREA KERANJANG DISESUAIKAN AGAR PROPORSIONAL DI TABLET/PC */
+        .cart-area { 
+            background-color: #fff; 
+            box-shadow: -10px 0 25px rgba(0,0,0,0.08); 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 2;
+        }
+        .cart-header-box { 
+            background-color: #dc3545; 
+            color: white; 
+            text-align: center; 
+            padding: 12px 15px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+        }
+        .cart-items { flex-grow: 1; overflow-y: auto; padding: 12px; }
+        .cart-footer { background-color: #f8f9fa; padding: 15px; border-top: 2px dashed #dee2e6; }
         
-        .item-name { font-size: 1rem; font-weight: 700; color: #2d3436; line-height: 1.3; }
-        .item-price { font-size: 0.85rem; color: #636e72; }
-        .item-total { font-size: 1.05rem; font-weight: 800; color: #2d3436; }
-        .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #dfe6e9; flex-shrink: 0; }
-        .product-img-placeholder { width: 60px; height: 60px; background: #f1f2f6; border-radius: 10px; border: 1px solid #dfe6e9; display: flex; align-items: center; justify-content: center; color: #a4b0be; flex-shrink: 0; }
+        .item-name { font-size: 0.95rem; font-weight: 700; color: #2d3436; line-height: 1.2; }
+        .item-price { font-size: 0.8rem; color: #636e72; }
+        .item-total { font-size: 1rem; font-weight: 800; color: #2d3436; }
+        .product-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #dfe6e9; flex-shrink: 0; }
+        .product-img-placeholder { width: 50px; height: 50px; background: #f1f2f6; border-radius: 8px; border: 1px solid #dfe6e9; display: flex; align-items: center; justify-content: center; color: #a4b0be; flex-shrink: 0; }
         
         .qris-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; border: 1px solid #f1f2f6; margin: 0 auto; }
         .qris-header { background: linear-gradient(135deg, #e84118 0%, #c23616 100%); padding: 18px; color: white; }
@@ -69,6 +122,7 @@
         .checkmark-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; background: linear-gradient(135deg, #10ac84 0%, #1dd1a1 100%); }
         .checkmark-circle i { font-size: 4rem; color: white; }
         .change-box { background: #f8f9fa; border: 2px dashed #1dd1a1; border-radius: 15px; padding: 20px; margin-top: 25px; }
+        
         .modern-loader { width: 70px; height: 70px; border: 6px solid #e0e0e0; border-top: 6px solid #e84118; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
@@ -81,14 +135,22 @@
             width: 90px; flex-shrink: 0; background: #ffffff; border-right: 1px solid #dee2e6;
             display: flex; flex-direction: column; justify-content: space-between; z-index: 5;
         }
-        .sidebar-menu { flex-grow: 1; overflow-y: auto; padding-top: 15px; display: flex; flex-direction: column; align-items: center; width: 100%; -ms-overflow-style: none; scrollbar-width: none; }
+        .sidebar-menu { 
+            flex-grow: 1; overflow-y: auto; padding-top: 15px; 
+            display: flex; flex-direction: column; align-items: center; width: 100%; 
+            -ms-overflow-style: none; scrollbar-width: none; 
+        }
         .sidebar-menu::-webkit-scrollbar { display: none; }
         .sidebar-footer { padding: 15px 0; border-top: 1px solid #f1f3f5; width: 100%; display: flex; justify-content: center; }
         
-        .catalog-grid { flex-grow: 1; overflow-y: auto; background: #f8f9fa; padding: 25px; position: relative; }
+        .catalog-grid { flex-grow: 1; overflow-y: auto; background: #f8f9fa; padding: 20px; position: relative; }
         
         .cat-item { 
-            width: 76px; min-height: 76px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; padding: 8px 4px; margin-bottom: 8px; border-radius: 12px; color: #6c757d; font-size: 0.7rem; font-weight: 700; transition: all 0.2s ease; border: 1px solid transparent; line-height: 1.2; word-break: break-word; 
+            width: 76px; min-height: 76px; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; text-align: center; cursor: pointer; 
+            padding: 8px 4px; margin-bottom: 8px; border-radius: 12px; color: #6c757d; 
+            font-size: 0.7rem; font-weight: 700; transition: all 0.2s ease; 
+            border: 1px solid transparent; line-height: 1.2; word-break: break-word; 
         }
         .cat-item i { font-size: 1.5rem; margin-bottom: 5px; color: #adb5bd; transition: 0.2s; }
         .cat-item:hover:not(.active) { background-color: #f1f3f5; border-color: #e9ecef; color: #495057; }
@@ -108,12 +170,12 @@
         .chips-container::-webkit-scrollbar { display: none; }
         .chips-container { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 🌟 ANIMASI OVERLAY SETTING & DETAIL PRODUK */
         .glass-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1050; }
         .slide-up { animation: slideUp 0.3s ease-out forwards; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Utility cursor */
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(30px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
         .cursor-pointer { cursor: pointer; }
     </style>
 </head>
@@ -154,7 +216,6 @@
                     <p class="text-muted fs-4 mt-2">Silakan tunggu kasir memilih metode pembayaran.</p>
                 </div>
                 
-                <!-- SCRIPT SPLIT PAYMENT & QRIS -->
                 <div v-else-if="isSplitPayment" class="w-100 h-100 fade-in p-4 d-flex align-items-center justify-content-center">
                     <div class="card shadow-lg border-0 w-100" style="max-width: 950px; border-radius: 24px; overflow: hidden;">
                         <div class="row g-0 h-100 align-items-stretch">
@@ -282,9 +343,9 @@
 
         <template v-else>
             
-            <!-- ================================================================================= -->
-            <!-- 🌟 RENDER KATALOG MENU / CDS INTERAKTIF -->
-            <!-- ================================================================================= -->
+            <!-- ================================================================= -->
+            <!-- KATALOG MENU / CDS INTERAKTIF -->
+            <!-- ================================================================= -->
             <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex text-start bg-light fade-in position-relative">
                 
                 <!-- Sidebar Kategori Kiri -->
@@ -300,7 +361,6 @@
                         </div>
                     </div>
                     
-                    <!-- TOMBOL PENGATURAN TERSEMBUNYI -->
                     <div class="sidebar-footer">
                         <button class="btn btn-sm btn-light text-muted border rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="openSettingsModal" title="Pengaturan Layar CDS">
                             <i class="fas fa-cog fs-5"></i>
@@ -311,7 +371,7 @@
                 <!-- Grid Produk Kanan -->
                 <div class="catalog-grid d-flex flex-column">
                     
-                    <div class="d-flex flex-wrap gap-2 mb-4 chips-container" style="overflow-x: auto; white-space: nowrap;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
+                    <div class="d-flex flex-wrap gap-2 mb-3 chips-container" style="overflow-x: auto; white-space: nowrap;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
                         <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
                                 :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white border'" @click="selectedSubCategory = 'ALL'">
                             Semua
@@ -325,7 +385,6 @@
 
                     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 align-content-start">
                         
-                        <!-- KARTU PRODUK -->
                         <div class="col" v-for="prod in filteredProducts" :key="prod.id">
                             <div class="product-card-cds position-relative" @click="openProductDetail(prod)">
                                 
@@ -339,10 +398,16 @@
                                     </template>
                                     <template v-else-if="prod.image || prod.gambar">
                                         <img :src="prod.image || prod.gambar" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" alt="Product">
-                                        <div class="product-img-placeholder-cds w-100 h-100" style="display: none;"><i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i><span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span></div>
+                                        <div class="product-img-placeholder-cds w-100 h-100" style="display: none;">
+                                            <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i>
+                                            <span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span>
+                                        </div>
                                     </template>
                                     <template v-else>
-                                        <div class="product-img-placeholder-cds"><i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i><span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span></div>
+                                        <div class="product-img-placeholder-cds">
+                                            <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i>
+                                            <span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span>
+                                        </div>
                                     </template>
                                     
                                     <span v-if="prod.tag" class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
@@ -371,7 +436,7 @@
                 </div>
 
                 <!-- ========================================================= -->
-                <!-- 🌟 OVERLAY DETAIL PRODUK & VARIAN (FOTO DINAMIS) -->
+                <!-- OVERLAY DETAIL PRODUK & KODE/FOTO VARIAN -->
                 <!-- ========================================================= -->
                 <div v-if="selectedProduct" class="position-absolute top-0 start-0 w-100 h-100 bg-white fade-in d-flex flex-column" style="z-index: 50;">
                     
@@ -387,7 +452,7 @@
                             <div class="row g-0">
                                 <div class="col-md-5 bg-white border-end d-flex align-items-center justify-content-center p-4">
                                     <div class="product-img-wrapper rounded-3 shadow-sm w-100" style="border-bottom: none;">
-                                        <!-- 🌟 Menampilkan Foto Varian yang Aktif, atau Foto Produk Utama -->
+                                        <!-- Foto Dinamis Varian -->
                                         <template v-if="activeVariantImage">
                                             <img :src="activeVariantImage" class="rounded-3" alt="Product / Variant" style="transition: opacity 0.3s ease; width: 100%; height: 100%; object-fit: cover;">
                                         </template>
@@ -400,18 +465,23 @@
                                     
                                     <div class="mb-2 d-flex gap-2">
                                         <span v-if="selectedProduct.tag" class="badge bg-warning text-dark px-3 py-2 rounded-pill">{{ selectedProduct.tag }}</span>
-                                        <span v-if="activeVariant && activeVariant.sku" class="badge bg-light text-secondary border px-3 py-2 rounded-pill"><i class="fas fa-barcode me-1"></i> {{ activeVariant.sku }}</span>
-                                        <span v-else-if="selectedProduct.sku" class="badge bg-light text-secondary border px-3 py-2 rounded-pill"><i class="fas fa-barcode me-1"></i> {{ selectedProduct.sku }}</span>
+                                        <!-- 🌟 KODE SKU / IDENTIFIER VARIAN YANG AKTIF -->
+                                        <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
+                                            <i class="fas fa-barcode me-1"></i> 
+                                            {{ activeVariant ? (activeVariant.sku || activeVariant.code || selectedProduct.sku || 'N/A') : (selectedProduct.sku || 'N/A') }}
+                                        </span>
                                     </div>
 
                                     <h2 class="fw-black text-dark mb-1 lh-sm">{{ selectedProduct.name }}</h2>
-                                    <h5 class="text-secondary fw-semibold mb-3" v-if="activeVariant">Varian: <span class="text-dark">{{ activeVariant.name }}</span></h5>
+                                    <h5 class="text-secondary fw-semibold mb-3" v-if="activeVariant">
+                                        Varian: <span class="text-dark">{{ activeVariant.name }}</span>
+                                    </h5>
                                     
                                     <div class="text-danger fw-black mb-4" style="font-size: 2rem; letter-spacing: -1px;">
                                         Rp {{ formatRupiah(activeVariant ? (activeVariant.sellPrice || selectedProduct.sellPrice) : (selectedProduct.sellPrice || selectedProduct.price)) }}
                                     </div>
                                     
-                                    <!-- List Varian (Bisa Diklik & Punya Thumbnail) -->
+                                    <!-- List Varian -->
                                     <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="mt-2">
                                         <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px;"><i class="fas fa-list-ul me-2"></i>Pilihan Varian:</h6>
                                         <div class="row g-2">
@@ -427,7 +497,6 @@
                                                     <div v-if="isVariantOutOfStock(v)" class="position-absolute top-0 end-0 m-2 badge bg-dark text-white rounded-pill shadow-sm" style="font-size: 0.6rem;">HABIS</div>
                                                     
                                                     <div class="d-flex p-2 gap-2 align-items-center">
-                                                        <!-- Thumbnail Varian Kecil -->
                                                         <div style="width: 45px; height: 45px; border-radius: 6px; overflow: hidden; background: #fff;" class="flex-shrink-0 border shadow-sm">
                                                             <img v-if="v.imageBase64 || v.image || v.gambar" :src="v.imageBase64 || v.image || v.gambar" style="width:100%; height:100%; object-fit:cover;">
                                                             <img v-else-if="selectedProduct.imageBase64" :src="selectedProduct.imageBase64" style="width:100%; height:100%; object-fit:cover;">
@@ -447,7 +516,7 @@
                                         <span class="fw-medium">Produk ini langsung tersedia tanpa pilihan varian khusus.</span>
                                     </div>
 
-                                    <!-- 🌟 Pilihan Identifier / Opsi Tambahan Dinamis -->
+                                    <!-- Pilihan Identifier / Opsi Tambahan -->
                                     <div v-if="(activeVariant && activeVariant.identifiers && activeVariant.identifiers.length > 0) || (!activeVariant && selectedProduct.identifiers && selectedProduct.identifiers.length > 0)" class="mt-4 pt-3 border-top">
                                         <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.9rem;"><i class="fas fa-tags me-2"></i>Pilihan / Opsi Tersedia:</h6>
                                         <div class="d-flex flex-wrap gap-2">
@@ -463,9 +532,7 @@
                     </div>
                 </div>
 
-                <!-- ========================================================= -->
-                <!-- 🌟 MODAL PENGATURAN CDS (HIERARKI KATEGORI TREE VIEW) -->
-                <!-- ========================================================= -->
+                <!-- MODAL PENGATURAN CDS -->
                 <div v-if="isSettingsOpen" class="position-absolute top-0 start-0 w-100 h-100 glass-overlay d-flex align-items-center justify-content-center">
                     <div class="card border-0 shadow-lg slide-up" style="width: 500px; max-width: 90%; border-radius: 20px; overflow: hidden;">
                         <div class="card-header bg-dark text-white p-3 px-4 d-flex justify-content-between align-items-center border-0">
@@ -473,12 +540,10 @@
                             <button type="button" class="btn-close btn-close-white" @click="isSettingsOpen = false"></button>
                         </div>
                         <div class="card-body p-4 bg-light" style="max-height: 70vh; overflow-y: auto;">
-                            
                             <div class="alert alert-info border-0 shadow-sm py-2 px-3 mb-4 fs-6 rounded-3">
                                 <i class="fas fa-info-circle me-2"></i> Pengaturan ini hanya tersimpan di perangkat ini (Local Kiosk).
                             </div>
 
-                            <!-- 🌟 Pilihan Kategori Berstruktur Hierarki Persis Master Produk -->
                             <h6 class="fw-bold text-dark mb-3">Kategori Ditampilkan (Pilih/Centang):</h6>
                             <div class="bg-white border rounded-3 p-3 mb-4 shadow-sm" style="max-height: 250px; overflow-y: auto;">
                                 <div class="form-check mb-3 border-bottom pb-3">
@@ -486,32 +551,21 @@
                                     <label class="form-check-label fw-bold text-primary" for="catAll">Tampilkan Semua Kategori</label>
                                 </div>
                                 
-                                <!-- Render Tree View Level 1, 2, 3 -->
                                 <div v-for="main in categoryTree" :key="main.id" class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" :id="'set-'+main.id" :value="main.id" v-model="tempSettings.selectedCategories">
-                                        <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id">
-                                            <i class="fas fa-folder text-warning me-1"></i> {{ main.name }}
-                                        </label>
+                                        <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id"><i class="fas fa-folder text-warning me-1"></i> {{ main.name }}</label>
                                     </div>
-                                    
-                                    <!-- Level 2 -->
                                     <div v-if="main.children && main.children.length > 0" class="ms-4 mt-2 border-start border-2 ps-3 border-light">
                                         <div v-for="sub in main.children" :key="sub.id" class="mb-2">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" :id="'set-'+sub.id" :value="sub.id" v-model="tempSettings.selectedCategories">
-                                                <label class="form-check-label text-secondary fw-semibold" :for="'set-'+sub.id">
-                                                    <i class="fas fa-level-up-alt fa-rotate-90 text-muted me-1" style="font-size: 0.8rem;"></i> {{ sub.name }}
-                                                </label>
+                                                <label class="form-check-label text-secondary fw-semibold" :for="'set-'+sub.id"><i class="fas fa-level-up-alt fa-rotate-90 text-muted me-1" style="font-size: 0.8rem;"></i> {{ sub.name }}</label>
                                             </div>
-                                            
-                                            <!-- Level 3 -->
                                             <div v-if="sub.children && sub.children.length > 0" class="ms-4 mt-1 border-start border-2 ps-3 border-light">
                                                 <div class="form-check mb-1" v-for="grand in sub.children" :key="grand.id">
                                                     <input class="form-check-input" type="checkbox" :id="'set-'+grand.id" :value="grand.id" v-model="tempSettings.selectedCategories">
-                                                    <label class="form-check-label text-muted" :for="'set-'+grand.id">
-                                                        <i class="fas fa-minus text-muted me-1" style="font-size: 0.7rem;"></i> {{ grand.name }}
-                                                    </label>
+                                                    <label class="form-check-label text-muted" :for="'set-'+grand.id"><i class="fas fa-minus text-muted me-1" style="font-size: 0.7rem;"></i> {{ grand.name }}</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -519,26 +573,16 @@
                                 </div>
                             </div>
 
-                            <!-- Pengaturan Inventori -->
                             <h6 class="fw-bold text-dark mb-3">Pengaturan Stok & Inventori:</h6>
                             <div class="bg-white border rounded-3 p-3 shadow-sm">
-                                
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="hideOOS" v-model="tempSettings.hideOutOfStock">
-                                    <label class="form-check-label fw-medium text-dark" for="hideOOS">
-                                        Sembunyikan produk yang stoknya habis <br>
-                                        <small class="text-muted fw-normal">Jika aktif, produk dengan stok 0 tidak akan tampil di layar.</small>
-                                    </label>
+                                    <label class="form-check-label fw-medium text-dark" for="hideOOS">Sembunyikan produk yang stoknya habis</label>
                                 </div>
-
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="allowNegative" v-model="tempSettings.allowNegativeInventory">
-                                    <label class="form-check-label fw-medium text-dark" for="allowNegative">
-                                        Izinkan Negative Inventory / Abaikan Stok<br>
-                                        <small class="text-muted fw-normal">Jika aktif, label "HABIS" akan dihilangkan dan semua barang dianggap ada.</small>
-                                    </label>
+                                    <label class="form-check-label fw-medium text-dark" for="allowNegative">Izinkan Negative Inventory / Abaikan Stok</label>
                                 </div>
-
                             </div>
                         </div>
                         <div class="card-footer p-3 bg-white border-top d-flex justify-content-end gap-2">
@@ -550,70 +594,88 @@
 
             </div>
 
-            <!-- 1. Render YouTube -->
-            <iframe v-else-if="cdsSettings.mediaType === 'youtube' && cdsSettings.youtubeUrl" 
-                    :src="getYouTubeEmbedUrl(cdsSettings.youtubeUrl)" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="width: 100%; height: 100%; pointer-events: none;">
-            </iframe>
-
-            <!-- 2. Render MP4 Biasa -->
+            <iframe v-else-if="cdsSettings.mediaType === 'youtube' && cdsSettings.youtubeUrl" :src="getYouTubeEmbedUrl(cdsSettings.youtubeUrl)" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="width: 100%; height: 100%; pointer-events: none;"></iframe>
             <video v-else-if="cdsSettings.mediaType === 'video' && cdsSettings.videoUrl" :src="cdsSettings.videoUrl" autoplay loop muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-            
-            <!-- 3. Render Gambar -->
             <img v-else-if="currentImage" :src="currentImage" alt="Promo" style="width: 100%; height: 100%; object-fit: cover;">
             
             <div v-if="cdsSettings.mediaType !== 'catalog'" class="welcome-text">{{ cdsSettings.welcomeText || 'Terima kasih telah berbelanja!' }}</div>
         </template>
     </div>
 
-    <!-- KANAN: AREA KERANJANG REAL-TIME -->
+    <!-- ================================================================= -->
+    <!-- 🌟 KANAN: AREA KERANJANG REAL-TIME (TAMPILAN & UKURAN FONT DIKECILKAN) -->
+    <!-- ================================================================= -->
     <div class="cart-area position-relative"> 
         
-        <div class="bg-danger text-white text-center py-4 shadow-sm d-flex flex-column">
-            <h3 class="mb-1 fw-bold">{{ storeName }}</h3>
-            <span class="fs-6 opacity-75" v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</span>
-            <div class="d-flex justify-content-between px-4 mt-3 text-light opacity-75" style="font-size: 0.85rem;">
-                <span class="fw-bold"><i class="fas fa-file-invoice"></i> {{ invoiceNumber || 'INV-...' }}</span>
-                <span class="fw-bold"><i class="fas fa-clock"></i> {{ currentTime }}</span>
+        <!-- Header Merah Dibuat Ramping/Kecil -->
+        <div class="cart-header-box">
+            <h5 class="mb-1 fw-bold fs-6">{{ storeName }}</h5>
+            <span class="d-block" style="font-size: 0.75rem; opacity: 0.85;" v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</span>
+            <div class="d-flex justify-content-between px-2 mt-1 opacity-75" style="font-size: 0.7rem;">
+                <span><i class="fas fa-file-invoice"></i> {{ invoiceNumber || 'INV-...' }}</span>
+                <span><i class="fas fa-clock"></i> {{ currentTime }}</span>
             </div>
         </div>
 
         <div class="cart-items">
             <div v-if="!cartItems || cartItems.length === 0" class="text-center text-muted mt-5 pt-5 fade-in">
-                <i class="fas fa-shopping-basket fa-5x text-light mb-4 opacity-50"></i>
-                <h4 class="text-secondary fw-bold">Keranjang Kosong</h4>
-                <p class="fs-6">Silakan bawa barang belanjaan Anda ke kasir.</p>
+                <i class="fas fa-shopping-basket fa-4x text-light mb-3 opacity-50"></i>
+                <h5 class="text-secondary fw-bold fs-6">Keranjang Kosong</h5>
+                <p class="small text-muted">Silakan bawa barang belanjaan Anda ke kasir.</p>
             </div>
-            <div v-for="(item, index) in cartItems" :key="index" class="d-flex gap-3 mb-4 border-bottom pb-3 fade-in" :style="'animation-delay: ' + (index * 0.1) + 's;'">
-                <div v-if="item.imageBase64" class="product-img-container"><img :src="item.imageBase64" class="product-img" alt="Produk"></div>
+            
+            <div v-for="(item, index) in cartItems" :key="index" class="d-flex gap-2 mb-3 border-bottom pb-2 fade-in">
+                <div v-if="item.imageBase64" class="product-img-container">
+                    <img :src="item.imageBase64" class="product-img" alt="Produk">
+                </div>
                 <div v-else class="product-img-placeholder"><i class="fas fa-box opacity-50"></i></div>
+                
                 <div class="flex-grow-1">
                     <div class="item-name">{{ item.name }}</div>
-                    <div v-if="item.note" class="text-muted small fst-italic mb-1" style="font-size: 0.8rem;">📝 {{ item.note }}</div>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div v-if="item.note" class="text-muted small fst-italic mb-1" style="font-size: 0.75rem;">📝 {{ item.note }}</div>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
                         <div class="item-price">
                             <span class="fw-bold text-dark">{{ item.qty }}</span> x 
-                            <span v-if="item.originalPrice > item.sellPrice" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.85em;">Rp {{ formatRupiah(item.originalPrice) }}</span>
+                            <span v-if="item.originalPrice > item.sellPrice" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(item.originalPrice) }}</span>
                             <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice) }}</span>
                         </div>
                         <div class="item-total">Rp {{ formatRupiah(item.qty * item.sellPrice) }}</div>
                     </div>
-                    <div v-if="item.itemDiscountAmt > 0" class="mt-2"><span class="badge bg-danger bg-opacity-10 text-danger border border-danger fw-bold px-2 py-1" style="font-size: 0.7rem;">Hemat Rp {{ formatRupiah(item.itemDiscountAmt * item.qty) }}</span></div>
                 </div>
             </div>
         </div>
 
+        <!-- Footer Keranjang dengan Ukuran Font Proporsional Tablet -->
         <div class="cart-footer">
-            <div class="d-flex justify-content-between mb-2 fs-6"><span class="text-muted">Subtotal Produk</span><span class="fw-bold text-dark">Rp {{ formatRupiah(subtotal) }}</span></div>
-            <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6"><span><i class="fas fa-tag"></i> Extra Diskon</span><span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span></div>
-            <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-success fs-6"><span><i class="fas fa-user-check"></i> Diskon Member</span><span class="fw-bold">- Rp {{ formatRupiah(memberDiscountAmt) }}</span></div>
-            <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6"><span><i class="fas fa-tags"></i> Diskon Manual</span><span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span></div>
-            <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6"><span>PPN (11%)</span><span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span></div>
-            <div v-if="shippingFee > 0" class="d-flex justify-content-between mb-2 text-info fs-6"><span><i class="fas fa-truck"></i> Ongkir ({{ courier }})</span><span class="fw-bold">+ Rp {{ formatRupiah(shippingFee) }}</span></div>
+            <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                <span class="text-muted">Subtotal Produk</span>
+                <span class="fw-bold text-dark">Rp {{ formatRupiah(subtotal) }}</span>
+            </div>
+            <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-1 text-danger" style="font-size: 0.8rem;">
+                <span>Extra Diskon</span>
+                <span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span>
+            </div>
+            <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-1 text-success" style="font-size: 0.8rem;">
+                <span>Diskon Member</span>
+                <span class="fw-bold">- Rp {{ formatRupiah(memberDiscountAmt) }}</span>
+            </div>
+            <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-1 text-danger" style="font-size: 0.8rem;">
+                <span>Diskon Manual</span>
+                <span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span>
+            </div>
+            <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-1 text-danger" style="font-size: 0.8rem;">
+                <span>PPN (11%)</span>
+                <span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span>
+            </div>
+            <div v-if="shippingFee > 0" class="d-flex justify-content-between mb-1 text-info" style="font-size: 0.8rem;">
+                <span>Ongkir ({{ courier }})</span>
+                <span class="fw-bold">+ Rp {{ formatRupiah(shippingFee) }}</span>
+            </div>
 
-            <hr class="my-3 border-secondary border-opacity-50">
-            <div class="d-flex justify-content-between align-items-end mt-3">
-                <span class="fw-bold text-dark text-uppercase tracking-wider" style="font-size: 0.95rem; margin-bottom: 6px;">Total Tagihan</span>
-                <span class="fw-black text-danger" style="font-size: 2.3rem; letter-spacing: -1.5px; text-shadow: 1px 1px 0 rgba(0,0,0,0.05); line-height: 1;">Rp {{ formatRupiah(total) }}</span>
+            <hr class="my-2 border-secondary border-opacity-50">
+            <div class="d-flex justify-content-between align-items-end">
+                <span class="fw-bold text-dark text-uppercase" style="font-size: 0.75rem;">Total Tagihan</span>
+                <span class="fw-black text-danger" style="font-size: 1.5rem; letter-spacing: -1px; line-height: 1;">Rp {{ formatRupiah(total) }}</span>
             </div>
         </div>
 
@@ -624,7 +686,11 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import { getFirestore, doc, onSnapshot, collection, query, where } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyBvwkhhUoFOMoKTPL4TWTCJxlx0AXoA3t4", authDomain: "quinsahcollection-36926.firebaseapp.com", projectId: "quinsahcollection-36926" };
+    const firebaseConfig = { 
+        apiKey: "AIzaSyBvwkhhUoFOMoKTPL4TWTCJxlx0AXoA3t4", 
+        authDomain: "quinsahcollection-36926.firebaseapp.com", 
+        projectId: "quinsahcollection-36926" 
+    };
     const appFirebase = initializeApp(firebaseConfig);
     const db = getFirestore(appFirebase);
 
@@ -635,26 +701,52 @@
     const app = Vue.createApp({
         data() {
             return {
-                storeName: 'QUINSAH COLLECTION', outletName: '', invoiceNumber: '', currentTime: '',
-                isPaymentOpen: false, paymentMethod: null, paymentType: 'CASH',
-                qrImageUrl: '', bankName: '', accountNumber: '', accountName: '',
+                storeName: 'QUINSAH COLLECTION', 
+                outletName: '', 
+                invoiceNumber: '', 
+                currentTime: '',
+                isPaymentOpen: false, 
+                paymentMethod: null, 
+                paymentType: 'CASH',
+                qrImageUrl: '', 
+                bankName: '', 
+                accountNumber: '', 
+                accountName: '',
                 
-                isSplitPayment: false, splitPayments: [], remainingSplitTagihan: 0,
-                currentPaymentAmount: 0, currentPaymentTotal: 0, changeAmount: 0, 
+                isSplitPayment: false, 
+                splitPayments: [], 
+                remainingSplitTagihan: 0,
+                currentPaymentAmount: 0, 
+                currentPaymentTotal: 0, 
+                changeAmount: 0, 
                 
-                cartItems: [], subtotal: 0, extraDiscountAmt: 0, memberDiscountAmt: 0,
-                invoiceDiscountAmt: 0, taxAmt: 0, shippingFee: 0, courier: '', total: 0,
+                cartItems: [], 
+                subtotal: 0, 
+                extraDiscountAmt: 0, 
+                memberDiscountAmt: 0,
+                invoiceDiscountAmt: 0, 
+                taxAmt: 0, 
+                shippingFee: 0, 
+                courier: '', 
+                total: 0,
                 paymentStatus: 'PENDING',
                 
-                cdsSettings: { mediaType: 'video', videoUrl: '', youtubeUrl: '', imageUrls: '', welcomeText: '' },
-                currentImage: '', imageIndex: 0, slideInterval: null,
+                cdsSettings: { 
+                    mediaType: 'video', 
+                    videoUrl: '', 
+                    youtubeUrl: '', 
+                    imageUrls: '', 
+                    welcomeText: '' 
+                },
+                currentImage: '', 
+                imageIndex: 0, 
+                slideInterval: null,
                 
                 categories: [], 
                 products: [], 
                 selectedMainCategory: 'ALL',
                 selectedSubCategory: 'ALL',
 
-                // VARIABEL LOKAL SETTING CDS & MODAL
                 selectedProduct: null,
                 activeVariant: null,
                 isSettingsOpen: false,
@@ -663,61 +755,61 @@
                     hideOutOfStock: false,
                     allowNegativeInventory: false
                 },
-                tempSettings: { selectedCategories: [], hideOutOfStock: false, allowNegativeInventory: false }
+                tempSettings: { 
+                    selectedCategories: [], 
+                    hideOutOfStock: false, 
+                    allowNegativeInventory: false 
+                }
             }
         },
         computed: {
-            // 🌟 LOGIKA BARU: Membangun Struktur Pohon Kategori yang 100% Bebas Duplikat & Akurat
             categoryTree() {
                 let map = {};
                 let tree = [];
-                
-                // 1. Buat peta (map) dari seluruh kategori
-                this.categories.forEach(cat => {
-                    map[cat.id] = { ...cat, children: [] };
-                });
-                
-                // 2. Susun pohon berdasarkan parentId
+                this.categories.forEach(cat => { map[cat.id] = { ...cat, children: [] }; });
                 this.categories.forEach(cat => {
                     let node = map[cat.id];
                     let parentId = cat.parentId || cat.parent_id || cat.parent || null;
-                    
-                    // Normalisasi ID parent jika kosong atau 0
                     if (parentId === '0' || parentId === '') parentId = null;
-
+                    
                     if (parentId && map[parentId]) {
-                        // Jika punya induk yang valid, masukkan sebagai anak
                         map[parentId].children.push(node);
                     } else {
-                        // Jika tidak punya induk (atau induknya terhapus), jadikan Level 1 (Utama)
                         tree.push(node);
                     }
                 });
-                
                 return tree;
             },
 
-            // 🌟 Foto Dinamis (Otomatis berubah mengikuti varian yang di-klik)
+            // Foto Dinamis & Fallback Varian
             activeVariantImage() {
-                if (this.activeVariant && (this.activeVariant.imageBase64 || this.activeVariant.image || this.activeVariant.gambar)) {
-                    return this.activeVariant.imageBase64 || this.activeVariant.image || this.activeVariant.gambar;
+                if (this.activeVariant) {
+                    if (this.activeVariant.imageBase64 && this.activeVariant.imageBase64.trim() !== '') {
+                        return this.activeVariant.imageBase64;
+                    }
+                    if (this.activeVariant.image || this.activeVariant.gambar) {
+                        return this.activeVariant.image || this.activeVariant.gambar;
+                    }
                 }
-                if (this.selectedProduct && (this.selectedProduct.imageBase64 || this.selectedProduct.image || this.selectedProduct.gambar)) {
-                    return this.selectedProduct.imageBase64 || this.selectedProduct.image || this.selectedProduct.gambar;
+                if (this.selectedProduct) {
+                    if (this.selectedProduct.imageBase64 && this.selectedProduct.imageBase64.trim() !== '') {
+                        return this.selectedProduct.imageBase64;
+                    }
+                    if (this.selectedProduct.image || this.selectedProduct.gambar) {
+                        return this.selectedProduct.image || this.selectedProduct.gambar;
+                    }
                 }
                 return null;
             },
 
-            // Sidebar Kiri: Tampilkan Kategori Utama berdasar filter Pengaturan Lokal
             mainCategories() {
-                let cats = this.categoryTree; // Pakai akar dari pohon
+                let cats = this.categoryTree;
                 if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
                     cats = cats.filter(c => this.localSettings.selectedCategories.includes(c.id));
                 }
                 return cats;
             },
             
-            // Chips Sub-Kategori di Atas
             activeSubCategories() {
                 if (this.selectedMainCategory === 'ALL') return [];
                 let mainNode = this.categoryTree.find(c => c.id === this.selectedMainCategory);
@@ -730,42 +822,47 @@
                 return subs;
             },
             
-            // Filter Produk Utama Cerdas
             filteredProducts() {
                 let result = this.products;
-
                 if (this.selectedMainCategory !== 'ALL') {
                     let targetCatId = this.selectedSubCategory !== 'ALL' ? this.selectedSubCategory : this.selectedMainCategory;
                     let allowedCatIds = this.getDescendantCategoryIds(targetCatId);
                     let allowedCatNames = this.categories.filter(c => allowedCatIds.includes(c.id)).map(c => c.name);
                     
                     result = result.filter(p => 
-                        allowedCatIds.includes(p.categoryId) || allowedCatIds.includes(p.kategoriId) || allowedCatIds.includes(p.id_kategori) || 
-                        allowedCatNames.includes(p.category) || allowedCatNames.includes(p.kategori)
+                        allowedCatIds.includes(p.categoryId) || 
+                        allowedCatIds.includes(p.kategoriId) || 
+                        allowedCatIds.includes(p.id_kategori) || 
+                        allowedCatNames.includes(p.category) || 
+                        allowedCatNames.includes(p.kategori)
                     );
                 } 
                 else if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
                     let allAllowedIds = [];
-                    this.localSettings.selectedCategories.forEach(catId => { allAllowedIds = allAllowedIds.concat(this.getDescendantCategoryIds(catId)); });
+                    this.localSettings.selectedCategories.forEach(catId => { 
+                        allAllowedIds = allAllowedIds.concat(this.getDescendantCategoryIds(catId)); 
+                    });
                     let allAllowedNames = this.categories.filter(c => allAllowedIds.includes(c.id)).map(c => c.name);
                     
                     result = result.filter(p => 
-                        allAllowedIds.includes(p.categoryId) || allAllowedIds.includes(p.kategoriId) || allAllowedIds.includes(p.id_kategori) || 
-                        allAllowedNames.includes(p.category) || allAllowedNames.includes(p.kategori)
+                        allAllowedIds.includes(p.categoryId) || 
+                        allAllowedIds.includes(p.kategoriId) || 
+                        allAllowedIds.includes(p.id_kategori) || 
+                        allAllowedNames.includes(p.category) || 
+                        allAllowedNames.includes(p.kategori)
                     );
                 }
-
+                
                 if (this.localSettings.hideOutOfStock) {
                     result = result.filter(p => !this.isOutOfStock(p));
                 }
-
                 return result;
             }
         },
         methods: {
             openProductDetail(prod) {
                 this.selectedProduct = prod;
-                this.activeVariant = null; // Reset seleksi tiap buka produk baru
+                this.activeVariant = null;
             },
             closeProductDetail() {
                 this.selectedProduct = null;
@@ -784,7 +881,7 @@
                 this.activeVariant = null;
             },
             toggleAllCategories(e) {
-                if (e.target.checked) this.tempSettings.selectedCategories = []; // Kosong = Tampil Semua
+                if (e.target.checked) this.tempSettings.selectedCategories = [];
             },
             selectMainCategory(catId) {
                 this.selectedMainCategory = catId;
@@ -792,13 +889,11 @@
             },
             getDescendantCategoryIds(parentId) {
                 let ids = [parentId];
-                // Mencari anak berdasarkan parentId
                 let children = this.categories.filter(c => {
                     let pId = c.parentId || c.parent_id || c.parent || null;
                     if (pId === '0' || pId === '') pId = null;
                     return pId === parentId;
                 });
-                
                 for (let child of children) { 
                     ids = ids.concat(this.getDescendantCategoryIds(child.id)); 
                 }
@@ -812,7 +907,11 @@
                 if (this.localSettings.allowNegativeInventory) return false;
                 let totalStock = 0; let outId = outletId || 'global';
                 if (prod.variants && prod.variants.length > 0) {
-                    prod.variants.forEach(v => { if (v.outletStocks && v.outletStocks[outId] !== undefined) totalStock += Number(v.outletStocks[outId]); });
+                    prod.variants.forEach(v => { 
+                        if (v.outletStocks && v.outletStocks[outId] !== undefined) {
+                            totalStock += Number(v.outletStocks[outId]); 
+                        }
+                    });
                 } else if (prod.baseOutletStocks && prod.baseOutletStocks[outId] !== undefined) {
                     totalStock = Number(prod.baseOutletStocks[outId]);
                 } else {
@@ -830,7 +929,6 @@
         mounted() {
             if (!companyId) return;
 
-            // MUAT PENGATURAN LOKAL SAAT HALAMAN DIBUKA
             let savedSettings = localStorage.getItem('cds_local_settings_' + outletId);
             if (savedSettings) {
                 try { this.localSettings = JSON.parse(savedSettings); } catch(e) {}
@@ -841,7 +939,13 @@
                 let cats = [];
                 snapshot.forEach(doc => {
                     let data = doc.data();
-                    cats.push({ id: doc.id, name: data.name || data.nama || data.kategori || 'Kategori', parentId: data.parentId || data.parent_id || data.parent || null, level: data.level || 1, ...data });
+                    cats.push({ 
+                        id: doc.id, 
+                        name: data.name || data.nama || data.kategori || 'Kategori', 
+                        parentId: data.parentId || data.parent_id || data.parent || null, 
+                        level: data.level || 1, 
+                        ...data 
+                    });
                 });
                 cats.sort((a, b) => a.name.localeCompare(b.name));
                 this.categories = cats;
@@ -856,7 +960,10 @@
 
             setInterval(() => {
                 const now = new Date();
-                const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const options = { 
+                    day: '2-digit', month: 'short', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit', second: '2-digit' 
+                };
                 this.currentTime = now.toLocaleDateString('id-ID', options).replace(',', ' -');
             }, 1000);
 
