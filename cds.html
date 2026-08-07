@@ -389,7 +389,7 @@
                                     <div class="product-img-wrapper rounded-3 shadow-sm w-100" style="border-bottom: none;">
                                         <!-- 🌟 Menampilkan Foto Varian yang Aktif, atau Foto Produk Utama -->
                                         <template v-if="activeVariantImage">
-                                            <img :src="activeVariantImage" class="rounded-3" alt="Product / Variant" style="transition: opacity 0.3s ease;">
+                                            <img :src="activeVariantImage" class="rounded-3" alt="Product / Variant" style="transition: opacity 0.3s ease; width: 100%; height: 100%; object-fit: cover;">
                                         </template>
                                         <template v-else>
                                             <div class="product-img-placeholder-cds w-100 h-100 rounded-3 bg-light"><i class="fas fa-box" style="font-size: 4rem;"></i></div>
@@ -447,11 +447,11 @@
                                         <span class="fw-medium">Produk ini langsung tersedia tanpa pilihan varian khusus.</span>
                                     </div>
 
-                                    <!-- 🌟 Pilihan Identifier / Opsi Tambahan -->
+                                    <!-- 🌟 Pilihan Identifier / Opsi Tambahan Dinamis -->
                                     <div v-if="(activeVariant && activeVariant.identifiers && activeVariant.identifiers.length > 0) || (!activeVariant && selectedProduct.identifiers && selectedProduct.identifiers.length > 0)" class="mt-4 pt-3 border-top">
-                                        <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.9rem;"><i class="fas fa-tags me-2"></i>Pilihan / Identifier Tersedia:</h6>
+                                        <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.9rem;"><i class="fas fa-tags me-2"></i>Pilihan / Opsi Tersedia:</h6>
                                         <div class="d-flex flex-wrap gap-2">
-                                            <span v-for="(idtf, idx) in (activeVariant ? activeVariant.identifiers : selectedProduct.identifiers)" :key="idx" class="badge border border-secondary text-secondary bg-light px-3 py-2 rounded-pill fs-6 fw-medium">
+                                            <span v-for="(idtf, idx) in (activeVariant ? activeVariant.identifiers : selectedProduct.identifiers)" :key="idx" class="badge border border-secondary text-secondary bg-light px-3 py-2 rounded-pill fs-6 fw-medium shadow-sm">
                                                 {{ typeof idtf === 'object' ? (idtf.name || idtf.label || JSON.stringify(idtf)) : idtf }}
                                             </span>
                                         </div>
@@ -478,7 +478,7 @@
                                 <i class="fas fa-info-circle me-2"></i> Pengaturan ini hanya tersimpan di perangkat ini (Local Kiosk).
                             </div>
 
-                            <!-- Pilihan Kategori Berstruktur Hierarki -->
+                            <!-- 🌟 Pilihan Kategori Berstruktur Hierarki Persis Master Produk -->
                             <h6 class="fw-bold text-dark mb-3">Kategori Ditampilkan (Pilih/Centang):</h6>
                             <div class="bg-white border rounded-3 p-3 mb-4 shadow-sm" style="max-height: 250px; overflow-y: auto;">
                                 <div class="form-check mb-3 border-bottom pb-3">
@@ -490,22 +490,28 @@
                                 <div v-for="main in categoryTree" :key="main.id" class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" :id="'set-'+main.id" :value="main.id" v-model="tempSettings.selectedCategories">
-                                        <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id">{{ main.name }}</label>
+                                        <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id">
+                                            <i class="fas fa-folder text-warning me-1"></i> {{ main.name }}
+                                        </label>
                                     </div>
                                     
                                     <!-- Level 2 -->
-                                    <div v-if="main.children && main.children.length > 0" class="ms-4 mt-1 border-start border-2 ps-3 border-light">
+                                    <div v-if="main.children && main.children.length > 0" class="ms-4 mt-2 border-start border-2 ps-3 border-light">
                                         <div v-for="sub in main.children" :key="sub.id" class="mb-2">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" :id="'set-'+sub.id" :value="sub.id" v-model="tempSettings.selectedCategories">
-                                                <label class="form-check-label text-secondary fw-semibold" :for="'set-'+sub.id">{{ sub.name }}</label>
+                                                <label class="form-check-label text-secondary fw-semibold" :for="'set-'+sub.id">
+                                                    <i class="fas fa-level-up-alt fa-rotate-90 text-muted me-1" style="font-size: 0.8rem;"></i> {{ sub.name }}
+                                                </label>
                                             </div>
                                             
                                             <!-- Level 3 -->
-                                            <div v-if="sub.children && sub.children.length > 0" class="ms-4 mt-1">
+                                            <div v-if="sub.children && sub.children.length > 0" class="ms-4 mt-1 border-start border-2 ps-3 border-light">
                                                 <div class="form-check mb-1" v-for="grand in sub.children" :key="grand.id">
                                                     <input class="form-check-input" type="checkbox" :id="'set-'+grand.id" :value="grand.id" v-model="tempSettings.selectedCategories">
-                                                    <label class="form-check-label text-muted" :for="'set-'+grand.id">{{ grand.name }}</label>
+                                                    <label class="form-check-label text-muted" :for="'set-'+grand.id">
+                                                        <i class="fas fa-minus text-muted me-1" style="font-size: 0.7rem;"></i> {{ grand.name }}
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
@@ -661,29 +667,37 @@
             }
         },
         computed: {
-            // 🌟 LOGIKA: Membangun Struktur Pohon Kategori (Tree View) untuk Modal Pengaturan
+            // 🌟 LOGIKA BARU: Membangun Struktur Pohon Kategori yang 100% Bebas Duplikat & Akurat
             categoryTree() {
+                let map = {};
                 let tree = [];
-                // 1. Ambil Kategori Induk (Level 1)
-                let mainCats = this.categories.filter(c => c.level === 1 || c.level === 'Level 1' || !c.parentId || c.parentId === '0');
                 
-                mainCats.forEach(main => {
-                    let node = { ...main, children: [] };
-                    // 2. Ambil Anak (Level 2)
-                    let subCats = this.categories.filter(c => c.parentId === main.id);
-                    subCats.forEach(sub => {
-                        let subNode = { ...sub, children: [] };
-                        // 3. Ambil Cucu (Level 3)
-                        let grandCats = this.categories.filter(c => c.parentId === sub.id);
-                        subNode.children = grandCats;
-                        node.children.push(subNode);
-                    });
-                    tree.push(node);
+                // 1. Buat peta (map) dari seluruh kategori
+                this.categories.forEach(cat => {
+                    map[cat.id] = { ...cat, children: [] };
                 });
+                
+                // 2. Susun pohon berdasarkan parentId
+                this.categories.forEach(cat => {
+                    let node = map[cat.id];
+                    let parentId = cat.parentId || cat.parent_id || cat.parent || null;
+                    
+                    // Normalisasi ID parent jika kosong atau 0
+                    if (parentId === '0' || parentId === '') parentId = null;
+
+                    if (parentId && map[parentId]) {
+                        // Jika punya induk yang valid, masukkan sebagai anak
+                        map[parentId].children.push(node);
+                    } else {
+                        // Jika tidak punya induk (atau induknya terhapus), jadikan Level 1 (Utama)
+                        tree.push(node);
+                    }
+                });
+                
                 return tree;
             },
 
-            // 🌟 LOGIKA: Foto Dinamis (Mengubah foto utama berdasarkan varian yang diklik)
+            // 🌟 Foto Dinamis (Otomatis berubah mengikuti varian yang di-klik)
             activeVariantImage() {
                 if (this.activeVariant && (this.activeVariant.imageBase64 || this.activeVariant.image || this.activeVariant.gambar)) {
                     return this.activeVariant.imageBase64 || this.activeVariant.image || this.activeVariant.gambar;
@@ -694,48 +708,53 @@
                 return null;
             },
 
-            allMainCategories() {
-                return this.categories.filter(c => {
-                    if (c.level === 1 || c.level === 'Level 1') return true;
-                    if (!c.parentId || c.parentId === '0' || c.parentId === '') return true;
-                    const parentExists = this.categories.some(p => p.id === c.parentId);
-                    return !parentExists;
-                });
-            },
-            
-            // Sidebar Kiri: Tampilkan hasil filter Local Settings
+            // Sidebar Kiri: Tampilkan Kategori Utama berdasar filter Pengaturan Lokal
             mainCategories() {
-                let cats = this.allMainCategories;
+                let cats = this.categoryTree; // Pakai akar dari pohon
                 if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
                     cats = cats.filter(c => this.localSettings.selectedCategories.includes(c.id));
                 }
                 return cats;
             },
             
+            // Chips Sub-Kategori di Atas
             activeSubCategories() {
                 if (this.selectedMainCategory === 'ALL') return [];
-                return this.categories.filter(c => c.parentId === this.selectedMainCategory);
+                let mainNode = this.categoryTree.find(c => c.id === this.selectedMainCategory);
+                if (!mainNode) return [];
+                
+                let subs = mainNode.children;
+                if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
+                    subs = subs.filter(sub => this.localSettings.selectedCategories.includes(sub.id));
+                }
+                return subs;
             },
             
+            // Filter Produk Utama Cerdas
             filteredProducts() {
                 let result = this.products;
 
-                // 1. Filter Berdasarkan Kategori yang di-klik
                 if (this.selectedMainCategory !== 'ALL') {
                     let targetCatId = this.selectedSubCategory !== 'ALL' ? this.selectedSubCategory : this.selectedMainCategory;
                     let allowedCatIds = this.getDescendantCategoryIds(targetCatId);
                     let allowedCatNames = this.categories.filter(c => allowedCatIds.includes(c.id)).map(c => c.name);
-                    result = result.filter(p => allowedCatIds.includes(p.categoryId) || allowedCatIds.includes(p.kategoriId) || allowedCatIds.includes(p.id_kategori) || allowedCatNames.includes(p.category) || allowedCatNames.includes(p.kategori));
+                    
+                    result = result.filter(p => 
+                        allowedCatIds.includes(p.categoryId) || allowedCatIds.includes(p.kategoriId) || allowedCatIds.includes(p.id_kategori) || 
+                        allowedCatNames.includes(p.category) || allowedCatNames.includes(p.kategori)
+                    );
                 } 
-                // Jika sedang memilih 'Semua', tapi di pengaturan hanya diizinkan beberapa kategori
                 else if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
                     let allAllowedIds = [];
                     this.localSettings.selectedCategories.forEach(catId => { allAllowedIds = allAllowedIds.concat(this.getDescendantCategoryIds(catId)); });
                     let allAllowedNames = this.categories.filter(c => allAllowedIds.includes(c.id)).map(c => c.name);
-                    result = result.filter(p => allAllowedIds.includes(p.categoryId) || allAllowedIds.includes(p.kategoriId) || allAllowedIds.includes(p.id_kategori) || allAllowedNames.includes(p.category) || allAllowedNames.includes(p.kategori));
+                    
+                    result = result.filter(p => 
+                        allAllowedIds.includes(p.categoryId) || allAllowedIds.includes(p.kategoriId) || allAllowedIds.includes(p.id_kategori) || 
+                        allAllowedNames.includes(p.category) || allAllowedNames.includes(p.kategori)
+                    );
                 }
 
-                // 2. Filter Pengaturan "Sembunyikan Produk Habis"
                 if (this.localSettings.hideOutOfStock) {
                     result = result.filter(p => !this.isOutOfStock(p));
                 }
@@ -746,7 +765,7 @@
         methods: {
             openProductDetail(prod) {
                 this.selectedProduct = prod;
-                this.activeVariant = null; // Reset seleksi varian saat membuka produk baru
+                this.activeVariant = null; // Reset seleksi tiap buka produk baru
             },
             closeProductDetail() {
                 this.selectedProduct = null;
@@ -760,12 +779,12 @@
                 this.localSettings = JSON.parse(JSON.stringify(this.tempSettings));
                 localStorage.setItem('cds_local_settings_' + outletId, JSON.stringify(this.localSettings));
                 this.isSettingsOpen = false;
-                this.selectedMainCategory = 'ALL'; // Reset view ke Semua
+                this.selectedMainCategory = 'ALL'; 
                 this.selectedProduct = null;
                 this.activeVariant = null;
             },
             toggleAllCategories(e) {
-                if (e.target.checked) this.tempSettings.selectedCategories = []; // Kosong = Pilih Semua
+                if (e.target.checked) this.tempSettings.selectedCategories = []; // Kosong = Tampil Semua
             },
             selectMainCategory(catId) {
                 this.selectedMainCategory = catId;
@@ -773,8 +792,16 @@
             },
             getDescendantCategoryIds(parentId) {
                 let ids = [parentId];
-                let children = this.categories.filter(c => c.parentId === parentId);
-                for (let child of children) { ids = ids.concat(this.getDescendantCategoryIds(child.id)); }
+                // Mencari anak berdasarkan parentId
+                let children = this.categories.filter(c => {
+                    let pId = c.parentId || c.parent_id || c.parent || null;
+                    if (pId === '0' || pId === '') pId = null;
+                    return pId === parentId;
+                });
+                
+                for (let child of children) { 
+                    ids = ids.concat(this.getDescendantCategoryIds(child.id)); 
+                }
                 return ids;
             },
             formatRupiah(number) {
