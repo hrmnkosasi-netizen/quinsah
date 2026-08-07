@@ -107,7 +107,7 @@
         .confetti:nth-child(9) { left: 90%; animation-duration: 2.9s; animation-delay: 0.2s; background-color: #f2d74e; }
         
         /* ================================================================================= */
-        /* 🌟 CSS KHUSUS KATALOG PRODUK CDS (DESAIN POS KASIR PROFESIONAL) */
+        /* 🌟 CSS KHUSUS KATALOG PRODUK CDS (HIERARKI & FOTO 1:1) */
         /* ================================================================================= */
         
         /* Sidebar Kiri - Desain Ikon Mengecil */
@@ -128,10 +128,10 @@
         /* Grid Kanan */
         .catalog-grid { flex-grow: 1; overflow-y: auto; background: #f8f9fa; padding: 25px; }
         
-        /* Desain Kategori (Icon Box) */
+        /* Desain Kategori Utama (Sidebar Icon Box) */
         .cat-item { 
-            width: 72px; 
-            min-height: 72px; 
+            width: 76px; 
+            min-height: 76px; 
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
@@ -149,11 +149,15 @@
             line-height: 1.2; 
             word-break: break-word; 
         }
-        .cat-item i { font-size: 1.4rem; margin-bottom: 5px; color: #adb5bd; transition: 0.2s; }
+        .cat-item i { font-size: 1.5rem; margin-bottom: 5px; color: #adb5bd; transition: 0.2s; }
         .cat-item:hover:not(.active) { background-color: #f1f3f5; border-color: #e9ecef; color: #495057; }
         .cat-item:hover:not(.active) i { color: #6c757d; }
         .cat-item.active { background-color: #dc3545; color: white; box-shadow: 0 4px 10px rgba(220,53,69,0.25); }
         .cat-item.active i { color: white; }
+        
+        /* Tombol Tambahan CSS */
+        .btn-white { background-color: #fff; color: #495057; border-color: #dee2e6; }
+        .btn-white:hover { background-color: #f8f9fa; color: #212529; }
         
         /* Desain Kartu Produk (Identik POS) */
         .product-card-cds { 
@@ -169,18 +173,24 @@
         }
         .product-card-cds:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important; }
         
-        /* Wrapper Gambar agar rapi & seragam */
+        /* 🌟 PERBAIKAN: UKURAN FOTO 1:1 KOTAK SEMPURNA! */
         .product-img-wrapper { 
-            height: 140px; 
             width: 100%; 
+            aspect-ratio: 1 / 1; /* <-- INI YANG MEMBUAT FOTO MENJADI KOTAK 1:1 */
             background-color: #f1f3f5; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid #f1f3f5;
         }
         .product-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         .product-img-placeholder-cds { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #adb5bd; }
+        
+        /* Sembunyikan scrollbar di menu chips atas */
+        .chips-container::-webkit-scrollbar { display: none; }
+        .chips-container { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
@@ -402,28 +412,44 @@
         <template v-else>
             
             <!-- ================================================================================= -->
-            <!-- 🌟 PERBAIKAN: RENDER KATALOG MENU/PRODUK (DIBUAT SANGAT MIRIP DENGAN DESAIN KASIR POS) -->
+            <!-- 🌟 RENDER KATALOG MENU/PRODUK (FOTO 1:1 & FILTER HIERARKI KATEGORI CERDAS) -->
             <!-- ================================================================================= -->
             <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex text-start bg-light fade-in">
                 
-                <!-- Sidebar Kategori Kiri (Desain Ikon) -->
+                <!-- 🌟 Sidebar Kategori Kiri (HANYA LEVEL 1 / UTAMA) -->
                 <div class="catalog-sidebar shadow-sm">
-                    <div class="cat-item" :class="{'active': selectedCategory === 'ALL'}" @click="selectedCategory = 'ALL'">
+                    <div class="cat-item" :class="{'active': selectedMainCategory === 'ALL'}" @click="selectMainCategory('ALL')">
                         <i class="fas fa-th-large"></i>
                         <span>Semua</span>
                     </div>
                     
-                    <!-- 🌟 PERBAIKAN: Klik akan menyimpan ID Kategori -->
-                    <div v-for="cat in categories" :key="cat.id" class="cat-item" :class="{'active': selectedCategory === cat.id}" @click="selectedCategory = cat.id">
+                    <div v-for="cat in mainCategories" :key="cat.id" class="cat-item" :class="{'active': selectedMainCategory === cat.id}" @click="selectMainCategory(cat.id)">
                         <i class="fas fa-tags"></i>
                         <span>{{ cat.name }}</span>
                     </div>
                 </div>
 
                 <!-- Grid Produk Kanan -->
-                <div class="catalog-grid">
-                    <!-- 🌟 PERBAIKAN: Pembagian Grid Maksimal Menjadi 5 Kolom (row-cols-xl-5) -->
-                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
+                <div class="catalog-grid d-flex flex-column">
+                    
+                    <!-- 🌟 Chips Sub-Kategori (LEVEL 2) Muncul di Atas Jika Induk Dipilih -->
+                    <div class="d-flex flex-wrap gap-2 mb-4 chips-container" style="overflow-x: auto; white-space: nowrap;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
+                        <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
+                                :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white border'"
+                                @click="selectedSubCategory = 'ALL'">
+                            Semua
+                        </button>
+                        
+                        <button v-for="sub in activeSubCategories" :key="sub.id"
+                                class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
+                                :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white border'"
+                                @click="selectedSubCategory = sub.id">
+                            {{ sub.name }}
+                        </button>
+                    </div>
+
+                    <!-- Layout Kotak Produk (Maksimal 5 Kolom) -->
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 align-content-start">
                         
                         <div class="col" v-for="prod in filteredProducts" :key="prod.id">
                             <div class="product-card-cds position-relative">
@@ -433,22 +459,20 @@
                                     <span class="badge bg-dark px-3 py-2 rounded-pill shadow-sm" style="letter-spacing: 1.5px; font-size: 0.85rem;">HABIS</span>
                                 </div>
 
-                                <!-- Bagian Gambar dengan Proteksi Error yang Identik dengan POS -->
-                                <div class="product-img-wrapper border-bottom">
+                                <!-- 🌟 Bagian Gambar 1:1 Kotak Sempurna -->
+                                <div class="product-img-wrapper">
                                     <template v-if="prod.imageBase64 && prod.imageBase64.trim() !== ''">
                                         <img :src="prod.imageBase64" @error="prod.imageBase64 = ''" alt="Product">
                                     </template>
                                     <template v-else-if="prod.image || prod.gambar">
-                                        <!-- Jika gambar link mati, sembunyikan img dan tampilkan placeholder div -->
                                         <img :src="prod.image || prod.gambar" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" alt="Product">
                                         <div class="product-img-placeholder-cds w-100 h-100" style="display: none;">
-                                            <i class="bi bi-box-seam" style="font-size: 2rem; margin-bottom: 5px;"></i>
+                                            <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i>
                                             <span style="font-size: 0.65rem; font-weight: bold; letter-spacing: 0.5px;">NO IMAGE</span>
                                         </div>
                                     </template>
                                     <template v-else>
                                         <div class="product-img-placeholder-cds">
-                                            <!-- Ikon Box Seam menggunakan FontAwesome jika Bi Icon tidak jalan -->
                                             <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i>
                                             <span style="font-size: 0.65rem; font-weight: bold; letter-spacing: 0.5px;">NO IMAGE</span>
                                         </div>
@@ -468,7 +492,7 @@
                                     </div>
                                     
                                     <div class="mt-auto pt-1">
-                                        <!-- Harga Saja -->
+                                        <!-- Harga -->
                                         <div class="text-danger fw-bold" style="font-size: 0.95rem;">Rp {{ formatRupiah(prod.sellPrice || prod.price) }}</div>
                                     </div>
                                 </div>
@@ -478,7 +502,7 @@
                         <!-- Info jika kategori kosong -->
                         <div v-if="filteredProducts.length === 0" class="col-12 text-center text-muted mt-5 py-5 w-100">
                             <i class="fas fa-search fs-1 mb-3 d-block opacity-50"></i>
-                            <span class="fw-bold fs-5">Kategori ini kosong.</span>
+                            <span class="fw-bold fs-5">Tidak ada produk di kategori ini.</span>
                         </div>
 
                     </div>
@@ -626,32 +650,70 @@
                 cdsSettings: { mediaType: 'video', videoUrl: '', youtubeUrl: '', imageUrls: '', welcomeText: '' },
                 currentImage: '', imageIndex: 0, slideInterval: null,
                 
-                // 🌟 VARIABEL KATALOG
+                // 🌟 VARIABEL KATALOG HIERARKI
                 categories: [], 
                 products: [], 
-                selectedCategory: 'ALL'
+                selectedMainCategory: 'ALL',
+                selectedSubCategory: 'ALL'
             }
         },
         computed: {
-            // 🌟 PERBAIKAN: Logika Filter Produk Cerdas (Berdasarkan ID atau Nama Kategori)
+            // 🌟 LOGIKA: Kategori Utama (Hanya Tampilkan Level 1 yang tidak punya induk)
+            mainCategories() {
+                return this.categories.filter(c => {
+                    if (c.level === 1 || c.level === 'Level 1') return true;
+                    if (!c.parentId || c.parentId === '0' || c.parentId === '') return true;
+                    
+                    // Atau jika dia yatim piatu (ID induknya sudah terhapus)
+                    const parentExists = this.categories.some(p => p.id === c.parentId);
+                    return !parentExists;
+                });
+            },
+            
+            // 🌟 LOGIKA: Sub-Kategori (Level 2) Muncul berdasarkan Kategori Utama yang diklik
+            activeSubCategories() {
+                if (this.selectedMainCategory === 'ALL') return [];
+                return this.categories.filter(c => c.parentId === this.selectedMainCategory);
+            },
+            
+            // 🌟 LOGIKA FILTER PRODUK YANG SANGAT CERDAS
             filteredProducts() {
-                if (this.selectedCategory === 'ALL') return this.products;
+                let targetCatId = this.selectedSubCategory !== 'ALL' ? this.selectedSubCategory : this.selectedMainCategory;
                 
-                // Cari nama kategori dari ID yang dipilih (untuk jaga-jaga kalau produk disambung pakai nama)
-                const selectedCatObj = this.categories.find(c => c.id === this.selectedCategory);
-                const catName = selectedCatObj ? selectedCatObj.name : '';
+                if (targetCatId === 'ALL') return this.products;
+
+                // Ambil ID target beserta seluruh "anak cucunya" (Level 2 & Level 3)
+                let allowedCatIds = this.getDescendantCategoryIds(targetCatId);
+                
+                // Ambil nama dari ID tersebut (sebagai cadangan jika produk di-bind menggunakan nama, bukan ID)
+                let allowedCatNames = this.categories.filter(c => allowedCatIds.includes(c.id)).map(c => c.name);
 
                 return this.products.filter(p => {
-                    return p.categoryId === this.selectedCategory ||
-                           p.kategoriId === this.selectedCategory ||
-                           p.category === this.selectedCategory ||
-                           p.id_kategori === this.selectedCategory ||
-                           (catName && p.category === catName) ||
-                           (catName && p.kategori === catName);
+                    return allowedCatIds.includes(p.categoryId) ||
+                           allowedCatIds.includes(p.kategoriId) ||
+                           allowedCatIds.includes(p.id_kategori) ||
+                           allowedCatNames.includes(p.category) ||
+                           allowedCatNames.includes(p.kategori);
                 });
             }
         },
         methods: {
+            // 🌟 Fungsi saat klik kategori di kiri
+            selectMainCategory(catId) {
+                this.selectedMainCategory = catId;
+                this.selectedSubCategory = 'ALL'; // Reset sub-kategori ke "Semua"
+            },
+            
+            // 🌟 Rekursi: Mencari seluruh anak cucu dari sebuah Kategori Induk
+            getDescendantCategoryIds(parentId) {
+                let ids = [parentId];
+                let children = this.categories.filter(c => c.parentId === parentId);
+                for (let child of children) {
+                    ids = ids.concat(this.getDescendantCategoryIds(child.id));
+                }
+                return ids;
+            },
+            
             formatRupiah(number) {
                 if(!number) return '0';
                 return Number(number).toLocaleString('id-ID');
@@ -705,25 +767,21 @@
         mounted() {
             if (!companyId) return;
 
-            // 🌟 PERBAIKAN: TARIK DATA KATEGORI (PLUS FILTER DUPLIKAT OTOMATIS)
+            // 🌟 TARIK DATA KATEGORI (Struktur Hierarki Level 1, 2, 3)
             const catQuery = query(collection(db, "categories"), where("companyId", "==", companyId));
             onSnapshot(catQuery, (snapshot) => {
                 let cats = [];
-                let seenNames = new Set(); // Tempat menyimpan nama yg sudah dicek
-                
                 snapshot.forEach(doc => {
                     let data = doc.data();
-                    let catName = data.name || data.nama || data.kategori || 'Kategori';
-                    let lowerName = catName.toLowerCase().trim();
-                    
-                    // Hanya masukkan kategori jika namanya belum ada (Menghindari Double)
-                    if (!seenNames.has(lowerName)) {
-                        seenNames.add(lowerName);
-                        cats.push({ id: doc.id, name: catName, ...data });
-                    }
+                    cats.push({ 
+                        id: doc.id, 
+                        name: data.name || data.nama || data.kategori || 'Kategori',
+                        parentId: data.parentId || data.parent_id || data.parent || null,
+                        level: data.level || 1,
+                        ...data 
+                    });
                 });
-                
-                // Urutkan sesuai abjad agar rapi
+                // Mengurutkan sesuai Abjad
                 cats.sort((a, b) => a.name.localeCompare(b.name));
                 this.categories = cats;
             });
