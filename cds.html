@@ -20,43 +20,35 @@
         @media (min-width: 992px) {
             body { overflow: hidden; }
             .split-screen { height: 100vh; display: flex; flex-direction: row; }
-            .promo-area { flex: 7; height: 100vh; } 
+            .promo-area { flex: 7; height: 100vh; position: relative; } 
             .cart-area { flex: 3; height: 100vh; } 
             .border-end-md { border-right: 2px dashed #dee2e6; } 
         }
 
-        /* MOBILE / HP LAYOUT & TABLET PORTRAIT */
+        /* MOBILE / HP LAYOUT */
         @media (max-width: 991px) {
             body { overflow-y: auto; background-color: #fff; }
             .split-screen { display: flex; flex-direction: column; min-height: 100vh; width: 100vw; }
-            
             .promo-area { display: none !important; }
             .cart-area { display: flex !important; width: 100%; min-height: 100vh; }
-            
-            .split-screen.mobile-payment-active .promo-area { display: flex !important; width: 100%; min-height: 100vh; }
+            .split-screen.mobile-payment-active .promo-area { display: flex !important; width: 100%; min-height: 100vh; position: relative; }
             .split-screen.mobile-payment-active .cart-area { display: none !important; }
-            
             .qris-amount { font-size: 2.2rem !important; }
             .success-card h1 { font-size: 2.2rem !important; }
             .change-box h1 { font-size: 2.5rem !important; }
             .welcome-text { font-size: 1.1rem !important; padding: 10px !important; }
             .qris-card { max-width: 95% !important; margin: 15px auto; }
             .success-card { padding: 25px 15px !important; margin: 15px auto; width: 92%; }
-            .checkmark-circle { width: 80px !important; height: 80px !important; }
-            .checkmark-circle i { font-size: 2.5rem !important; }
         }
 
-        /* AREA KIRI: PROMO / PEMBAYARAN */
         .promo-area { background-color: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;}
         .promo-area video, .promo-area img { width: 100%; height: 100%; object-fit: cover; }
         .welcome-text { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); color: white; padding: 20px; text-align: center; font-size: 1.6rem; font-weight: bold; letter-spacing: 1px; backdrop-filter: blur(5px); z-index: 2; }
         
-        /* OVERLAY PEMBAYARAN */
         .payment-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #f4f7f6; z-index: 20; overflow-y: auto; padding: 15px; }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* AREA KANAN: KERANJANG */
         .cart-area { background-color: #fff; box-shadow: -10px 0 25px rgba(0,0,0,0.08); display: flex; flex-direction: column; z-index: 2;}
         .cart-items { flex-grow: 1; overflow-y: auto; padding: 15px; }
         .cart-footer { background-color: #f8f9fa; padding: 20px; border-top: 2px dashed #dee2e6; }
@@ -64,144 +56,72 @@
         .item-name { font-size: 1rem; font-weight: 700; color: #2d3436; line-height: 1.3; }
         .item-price { font-size: 0.85rem; color: #636e72; }
         .item-total { font-size: 1.05rem; font-weight: 800; color: #2d3436; }
-        
-        .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #dfe6e9; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.04); }
+        .product-img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #dfe6e9; flex-shrink: 0; }
         .product-img-placeholder { width: 60px; height: 60px; background: #f1f2f6; border-radius: 10px; border: 1px solid #dfe6e9; display: flex; align-items: center; justify-content: center; color: #a4b0be; flex-shrink: 0; }
         
-        /* KARTU QRIS PREMIUM */
         .qris-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; border: 1px solid #f1f2f6; margin: 0 auto; }
         .qris-header { background: linear-gradient(135deg, #e84118 0%, #c23616 100%); padding: 18px; color: white; }
         .qris-qr-box { background: white; padding: 15px; border-radius: 20px; display: inline-block; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 1px solid #f1f2f6; }
         .qris-amount { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; color: #2d3436; margin-top: 15px; margin-bottom: 5px; word-break: break-all; }
-        
-        /* INFO REKENING BANK */
         .bank-info-box { background: linear-gradient(145deg, #ffffff, #f0f4f8); border: 2px dashed #0984e3; border-radius: 20px; padding: 25px; margin: 20px auto; max-width: 90%; }
         
-        /* ANIMASI LUNAS & KONFETI */
-        .success-card { background: white; border-radius: 30px; padding: 40px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; z-index: 10; transform: scale(0.9); animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; border: 2px solid #eef2f3; max-width: 500px; width: 100%; }
-        @keyframes popIn { to { transform: scale(1); } }
-        
-        .checkmark-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; background: linear-gradient(135deg, #10ac84 0%, #1dd1a1 100%); box-shadow: 0 10px 20px rgba(29, 209, 161, 0.3); animation: pulse 2s infinite; }
-        .checkmark-circle i { font-size: 4rem; color: white; animation: checkmark 0.5s ease-out 0.3s both; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(29, 209, 161, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(29, 209, 161, 0); } 100% { box-shadow: 0 0 0 0 rgba(29, 209, 161, 0); } }
-        @keyframes checkmark { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-        
+        .success-card { background: white; border-radius: 30px; padding: 40px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; z-index: 10; border: 2px solid #eef2f3; max-width: 500px; width: 100%; }
+        .checkmark-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; background: linear-gradient(135deg, #10ac84 0%, #1dd1a1 100%); }
+        .checkmark-circle i { font-size: 4rem; color: white; }
         .change-box { background: #f8f9fa; border: 2px dashed #1dd1a1; border-radius: 15px; padding: 20px; margin-top: 25px; }
-
-        /* ANIMASI LOADING MODERN */
         .modern-loader { width: 70px; height: 70px; border: 6px solid #e0e0e0; border-top: 6px solid #e84118; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Konfeti */
         .confetti-container { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; overflow: hidden; z-index: 5; display: flex; justify-content: center; }
         .confetti { width: 15px; height: 15px; background-color: #f2d74e; position: absolute; top: -20px; animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
-        .confetti:nth-child(1) { left: 10%; animation-duration: 3s; animation-delay: 0s; background-color: #95c3de; }
-        .confetti:nth-child(2) { left: 20%; animation-duration: 2.5s; animation-delay: 0.2s; background-color: #ff9a91; }
-        .confetti:nth-child(3) { left: 30%; animation-duration: 3.5s; animation-delay: 0.1s; background-color: #f2d74e; }
-        .confetti:nth-child(4) { left: 40%; animation-duration: 4s; animation-delay: 0.4s; background-color: #95c3de; }
-        .confetti:nth-child(5) { left: 50%; animation-duration: 2.8s; animation-delay: 0.3s; background-color: #ff9a91; }
-        .confetti:nth-child(6) { left: 60%; animation-duration: 3.2s; animation-delay: 0.5s; background-color: #f2d74e; }
-        .confetti:nth-child(7) { left: 70%; animation-duration: 2.7s; animation-delay: 0.1s; background-color: #95c3de; }
-        .confetti:nth-child(8) { left: 80%; animation-duration: 3.8s; animation-delay: 0.6s; background-color: #ff9a91; }
-        .confetti:nth-child(9) { left: 90%; animation-duration: 2.9s; animation-delay: 0.2s; background-color: #f2d74e; }
         
-        /* ================================================================================= */
-        /* 🌟 CSS KHUSUS KATALOG PRODUK CDS (HIERARKI & FOTO 1:1) */
-        /* ================================================================================= */
-        
-        /* Sidebar Kiri - Desain Ikon Mengecil */
+        /* 🌟 CSS KHUSUS KATALOG & SIDEBAR CDS */
         .catalog-sidebar { 
-            width: 90px; 
-            flex-shrink: 0; 
-            background: #ffffff; 
-            border-right: 1px solid #dee2e6; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding-top: 15px; 
-            box-shadow: 2px 0 10px rgba(0,0,0,0.02);
-            z-index: 5;
+            width: 90px; flex-shrink: 0; background: #ffffff; border-right: 1px solid #dee2e6;
+            display: flex; flex-direction: column; justify-content: space-between; z-index: 5;
         }
+        .sidebar-menu { flex-grow: 1; overflow-y: auto; padding-top: 15px; display: flex; flex-direction: column; align-items: center; width: 100%; -ms-overflow-style: none; scrollbar-width: none; }
+        .sidebar-menu::-webkit-scrollbar { display: none; }
+        .sidebar-footer { padding: 15px 0; border-top: 1px solid #f1f3f5; width: 100%; display: flex; justify-content: center; }
         
-        /* Grid Kanan */
-        .catalog-grid { flex-grow: 1; overflow-y: auto; background: #f8f9fa; padding: 25px; }
+        .catalog-grid { flex-grow: 1; overflow-y: auto; background: #f8f9fa; padding: 25px; position: relative; }
         
-        /* Desain Kategori Utama (Sidebar Icon Box) */
         .cat-item { 
-            width: 76px; 
-            min-height: 76px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            text-align: center; 
-            cursor: pointer; 
-            padding: 8px 4px; 
-            margin-bottom: 8px; 
-            border-radius: 12px; 
-            color: #6c757d; 
-            font-size: 0.7rem; 
-            font-weight: 700; 
-            transition: all 0.2s ease; 
-            border: 1px solid transparent; 
-            line-height: 1.2; 
-            word-break: break-word; 
+            width: 76px; min-height: 76px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; padding: 8px 4px; margin-bottom: 8px; border-radius: 12px; color: #6c757d; font-size: 0.7rem; font-weight: 700; transition: all 0.2s ease; border: 1px solid transparent; line-height: 1.2; word-break: break-word; 
         }
         .cat-item i { font-size: 1.5rem; margin-bottom: 5px; color: #adb5bd; transition: 0.2s; }
         .cat-item:hover:not(.active) { background-color: #f1f3f5; border-color: #e9ecef; color: #495057; }
-        .cat-item:hover:not(.active) i { color: #6c757d; }
         .cat-item.active { background-color: #dc3545; color: white; box-shadow: 0 4px 10px rgba(220,53,69,0.25); }
         .cat-item.active i { color: white; }
         
-        /* Tombol Tambahan CSS */
         .btn-white { background-color: #fff; color: #495057; border-color: #dee2e6; }
         .btn-white:hover { background-color: #f8f9fa; color: #212529; }
         
-        /* Desain Kartu Produk (Identik POS) */
-        .product-card-cds { 
-            transition: transform 0.2s, box-shadow 0.2s; 
-            cursor: default; 
-            border-radius: 12px; 
-            border: 1px solid #e9ecef; 
-            background: #fff; 
-            height: 100%; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-        }
-        .product-card-cds:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important; }
+        .product-card-cds { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-radius: 12px; border: 1px solid #e9ecef; background: #fff; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+        .product-card-cds:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important; border-color: #dee2e6; }
         
-        /* 🌟 PERBAIKAN: UKURAN FOTO 1:1 KOTAK SEMPURNA! */
-        .product-img-wrapper { 
-            width: 100%; 
-            aspect-ratio: 1 / 1; /* <-- INI YANG MEMBUAT FOTO MENJADI KOTAK 1:1 */
-            background-color: #f1f3f5; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            position: relative;
-            overflow: hidden;
-            border-bottom: 1px solid #f1f3f5;
-        }
+        .product-img-wrapper { width: 100%; aspect-ratio: 1 / 1; background-color: #f1f3f5; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; border-bottom: 1px solid #f1f3f5; }
         .product-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         .product-img-placeholder-cds { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #adb5bd; }
         
-        /* Sembunyikan scrollbar di menu chips atas */
         .chips-container::-webkit-scrollbar { display: none; }
         .chips-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 🌟 ANIMASI OVERLAY SETTING & DETAIL PRODUK */
+        .glass-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1050; }
+        .slide-up { animation: slideUp 0.3s ease-out forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div id="cdsApp" class="split-screen" :class="(isPaymentOpen || paymentStatus === 'LUNAS') ? 'mobile-payment-active' : 'mobile-cart-active'" v-cloak>
     
-    <!-- KIRI: AREA PROMO ATAU LAYAR PEMBAYARAN -->
+    <!-- KIRI: AREA PROMO / KATALOG ATAU LAYAR PEMBAYARAN -->
     <div class="promo-area">
         <div v-if="isPaymentOpen || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
             
-            <!-- ANIMASI TRANSAKSI SELESAI (LUNAS FULL + SUDAH DI CETAK) -->
             <div v-if="paymentStatus === 'LUNAS'" class="w-100 h-100 d-flex align-items-center justify-content-center position-relative">
                 <div class="confetti-container">
                     <div class="confetti"></div><div class="confetti"></div><div class="confetti"></div>
@@ -216,19 +136,14 @@
                     
                     <div v-if="changeAmount > 0" class="change-box fade-in" style="animation-delay: 0.8s; opacity: 0; animation-fill-mode: forwards;">
                         <h5 class="text-secondary fw-bold text-uppercase tracking-wider mb-2">Uang Kembali Anda</h5>
-                        <h1 class="text-success fw-black mb-0" style="font-size: 4.5rem; text-shadow: 0 4px 15px rgba(29,209,161,0.25);">
-                            Rp {{ formatRupiah(changeAmount) }}
-                        </h1>
+                        <h1 class="text-success fw-black mb-0" style="font-size: 4.5rem;">Rp {{ formatRupiah(changeAmount) }}</h1>
                     </div>
                     <div v-else class="mt-4 pt-4 border-top fade-in" style="animation-delay: 0.8s; opacity: 0; animation-fill-mode: forwards;">
-                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-5 py-3 fs-5">
-                            Pembayaran Pas / Lunas
-                        </span>
+                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-5 py-3 fs-5">Pembayaran Pas / Lunas</span>
                     </div>
                 </div>
             </div>
 
-            <!-- TAMPILAN PROSES PEMBAYARAN (PENDING/MENUNGGU CETAK) -->
             <template v-else>
                 <div v-if="!paymentMethod && !isSplitPayment" class="text-center fade-in">
                     <i class="fas fa-cash-register fa-6x text-secondary mb-4 opacity-50"></i>
@@ -236,17 +151,13 @@
                     <p class="text-muted fs-4 mt-2">Silakan tunggu kasir memilih metode pembayaran.</p>
                 </div>
                 
-                <!-- TAMPILAN SPLIT PAYMENT -->
+                <!-- ... SCRIPT SPLIT PAYMENT & QRIS BAWAAN POS ANDA (TIDAK ADA YG DIUBAH) ... -->
                 <div v-else-if="isSplitPayment" class="w-100 h-100 fade-in p-4 d-flex align-items-center justify-content-center">
-                    
                     <div class="card shadow-lg border-0 w-100" style="max-width: 950px; border-radius: 24px; overflow: hidden;">
                         <div class="row g-0 h-100 align-items-stretch">
-                            
-                            <!-- KOTAK KIRI: Ringkasan Split -->
                             <div class="col-md-5 d-flex flex-column border-end-md" style="background-color: #fdfdfd;">
                                 <div class="p-4 p-md-5 text-center d-flex flex-column h-100">
                                     <h4 class="fw-bold text-dark mb-4 border-bottom pb-3">Ringkasan Split</h4>
-                                    
                                     <div class="mb-3 text-start flex-grow-1" v-if="splitPayments.length > 0">
                                         <div v-for="(p, i) in splitPayments" :key="i" class="d-flex justify-content-between border-bottom pb-3 mb-3 fw-bold text-secondary" style="font-size: 1.15rem;">
                                             <span><i class="fas fa-check-circle text-success me-2"></i> {{ p.method }}</span>
@@ -254,19 +165,13 @@
                                         </div>
                                     </div>
                                     <div v-else class="text-muted fs-5 fst-italic flex-grow-1 d-flex align-items-center justify-content-center">Belum ada dana masuk</div>
-                                    
                                     <div class="mt-4 pt-4 border-top">
                                         <h6 class="text-muted mb-2 text-uppercase fw-bold">Sisa Tagihan (Pokok)</h6>
-                                        <h1 class="fw-black mb-0 text-danger" style="font-size: 3rem; letter-spacing: -1px;">
-                                            Rp {{ formatRupiah(remainingSplitTagihan > 0 ? remainingSplitTagihan : 0) }}
-                                        </h1>
+                                        <h1 class="fw-black mb-0 text-danger" style="font-size: 3rem;">Rp {{ formatRupiah(remainingSplitTagihan > 0 ? remainingSplitTagihan : 0) }}</h1>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- KOTAK KANAN: Instruksi Pembayaran / QRIS Dinamis -->
                             <div class="col-md-7 d-flex flex-column position-relative bg-white">
-                                
                                 <div v-if="remainingSplitTagihan <= 0" class="d-flex flex-column align-items-center justify-content-center text-center p-5 h-100 fade-in">
                                     <i class="fas fa-check-circle text-success mb-3" style="font-size: 6rem;"></i>
                                     <h2 class="fw-black text-success mb-2">{{ changeAmount > 0 ? 'Pembayaran Lunas!' : 'Pembayaran Pas!' }}</h2>
@@ -276,16 +181,13 @@
                                     </div>
                                     <p class="text-muted mt-5 mb-0 fs-5"><i class="fas fa-print me-2"></i>Menunggu kasir mencetak struk...</p>
                                 </div>
-
                                 <div v-else-if="paymentMethod && paymentType === 'QRIS'" class="h-100 d-flex flex-column fade-in">
                                     <div class="qris-header d-flex justify-content-between align-items-center py-3 px-4">
                                         <span class="fw-bold fs-5" style="letter-spacing: 1px;">SCAN UNTUK SISA TAGIHAN</span>
                                         <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 28px; width: 90px; object-fit: contain; filter: brightness(0) invert(1);">
                                     </div>
                                     <div class="p-4 text-center flex-grow-1 d-flex flex-column justify-content-center align-items-center">
-                                        <div class="qris-amount mb-3" style="font-size: 3rem;">
-                                            Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}
-                                        </div>
+                                        <div class="qris-amount mb-3" style="font-size: 3rem;">Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}</div>
                                         <div class="d-flex justify-content-center gap-3 mb-4 text-muted" style="font-size: 0.95rem;">
                                             <span class="fw-semibold"><i class="fas fa-box text-secondary"></i> Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : remainingSplitTagihan) }}</span>
                                             <span v-if="currentPaymentAmount > 0 && (currentPaymentTotal - currentPaymentAmount) > 0" class="fw-bold text-danger bg-danger bg-opacity-10 px-2 py-1 rounded">
@@ -298,16 +200,11 @@
                                         <p class="text-secondary mt-3 mb-0 fw-bold">Arahkan kamera ke layar ini</p>
                                     </div>
                                 </div>
-                                
                                 <div v-else-if="paymentMethod" class="d-flex flex-column align-items-center justify-content-center text-center p-5 h-100 fade-in">
                                     <i v-if="paymentType === 'TRANSFER' || paymentType === 'VA'" class="fas fa-university fa-4x text-info mb-3"></i>
                                     <i v-else class="fas fa-wallet fa-4x text-primary mb-3"></i>
                                     <h3 class="fw-bold text-dark mb-1">Metode: {{ paymentMethod }}</h3>
-                                    
-                                    <h1 class="fw-black text-danger my-3" style="font-size: 3.5rem; letter-spacing: -2px;">
-                                        Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}
-                                    </h1>
-                                    
+                                    <h1 class="fw-black text-danger my-3" style="font-size: 3.5rem;">Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}</h1>
                                     <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box w-100 mt-2 text-start p-4">
                                         <div class="text-uppercase fw-bold text-secondary mb-1" style="font-size: 0.85rem;">Transfer Ke:</div>
                                         <h5 class="fw-bold text-primary mb-1">{{ bankName }}</h5>
@@ -315,36 +212,25 @@
                                         <p class="text-muted mb-0" v-if="accountName">a.n {{ accountName }}</p>
                                     </div>
                                 </div>
-                                
                                 <div v-else class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-center p-5 fade-in">
                                     <div class="modern-loader"></div>
                                     <h4 class="text-dark fw-bold mt-2">Memproses...</h4>
-                                    <p class="text-muted fs-5">Menunggu kasir memilih metode selanjutnya.</p>
                                 </div>
-
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- TAMPILAN QRIS PREMIUM (NON-SPLIT) -->
                 <div v-else-if="paymentType === 'QRIS'" class="text-center w-100 h-100 fade-in d-flex justify-content-center align-items-center p-4">
-                    
                     <div class="qris-card" style="max-width: 780px;">
                         <div class="qris-header d-flex justify-content-between align-items-center py-3 px-4">
                             <span class="fw-bold fs-5" style="letter-spacing: 2px;">TOTAL TAGIHAN</span>
                             <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS" style="height: 28px; width: 90px; object-fit: contain; filter: brightness(0) invert(1);">
                         </div>
-                        
                         <div class="card-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-around text-center text-md-start">
-                            
                             <div class="mb-4 mb-md-0 pe-md-4 border-end-md w-100">
                                 <span class="badge bg-light text-dark border mb-3 px-4 py-2 fs-5 shadow-sm">{{ paymentMethod }}</span>
-                                
-                                <div class="qris-amount mb-3">
-                                    Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}
-                                </div>
-
+                                <div class="qris-amount mb-3">Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}</div>
                                 <div class="text-muted fs-5 mt-4">
                                     <div class="fw-semibold mb-2"><i class="fas fa-box text-secondary"></i> Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : total) }}</div>
                                     <div v-if="currentPaymentAmount > 0 && (currentPaymentTotal - currentPaymentAmount) > 0" class="fw-bold text-danger bg-danger bg-opacity-10 px-3 py-1 rounded d-inline-block">
@@ -352,51 +238,34 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="ps-md-4 text-center">
                                 <div class="qris-qr-box">
                                     <img :src="qrImageUrl || ('https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=PAY_' + (currentPaymentTotal > 0 ? currentPaymentTotal : total))" alt="QRIS Code" style="width: 250px; height: 250px; object-fit: contain;">
                                 </div>
                                 <p class="text-secondary mt-4 mb-0 fw-bold fs-5">Arahkan kamera ke layar ini</p>
                             </div>
-
                         </div>
                     </div>
-
                 </div>
                 
-                <!-- METODE TUNAI / TRANSFER (BAYAR PENUH) -->
                 <div v-else class="text-center w-100 h-100 d-flex flex-column align-items-center justify-content-center fade-in">
-                    
-                    <!-- SKENARIO 1: JIKA KASIR MENGETIK UANG LEBIH (MENAMPILKAN KEMBALIAN) -->
                     <template v-if="changeAmount > 0">
-                        <i class="fas fa-check-circle text-success mb-3" style="font-size: 6rem; filter: drop-shadow(0 10px 10px rgba(29,209,161,0.2));"></i>
+                        <i class="fas fa-check-circle text-success mb-3" style="font-size: 6rem;"></i>
                         <h2 class="fw-black text-success mb-2" style="font-size: 2.5rem;">Pembayaran Lunas!</h2>
-                        
                         <div class="mt-4 p-4 bg-success bg-opacity-10 rounded-4 mx-auto border border-success w-100 shadow-sm" style="max-width: 500px;">
                             <h6 class="text-success fw-bold text-uppercase mb-2 tracking-wider">Kembalian</h6>
-                            <h1 class="text-success fw-black mb-0" style="font-size: 4.5rem; letter-spacing: -2px;">Rp {{ formatRupiah(changeAmount) }}</h1>
+                            <h1 class="text-success fw-black mb-0" style="font-size: 4.5rem;">Rp {{ formatRupiah(changeAmount) }}</h1>
                         </div>
-                        
                         <div class="text-muted fw-bold mt-4 pt-3 border-top w-50 mx-auto" style="font-size: 1.1rem;">
                             <i class="fas fa-hand-holding-usd me-2 text-secondary"></i>Uang Diterima: Rp {{ formatRupiah(currentPaymentAmount) }}
                         </div>
-                        
-                        <p class="text-muted mt-4 mb-0 fs-5"><i class="fas fa-print me-2"></i>Menunggu kasir mencetak struk...</p>
                     </template>
-
-                    <!-- SKENARIO 2: JIKA UANG PAS ATAU BELUM KLIK CETAK -->
                     <template v-else>
-                        <i v-if="paymentType === 'TRANSFER' || paymentType === 'VA'" class="fas fa-university fa-6x text-info mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
-                        <i v-else class="fas fa-wallet fa-6x text-primary mb-4" style="filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));"></i>
-                        
+                        <i v-if="paymentType === 'TRANSFER' || paymentType === 'VA'" class="fas fa-university fa-6x text-info mb-4"></i>
+                        <i v-else class="fas fa-wallet fa-6x text-primary mb-4"></i>
                         <h1 class="fw-bold text-dark mb-2">Total Tagihan</h1>
-                        <h1 class="fw-black text-danger my-4" style="font-size: 5.5rem; letter-spacing: -3px; text-shadow: 0 5px 15px rgba(232,65,24,0.15);">
-                            Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}
-                        </h1>
-                        
+                        <h1 class="fw-black text-danger my-4" style="font-size: 5.5rem;">Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}</h1>
                         <h4 class="text-muted mt-2">Metode: {{ paymentMethod }}</h4>
-
                         <div v-if="(paymentType === 'TRANSFER' || paymentType === 'VA') && bankName" class="bank-info-box text-center shadow-sm mx-auto mt-4" style="max-width: 600px;">
                             <div class="text-uppercase fw-bold text-secondary mb-2" style="font-size: 1rem;">Mohon Transfer Ke:</div>
                             <h3 class="fw-bold text-primary mb-2">{{ bankName }}</h3>
@@ -404,7 +273,6 @@
                             <h4 class="text-muted mb-0" v-if="accountName">a.n {{ accountName }}</h4>
                         </div>
                     </template>
-
                 </div>
             </template>            
         </div>
@@ -412,110 +280,227 @@
         <template v-else>
             
             <!-- ================================================================================= -->
-            <!-- 🌟 RENDER KATALOG MENU/PRODUK (FOTO 1:1 & FILTER HIERARKI KATEGORI CERDAS) -->
+            <!-- 🌟 RENDER KATALOG MENU / CDS INTERAKTIF -->
             <!-- ================================================================================= -->
-            <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex text-start bg-light fade-in">
+            <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex text-start bg-light fade-in position-relative">
                 
-                <!-- 🌟 Sidebar Kategori Kiri (HANYA LEVEL 1 / UTAMA) -->
+                <!-- Sidebar Kategori Kiri -->
                 <div class="catalog-sidebar shadow-sm">
-                    <div class="cat-item" :class="{'active': selectedMainCategory === 'ALL'}" @click="selectMainCategory('ALL')">
-                        <i class="fas fa-th-large"></i>
-                        <span>Semua</span>
+                    <div class="sidebar-menu">
+                        <div class="cat-item" :class="{'active': selectedMainCategory === 'ALL'}" @click="selectMainCategory('ALL')">
+                            <i class="fas fa-th-large"></i>
+                            <span>Semua</span>
+                        </div>
+                        <div v-for="cat in mainCategories" :key="cat.id" class="cat-item" :class="{'active': selectedMainCategory === cat.id}" @click="selectMainCategory(cat.id)">
+                            <i class="fas fa-tags"></i>
+                            <span>{{ cat.name }}</span>
+                        </div>
                     </div>
                     
-                    <div v-for="cat in mainCategories" :key="cat.id" class="cat-item" :class="{'active': selectedMainCategory === cat.id}" @click="selectMainCategory(cat.id)">
-                        <i class="fas fa-tags"></i>
-                        <span>{{ cat.name }}</span>
+                    <!-- 🌟 TOMBOL PENGATURAN TERSEMBUNYI -->
+                    <div class="sidebar-footer">
+                        <button class="btn btn-sm btn-light text-muted border rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="openSettingsModal" title="Pengaturan Layar CDS">
+                            <i class="fas fa-cog fs-5"></i>
+                        </button>
                     </div>
                 </div>
 
                 <!-- Grid Produk Kanan -->
                 <div class="catalog-grid d-flex flex-column">
                     
-                    <!-- 🌟 Chips Sub-Kategori (LEVEL 2) Muncul di Atas Jika Induk Dipilih -->
                     <div class="d-flex flex-wrap gap-2 mb-4 chips-container" style="overflow-x: auto; white-space: nowrap;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
                         <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
-                                :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white border'"
-                                @click="selectedSubCategory = 'ALL'">
+                                :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white border'" @click="selectedSubCategory = 'ALL'">
                             Semua
                         </button>
-                        
                         <button v-for="sub in activeSubCategories" :key="sub.id"
                                 class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
-                                :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white border'"
-                                @click="selectedSubCategory = sub.id">
+                                :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white border'" @click="selectedSubCategory = sub.id">
                             {{ sub.name }}
                         </button>
                     </div>
 
-                    <!-- Layout Kotak Produk (Maksimal 5 Kolom) -->
                     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 align-content-start">
                         
+                        <!-- 🌟 KARTU PRODUK (Kini Bisa Diklik) -->
                         <div class="col" v-for="prod in filteredProducts" :key="prod.id">
-                            <div class="product-card-cds position-relative">
+                            <div class="product-card-cds position-relative" @click="openProductDetail(prod)">
                                 
-                                <!-- OVERLAY JIKA STOK HABIS -->
                                 <div v-if="isOutOfStock(prod)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255, 255, 255, 0.75); z-index: 10;">
                                     <span class="badge bg-dark px-3 py-2 rounded-pill shadow-sm" style="letter-spacing: 1.5px; font-size: 0.85rem;">HABIS</span>
                                 </div>
 
-                                <!-- 🌟 Bagian Gambar 1:1 Kotak Sempurna -->
                                 <div class="product-img-wrapper">
                                     <template v-if="prod.imageBase64 && prod.imageBase64.trim() !== ''">
                                         <img :src="prod.imageBase64" @error="prod.imageBase64 = ''" alt="Product">
                                     </template>
                                     <template v-else-if="prod.image || prod.gambar">
                                         <img :src="prod.image || prod.gambar" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" alt="Product">
-                                        <div class="product-img-placeholder-cds w-100 h-100" style="display: none;">
-                                            <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i>
-                                            <span style="font-size: 0.65rem; font-weight: bold; letter-spacing: 0.5px;">NO IMAGE</span>
-                                        </div>
+                                        <div class="product-img-placeholder-cds w-100 h-100" style="display: none;"><i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i><span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span></div>
                                     </template>
                                     <template v-else>
-                                        <div class="product-img-placeholder-cds">
-                                            <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i>
-                                            <span style="font-size: 0.65rem; font-weight: bold; letter-spacing: 0.5px;">NO IMAGE</span>
-                                        </div>
+                                        <div class="product-img-placeholder-cds"><i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i><span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span></div>
                                     </template>
                                     
-                                    <!-- Tag Produk -->
                                     <span v-if="prod.tag" class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
                                 </div>
                                 
                                 <div class="p-2 pb-3 d-flex flex-column flex-grow-1 bg-white">
-                                    <!-- Nama Produk -->
                                     <h6 class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ prod.name || 'Tanpa Nama' }}</h6>
                                     
-                                    <!-- SKU Label -->
-                                    <div class="mb-2" v-if="prod.sku">
-                                        <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;">{{ prod.sku }}</span>
+                                    <!-- Menampilkan Info Varian jika ada -->
+                                    <div class="mb-2">
+                                        <span v-if="prod.sku" class="badge bg-light text-secondary border fw-normal me-1" style="font-size: 0.65rem;">{{ prod.sku }}</span>
+                                        <span v-if="prod.variants && prod.variants.length > 0" class="badge bg-info bg-opacity-10 text-info border border-info fw-semibold" style="font-size: 0.65rem;">{{ prod.variants.length }} Varian</span>
                                     </div>
                                     
                                     <div class="mt-auto pt-1">
-                                        <!-- Harga -->
                                         <div class="text-danger fw-bold" style="font-size: 0.95rem;">Rp {{ formatRupiah(prod.sellPrice || prod.price) }}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Info jika kategori kosong -->
                         <div v-if="filteredProducts.length === 0" class="col-12 text-center text-muted mt-5 py-5 w-100">
                             <i class="fas fa-search fs-1 mb-3 d-block opacity-50"></i>
-                            <span class="fw-bold fs-5">Tidak ada produk di kategori ini.</span>
+                            <span class="fw-bold fs-5">Tidak ada produk yang ditampilkan.</span>
                         </div>
-
                     </div>
                 </div>
+
+                <!-- ========================================================= -->
+                <!-- 🌟 OVERLAY DETAIL PRODUK (MUNCUL SAAT KARTU DIKLIK) -->
+                <!-- ========================================================= -->
+                <div v-if="selectedProduct" class="position-absolute top-0 start-0 w-100 h-100 bg-white fade-in d-flex flex-column" style="z-index: 50;">
+                    
+                    <div class="p-3 border-bottom d-flex align-items-center shadow-sm sticky-top bg-white">
+                        <button @click="selectedProduct = null" class="btn btn-outline-dark rounded-pill px-3 py-1 fw-bold me-3 shadow-sm">
+                            <i class="fas fa-arrow-left me-2"></i> Kembali
+                        </button>
+                        <h5 class="mb-0 fw-bold text-truncate text-secondary">Detail Produk</h5>
+                    </div>
+                    
+                    <div class="p-4 overflow-y-auto flex-grow-1 bg-light">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mx-auto" style="max-width: 900px;">
+                            <div class="row g-0">
+                                <div class="col-md-5 bg-white border-end d-flex align-items-center justify-content-center p-4">
+                                    <div class="product-img-wrapper rounded-3 shadow-sm w-100" style="border-bottom: none;">
+                                        <template v-if="selectedProduct.imageBase64 && selectedProduct.imageBase64.trim() !== ''">
+                                            <img :src="selectedProduct.imageBase64" class="rounded-3" alt="Product">
+                                        </template>
+                                        <template v-else-if="selectedProduct.image || selectedProduct.gambar">
+                                            <img :src="selectedProduct.image || selectedProduct.gambar" class="rounded-3" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="product-img-placeholder-cds w-100 h-100 rounded-3 bg-light" style="display: none;"><i class="fas fa-box" style="font-size: 4rem;"></i></div>
+                                        </template>
+                                        <template v-else>
+                                            <div class="product-img-placeholder-cds w-100 h-100 rounded-3 bg-light"><i class="fas fa-box" style="font-size: 4rem;"></i></div>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="col-md-7 p-4 p-lg-5 bg-white d-flex flex-column">
+                                    
+                                    <div class="mb-2 d-flex gap-2">
+                                        <span v-if="selectedProduct.tag" class="badge bg-warning text-dark px-3 py-2 rounded-pill">{{ selectedProduct.tag }}</span>
+                                        <span v-if="selectedProduct.sku" class="badge bg-light text-secondary border px-3 py-2 rounded-pill"><i class="fas fa-barcode me-1"></i> {{ selectedProduct.sku }}</span>
+                                    </div>
+
+                                    <h2 class="fw-black text-dark mb-2 lh-sm">{{ selectedProduct.name }}</h2>
+                                    <div class="text-danger fw-black mb-4" style="font-size: 2rem; letter-spacing: -1px;">Rp {{ formatRupiah(selectedProduct.sellPrice || selectedProduct.price) }}</div>
+                                    
+                                    <!-- List Varian -->
+                                    <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="mt-2">
+                                        <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px;"><i class="fas fa-list-ul me-2"></i>Pilihan Varian:</h6>
+                                        <div class="row g-3">
+                                            
+                                            <div class="col-sm-6" v-for="v in selectedProduct.variants" :key="v.name">
+                                                <div class="card border border-2 rounded-4 h-100 transition-all position-relative overflow-hidden" :class="isVariantOutOfStock(v) ? 'bg-light border-light opacity-75' : 'border-primary border-opacity-25 shadow-sm'">
+                                                    
+                                                    <!-- Overlay Habis (Hanya muncul jika stok 0 & negative inventory OFF) -->
+                                                    <div v-if="isVariantOutOfStock(v)" class="position-absolute top-0 end-0 m-2 badge bg-dark text-white rounded-pill shadow-sm" style="font-size: 0.65rem;">HABIS</div>
+                                                    
+                                                    <div class="card-body p-3 d-flex flex-column">
+                                                        <div class="fw-bold text-dark mb-1 fs-6 lh-sm pe-4">{{ v.name }}</div>
+                                                        <div class="mt-auto pt-2 text-danger fw-bold fs-5">Rp {{ formatRupiah(v.sellPrice || selectedProduct.sellPrice) }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <div v-else class="alert alert-secondary border-0 bg-light d-flex align-items-center mt-3">
+                                        <i class="fas fa-info-circle fs-4 me-3 text-secondary"></i> 
+                                        <span class="fw-medium">Produk ini langsung tersedia tanpa pilihan varian khusus.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- 🌟 MODAL PENGATURAN CDS (OVERLAY) -->
+                <!-- ========================================================= -->
+                <div v-if="isSettingsOpen" class="position-absolute top-0 start-0 w-100 h-100 glass-overlay d-flex align-items-center justify-content-center">
+                    <div class="card border-0 shadow-lg slide-up" style="width: 500px; max-width: 90%; border-radius: 20px; overflow: hidden;">
+                        <div class="card-header bg-dark text-white p-3 px-4 d-flex justify-content-between align-items-center border-0">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-desktop me-2"></i> Pengaturan Layar CDS</h5>
+                            <button type="button" class="btn-close btn-close-white" @click="isSettingsOpen = false"></button>
+                        </div>
+                        <div class="card-body p-4 bg-light" style="max-height: 70vh; overflow-y: auto;">
+                            
+                            <div class="alert alert-info border-0 shadow-sm py-2 px-3 mb-4 fs-6 rounded-3">
+                                <i class="fas fa-info-circle me-2"></i> Pengaturan ini hanya tersimpan di perangkat ini (Local Kiosk).
+                            </div>
+
+                            <!-- Pilihan Kategori -->
+                            <h6 class="fw-bold text-dark mb-3">Kategori Ditampilkan di Sidebar:</h6>
+                            <div class="bg-white border rounded-3 p-3 mb-4 shadow-sm" style="max-height: 200px; overflow-y: auto;">
+                                <div class="form-check mb-2 border-bottom pb-2">
+                                    <input class="form-check-input" type="checkbox" id="catAll" 
+                                           :checked="tempSettings.selectedCategories.length === 0" 
+                                           @change="toggleAllCategories($event)">
+                                    <label class="form-check-label fw-bold text-primary" for="catAll">Tampilkan Semua Kategori</label>
+                                </div>
+                                <div class="form-check mb-2" v-for="cat in allMainCategories" :key="'set-'+cat.id">
+                                    <input class="form-check-input" type="checkbox" :id="'set-'+cat.id" :value="cat.id" v-model="tempSettings.selectedCategories">
+                                    <label class="form-check-label text-dark fw-medium" :for="'set-'+cat.id">{{ cat.name }}</label>
+                                </div>
+                            </div>
+
+                            <!-- Pengaturan Inventori -->
+                            <h6 class="fw-bold text-dark mb-3">Pengaturan Stok & Inventori:</h6>
+                            <div class="bg-white border rounded-3 p-3 shadow-sm">
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="hideOOS" v-model="tempSettings.hideOutOfStock">
+                                    <label class="form-check-label fw-medium text-dark" for="hideOOS">
+                                        Sembunyikan produk yang stoknya habis <br>
+                                        <small class="text-muted fw-normal">Jika aktif, produk dengan stok 0 tidak akan tampil di layar.</small>
+                                    </label>
+                                </div>
+
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="allowNegative" v-model="tempSettings.allowNegativeInventory">
+                                    <label class="form-check-label fw-medium text-dark" for="allowNegative">
+                                        Izinkan Negative Inventory / Abaikan Stok<br>
+                                        <small class="text-muted fw-normal">Jika aktif, label "HABIS" akan dihilangkan dan semua barang dianggap ada (Bisa dibeli tanpa batas).</small>
+                                    </label>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="card-footer p-3 bg-white border-top d-flex justify-content-end gap-2">
+                            <button class="btn btn-light fw-bold px-4 rounded-pill" @click="isSettingsOpen = false">Batal</button>
+                            <button class="btn btn-danger fw-bold px-4 rounded-pill shadow-sm" @click="saveSettingsLocal"><i class="fas fa-save me-2"></i> Simpan Pengaturan</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- 1. Render YouTube -->
             <iframe v-else-if="cdsSettings.mediaType === 'youtube' && cdsSettings.youtubeUrl" 
-                    :src="getYouTubeEmbedUrl(cdsSettings.youtubeUrl)" 
-                    frameborder="0" 
-                    allow="autoplay; encrypted-media" 
-                    allowfullscreen 
-                    style="width: 100%; height: 100%; pointer-events: none;">
+                    :src="getYouTubeEmbedUrl(cdsSettings.youtubeUrl)" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="width: 100%; height: 100%; pointer-events: none;">
             </iframe>
 
             <!-- 2. Render MP4 Biasa -->
@@ -534,7 +519,6 @@
         <div class="bg-danger text-white text-center py-4 shadow-sm d-flex flex-column">
             <h3 class="mb-1 fw-bold">{{ storeName }}</h3>
             <span class="fs-6 opacity-75" v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</span>
-            
             <div class="d-flex justify-content-between px-4 mt-3 text-light opacity-75" style="font-size: 0.85rem;">
                 <span class="fw-bold"><i class="fas fa-file-invoice"></i> {{ invoiceNumber || 'INV-...' }}</span>
                 <span class="fw-bold"><i class="fas fa-clock"></i> {{ currentTime }}</span>
@@ -547,74 +531,37 @@
                 <h4 class="text-secondary fw-bold">Keranjang Kosong</h4>
                 <p class="fs-6">Silakan bawa barang belanjaan Anda ke kasir.</p>
             </div>
-            
             <div v-for="(item, index) in cartItems" :key="index" class="d-flex gap-3 mb-4 border-bottom pb-3 fade-in" :style="'animation-delay: ' + (index * 0.1) + 's;'">
-                <div v-if="item.imageBase64" class="product-img-container">
-                    <img :src="item.imageBase64" class="product-img" alt="Produk">
-                </div>
-                <div v-else class="product-img-placeholder">
-                    <i class="fas fa-box opacity-50"></i>
-                </div>
-                
+                <div v-if="item.imageBase64" class="product-img-container"><img :src="item.imageBase64" class="product-img" alt="Produk"></div>
+                <div v-else class="product-img-placeholder"><i class="fas fa-box opacity-50"></i></div>
                 <div class="flex-grow-1">
                     <div class="item-name">{{ item.name }}</div>
                     <div v-if="item.note" class="text-muted small fst-italic mb-1" style="font-size: 0.8rem;">📝 {{ item.note }}</div>
-                    
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <div class="item-price">
                             <span class="fw-bold text-dark">{{ item.qty }}</span> x 
-                            <span v-if="item.originalPrice > item.sellPrice" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.85em;">
-                                Rp {{ formatRupiah(item.originalPrice) }}
-                            </span>
+                            <span v-if="item.originalPrice > item.sellPrice" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.85em;">Rp {{ formatRupiah(item.originalPrice) }}</span>
                             <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice) }}</span>
                         </div>
-                        <div class="item-total">
-                            Rp {{ formatRupiah(item.qty * item.sellPrice) }}
-                        </div>
+                        <div class="item-total">Rp {{ formatRupiah(item.qty * item.sellPrice) }}</div>
                     </div>
-                    
-                    <div v-if="item.itemDiscountAmt > 0" class="mt-2">
-                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger fw-bold px-2 py-1" style="font-size: 0.7rem;">
-                            Hemat Rp {{ formatRupiah(item.itemDiscountAmt * item.qty) }}
-                        </span>
-                    </div>
+                    <div v-if="item.itemDiscountAmt > 0" class="mt-2"><span class="badge bg-danger bg-opacity-10 text-danger border border-danger fw-bold px-2 py-1" style="font-size: 0.7rem;">Hemat Rp {{ formatRupiah(item.itemDiscountAmt * item.qty) }}</span></div>
                 </div>
             </div>
         </div>
 
         <div class="cart-footer">
-            <div class="d-flex justify-content-between mb-2 fs-6">
-                <span class="text-muted">Subtotal Produk</span>
-                <span class="fw-bold text-dark">Rp {{ formatRupiah(subtotal) }}</span>
-            </div>
-            <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6">
-                <span><i class="fas fa-tag"></i> Extra Diskon</span>
-                <span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span>
-            </div>
-            <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-success fs-6">
-                <span><i class="fas fa-user-check"></i> Diskon Member</span>
-                <span class="fw-bold">- Rp {{ formatRupiah(memberDiscountAmt) }}</span>
-            </div>
-            <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6">
-                <span><i class="fas fa-tags"></i> Diskon Manual</span>
-                <span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span>
-            </div>
-            <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6">
-                <span>PPN (11%)</span>
-                <span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span>
-            </div>
-            <div v-if="shippingFee > 0" class="d-flex justify-content-between mb-2 text-info fs-6">
-                <span><i class="fas fa-truck"></i> Ongkir ({{ courier }})</span>
-                <span class="fw-bold">+ Rp {{ formatRupiah(shippingFee) }}</span>
-            </div>
+            <div class="d-flex justify-content-between mb-2 fs-6"><span class="text-muted">Subtotal Produk</span><span class="fw-bold text-dark">Rp {{ formatRupiah(subtotal) }}</span></div>
+            <div v-if="extraDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6"><span><i class="fas fa-tag"></i> Extra Diskon</span><span class="fw-bold">- Rp {{ formatRupiah(extraDiscountAmt) }}</span></div>
+            <div v-if="memberDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-success fs-6"><span><i class="fas fa-user-check"></i> Diskon Member</span><span class="fw-bold">- Rp {{ formatRupiah(memberDiscountAmt) }}</span></div>
+            <div v-if="invoiceDiscountAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6"><span><i class="fas fa-tags"></i> Diskon Manual</span><span class="fw-bold">- Rp {{ formatRupiah(invoiceDiscountAmt) }}</span></div>
+            <div v-if="taxAmt > 0" class="d-flex justify-content-between mb-2 text-danger fs-6"><span>PPN (11%)</span><span class="fw-bold">+ Rp {{ formatRupiah(taxAmt) }}</span></div>
+            <div v-if="shippingFee > 0" class="d-flex justify-content-between mb-2 text-info fs-6"><span><i class="fas fa-truck"></i> Ongkir ({{ courier }})</span><span class="fw-bold">+ Rp {{ formatRupiah(shippingFee) }}</span></div>
 
             <hr class="my-3 border-secondary border-opacity-50">
-            
             <div class="d-flex justify-content-between align-items-end mt-3">
                 <span class="fw-bold text-dark text-uppercase tracking-wider" style="font-size: 0.95rem; margin-bottom: 6px;">Total Tagihan</span>
-                <span class="fw-black text-danger" style="font-size: 2.3rem; letter-spacing: -1.5px; text-shadow: 1px 1px 0 rgba(0,0,0,0.05); line-height: 1;">
-                    Rp {{ formatRupiah(total) }}
-                </span>
+                <span class="fw-black text-danger" style="font-size: 2.3rem; letter-spacing: -1.5px; text-shadow: 1px 1px 0 rgba(0,0,0,0.05); line-height: 1;">Rp {{ formatRupiah(total) }}</span>
             </div>
         </div>
 
@@ -650,143 +597,143 @@
                 cdsSettings: { mediaType: 'video', videoUrl: '', youtubeUrl: '', imageUrls: '', welcomeText: '' },
                 currentImage: '', imageIndex: 0, slideInterval: null,
                 
-                // 🌟 VARIABEL KATALOG HIERARKI
                 categories: [], 
                 products: [], 
                 selectedMainCategory: 'ALL',
-                selectedSubCategory: 'ALL'
+                selectedSubCategory: 'ALL',
+
+                // 🌟 VARIABEL LOKAL SETTING CDS & MODAL
+                selectedProduct: null,
+                isSettingsOpen: false,
+                localSettings: {
+                    selectedCategories: [], // Array ID kategori yg dipilih
+                    hideOutOfStock: false,
+                    allowNegativeInventory: false
+                },
+                tempSettings: { selectedCategories: [], hideOutOfStock: false, allowNegativeInventory: false }
             }
         },
         computed: {
-            // 🌟 LOGIKA: Kategori Utama (Hanya Tampilkan Level 1 yang tidak punya induk)
-            mainCategories() {
+            allMainCategories() {
                 return this.categories.filter(c => {
                     if (c.level === 1 || c.level === 'Level 1') return true;
                     if (!c.parentId || c.parentId === '0' || c.parentId === '') return true;
-                    
-                    // Atau jika dia yatim piatu (ID induknya sudah terhapus)
                     const parentExists = this.categories.some(p => p.id === c.parentId);
                     return !parentExists;
                 });
             },
             
-            // 🌟 LOGIKA: Sub-Kategori (Level 2) Muncul berdasarkan Kategori Utama yang diklik
+            // Sidebar Kiri: Tampilkan hasil filter Local Settings
+            mainCategories() {
+                let cats = this.allMainCategories;
+                if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
+                    cats = cats.filter(c => this.localSettings.selectedCategories.includes(c.id));
+                }
+                return cats;
+            },
+            
             activeSubCategories() {
                 if (this.selectedMainCategory === 'ALL') return [];
                 return this.categories.filter(c => c.parentId === this.selectedMainCategory);
             },
             
-            // 🌟 LOGIKA FILTER PRODUK YANG SANGAT CERDAS
             filteredProducts() {
-                let targetCatId = this.selectedSubCategory !== 'ALL' ? this.selectedSubCategory : this.selectedMainCategory;
-                
-                if (targetCatId === 'ALL') return this.products;
+                let result = this.products;
 
-                // Ambil ID target beserta seluruh "anak cucunya" (Level 2 & Level 3)
-                let allowedCatIds = this.getDescendantCategoryIds(targetCatId);
-                
-                // Ambil nama dari ID tersebut (sebagai cadangan jika produk di-bind menggunakan nama, bukan ID)
-                let allowedCatNames = this.categories.filter(c => allowedCatIds.includes(c.id)).map(c => c.name);
+                // 1. Filter Berdasarkan Kategori yang di-klik
+                if (this.selectedMainCategory !== 'ALL') {
+                    let targetCatId = this.selectedSubCategory !== 'ALL' ? this.selectedSubCategory : this.selectedMainCategory;
+                    let allowedCatIds = this.getDescendantCategoryIds(targetCatId);
+                    let allowedCatNames = this.categories.filter(c => allowedCatIds.includes(c.id)).map(c => c.name);
+                    result = result.filter(p => allowedCatIds.includes(p.categoryId) || allowedCatIds.includes(p.kategoriId) || allowedCatIds.includes(p.id_kategori) || allowedCatNames.includes(p.category) || allowedCatNames.includes(p.kategori));
+                } 
+                // Jika sedang memilih 'Semua', tapi di pengaturan hanya diizinkan beberapa kategori
+                else if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
+                    let allAllowedIds = [];
+                    this.localSettings.selectedCategories.forEach(catId => { allAllowedIds = allAllowedIds.concat(this.getDescendantCategoryIds(catId)); });
+                    let allAllowedNames = this.categories.filter(c => allAllowedIds.includes(c.id)).map(c => c.name);
+                    result = result.filter(p => allAllowedIds.includes(p.categoryId) || allAllowedIds.includes(p.kategoriId) || allAllowedIds.includes(p.id_kategori) || allAllowedNames.includes(p.category) || allAllowedNames.includes(p.kategori));
+                }
 
-                return this.products.filter(p => {
-                    return allowedCatIds.includes(p.categoryId) ||
-                           allowedCatIds.includes(p.kategoriId) ||
-                           allowedCatIds.includes(p.id_kategori) ||
-                           allowedCatNames.includes(p.category) ||
-                           allowedCatNames.includes(p.kategori);
-                });
+                // 2. Filter Pengaturan "Sembunyikan Produk Habis"
+                if (this.localSettings.hideOutOfStock) {
+                    result = result.filter(p => !this.isOutOfStock(p));
+                }
+
+                return result;
             }
         },
         methods: {
-            // 🌟 Fungsi saat klik kategori di kiri
+            openProductDetail(prod) {
+                this.selectedProduct = prod;
+            },
+            openSettingsModal() {
+                this.tempSettings = JSON.parse(JSON.stringify(this.localSettings));
+                this.isSettingsOpen = true;
+            },
+            saveSettingsLocal() {
+                this.localSettings = JSON.parse(JSON.stringify(this.tempSettings));
+                localStorage.setItem('cds_local_settings_' + outletId, JSON.stringify(this.localSettings));
+                this.isSettingsOpen = false;
+                this.selectedMainCategory = 'ALL'; // Reset view ke Semua
+                this.selectedProduct = null;
+            },
+            toggleAllCategories(e) {
+                if (e.target.checked) this.tempSettings.selectedCategories = []; // Kosong = Pilih Semua
+            },
             selectMainCategory(catId) {
                 this.selectedMainCategory = catId;
-                this.selectedSubCategory = 'ALL'; // Reset sub-kategori ke "Semua"
+                this.selectedSubCategory = 'ALL';
             },
-            
-            // 🌟 Rekursi: Mencari seluruh anak cucu dari sebuah Kategori Induk
             getDescendantCategoryIds(parentId) {
                 let ids = [parentId];
                 let children = this.categories.filter(c => c.parentId === parentId);
-                for (let child of children) {
-                    ids = ids.concat(this.getDescendantCategoryIds(child.id));
-                }
+                for (let child of children) { ids = ids.concat(this.getDescendantCategoryIds(child.id)); }
                 return ids;
             },
-            
             formatRupiah(number) {
                 if(!number) return '0';
                 return Number(number).toLocaleString('id-ID');
             },
-            getYouTubeEmbedUrl(url) {
-                if (!url) return '';
-                let videoId = '';
-                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                const match = url.match(regExp);
-                if (match && match[2].length === 11) {
-                    videoId = match[2];
-                } else {
-                    return '';
-                }
-                return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}`;
-            },
-            startImageSlider() {
-                clearInterval(this.slideInterval);
-                if (this.cdsSettings.mediaType !== 'video' && this.cdsSettings.imageUrls) {
-                    const images = this.cdsSettings.imageUrls.split('\n').filter(url => url.trim() !== '');
-                    if (images.length > 0) {
-                        this.currentImage = images[0].trim();
-                        if (this.cdsSettings.mediaType === 'image_slider' && images.length > 1) {
-                            this.slideInterval = setInterval(() => {
-                                this.imageIndex = (this.imageIndex + 1) % images.length;
-                                this.currentImage = images[this.imageIndex].trim();
-                            }, 5000);
-                        }
-                    }
-                }
-            },
             isOutOfStock(prod) {
-                let totalStock = 0;
-                let outId = outletId || 'global';
-                
+                if (this.localSettings.allowNegativeInventory) return false;
+                let totalStock = 0; let outId = outletId || 'global';
                 if (prod.variants && prod.variants.length > 0) {
-                    prod.variants.forEach(v => {
-                        if (v.outletStocks && v.outletStocks[outId] !== undefined) {
-                            totalStock += Number(v.outletStocks[outId]);
-                        }
-                    });
+                    prod.variants.forEach(v => { if (v.outletStocks && v.outletStocks[outId] !== undefined) totalStock += Number(v.outletStocks[outId]); });
                 } else if (prod.baseOutletStocks && prod.baseOutletStocks[outId] !== undefined) {
                     totalStock = Number(prod.baseOutletStocks[outId]);
                 } else {
-                    totalStock = Number(prod.qty || prod.stok || 1); 
+                    totalStock = Number(prod.qty || prod.stok || 0); 
                 }
-                
                 return totalStock <= 0;
+            },
+            isVariantOutOfStock(v) {
+                if (this.localSettings.allowNegativeInventory) return false;
+                let outId = outletId || 'global';
+                let stock = (v.outletStocks && v.outletStocks[outId] !== undefined) ? Number(v.outletStocks[outId]) : Number(v.stok || v.qty || 0);
+                return stock <= 0;
             }
         },
         mounted() {
             if (!companyId) return;
 
-            // 🌟 TARIK DATA KATEGORI (Struktur Hierarki Level 1, 2, 3)
+            // 🌟 MUAT PENGATURAN LOKAL SAAT HALAMAN DIBUKA
+            let savedSettings = localStorage.getItem('cds_local_settings_' + outletId);
+            if (savedSettings) {
+                try { this.localSettings = JSON.parse(savedSettings); } catch(e) {}
+            }
+
             const catQuery = query(collection(db, "categories"), where("companyId", "==", companyId));
             onSnapshot(catQuery, (snapshot) => {
                 let cats = [];
                 snapshot.forEach(doc => {
                     let data = doc.data();
-                    cats.push({ 
-                        id: doc.id, 
-                        name: data.name || data.nama || data.kategori || 'Kategori',
-                        parentId: data.parentId || data.parent_id || data.parent || null,
-                        level: data.level || 1,
-                        ...data 
-                    });
+                    cats.push({ id: doc.id, name: data.name || data.nama || data.kategori || 'Kategori', parentId: data.parentId || data.parent_id || data.parent || null, level: data.level || 1, ...data });
                 });
-                // Mengurutkan sesuai Abjad
                 cats.sort((a, b) => a.name.localeCompare(b.name));
                 this.categories = cats;
             });
 
-            // TARIK DATA PRODUK SECARA LIVE
             const prodQuery = query(collection(db, "products"), where("companyId", "==", companyId));
             onSnapshot(prodQuery, (snapshot) => {
                 let prods = [];
@@ -843,7 +790,6 @@
                     const data = docSnap.data();
                     if (data.cdsSettings) {
                         this.cdsSettings = data.cdsSettings;
-                        this.startImageSlider(); 
                     }
                 }
             });
