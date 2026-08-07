@@ -112,6 +112,9 @@
         .glass-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1050; }
         .slide-up { animation: slideUp 0.3s ease-out forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Utility cursor */
+        .cursor-pointer { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -151,7 +154,7 @@
                     <p class="text-muted fs-4 mt-2">Silakan tunggu kasir memilih metode pembayaran.</p>
                 </div>
                 
-                <!-- ... SCRIPT SPLIT PAYMENT & QRIS BAWAAN POS ANDA (TIDAK ADA YG DIUBAH) ... -->
+                <!-- SCRIPT SPLIT PAYMENT & QRIS -->
                 <div v-else-if="isSplitPayment" class="w-100 h-100 fade-in p-4 d-flex align-items-center justify-content-center">
                     <div class="card shadow-lg border-0 w-100" style="max-width: 950px; border-radius: 24px; overflow: hidden;">
                         <div class="row g-0 h-100 align-items-stretch">
@@ -297,7 +300,7 @@
                         </div>
                     </div>
                     
-                    <!-- 🌟 TOMBOL PENGATURAN TERSEMBUNYI -->
+                    <!-- TOMBOL PENGATURAN TERSEMBUNYI -->
                     <div class="sidebar-footer">
                         <button class="btn btn-sm btn-light text-muted border rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="openSettingsModal" title="Pengaturan Layar CDS">
                             <i class="fas fa-cog fs-5"></i>
@@ -322,7 +325,7 @@
 
                     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 align-content-start">
                         
-                        <!-- 🌟 KARTU PRODUK (Kini Bisa Diklik) -->
+                        <!-- KARTU PRODUK -->
                         <div class="col" v-for="prod in filteredProducts" :key="prod.id">
                             <div class="product-card-cds position-relative" @click="openProductDetail(prod)">
                                 
@@ -348,7 +351,6 @@
                                 <div class="p-2 pb-3 d-flex flex-column flex-grow-1 bg-white">
                                     <h6 class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ prod.name || 'Tanpa Nama' }}</h6>
                                     
-                                    <!-- Menampilkan Info Varian jika ada -->
                                     <div class="mb-2">
                                         <span v-if="prod.sku" class="badge bg-light text-secondary border fw-normal me-1" style="font-size: 0.65rem;">{{ prod.sku }}</span>
                                         <span v-if="prod.variants && prod.variants.length > 0" class="badge bg-info bg-opacity-10 text-info border border-info fw-semibold" style="font-size: 0.65rem;">{{ prod.variants.length }} Varian</span>
@@ -369,28 +371,25 @@
                 </div>
 
                 <!-- ========================================================= -->
-                <!-- 🌟 OVERLAY DETAIL PRODUK (MUNCUL SAAT KARTU DIKLIK) -->
+                <!-- 🌟 OVERLAY DETAIL PRODUK & VARIAN (FOTO DINAMIS) -->
                 <!-- ========================================================= -->
                 <div v-if="selectedProduct" class="position-absolute top-0 start-0 w-100 h-100 bg-white fade-in d-flex flex-column" style="z-index: 50;">
                     
                     <div class="p-3 border-bottom d-flex align-items-center shadow-sm sticky-top bg-white">
-                        <button @click="selectedProduct = null" class="btn btn-outline-dark rounded-pill px-3 py-1 fw-bold me-3 shadow-sm">
+                        <button @click="closeProductDetail" class="btn btn-outline-dark rounded-pill px-3 py-1 fw-bold me-3 shadow-sm">
                             <i class="fas fa-arrow-left me-2"></i> Kembali
                         </button>
                         <h5 class="mb-0 fw-bold text-truncate text-secondary">Detail Produk</h5>
                     </div>
                     
                     <div class="p-4 overflow-y-auto flex-grow-1 bg-light">
-                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mx-auto" style="max-width: 900px;">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mx-auto" style="max-width: 950px;">
                             <div class="row g-0">
                                 <div class="col-md-5 bg-white border-end d-flex align-items-center justify-content-center p-4">
                                     <div class="product-img-wrapper rounded-3 shadow-sm w-100" style="border-bottom: none;">
-                                        <template v-if="selectedProduct.imageBase64 && selectedProduct.imageBase64.trim() !== ''">
-                                            <img :src="selectedProduct.imageBase64" class="rounded-3" alt="Product">
-                                        </template>
-                                        <template v-else-if="selectedProduct.image || selectedProduct.gambar">
-                                            <img :src="selectedProduct.image || selectedProduct.gambar" class="rounded-3" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            <div class="product-img-placeholder-cds w-100 h-100 rounded-3 bg-light" style="display: none;"><i class="fas fa-box" style="font-size: 4rem;"></i></div>
+                                        <!-- 🌟 Menampilkan Foto Varian yang Aktif, atau Foto Produk Utama -->
+                                        <template v-if="activeVariantImage">
+                                            <img :src="activeVariantImage" class="rounded-3" alt="Product / Variant" style="transition: opacity 0.3s ease;">
                                         </template>
                                         <template v-else>
                                             <div class="product-img-placeholder-cds w-100 h-100 rounded-3 bg-light"><i class="fas fa-box" style="font-size: 4rem;"></i></div>
@@ -401,36 +400,63 @@
                                     
                                     <div class="mb-2 d-flex gap-2">
                                         <span v-if="selectedProduct.tag" class="badge bg-warning text-dark px-3 py-2 rounded-pill">{{ selectedProduct.tag }}</span>
-                                        <span v-if="selectedProduct.sku" class="badge bg-light text-secondary border px-3 py-2 rounded-pill"><i class="fas fa-barcode me-1"></i> {{ selectedProduct.sku }}</span>
+                                        <span v-if="activeVariant && activeVariant.sku" class="badge bg-light text-secondary border px-3 py-2 rounded-pill"><i class="fas fa-barcode me-1"></i> {{ activeVariant.sku }}</span>
+                                        <span v-else-if="selectedProduct.sku" class="badge bg-light text-secondary border px-3 py-2 rounded-pill"><i class="fas fa-barcode me-1"></i> {{ selectedProduct.sku }}</span>
                                     </div>
 
-                                    <h2 class="fw-black text-dark mb-2 lh-sm">{{ selectedProduct.name }}</h2>
-                                    <div class="text-danger fw-black mb-4" style="font-size: 2rem; letter-spacing: -1px;">Rp {{ formatRupiah(selectedProduct.sellPrice || selectedProduct.price) }}</div>
+                                    <h2 class="fw-black text-dark mb-1 lh-sm">{{ selectedProduct.name }}</h2>
+                                    <h5 class="text-secondary fw-semibold mb-3" v-if="activeVariant">Varian: <span class="text-dark">{{ activeVariant.name }}</span></h5>
                                     
-                                    <!-- List Varian -->
+                                    <div class="text-danger fw-black mb-4" style="font-size: 2rem; letter-spacing: -1px;">
+                                        Rp {{ formatRupiah(activeVariant ? (activeVariant.sellPrice || selectedProduct.sellPrice) : (selectedProduct.sellPrice || selectedProduct.price)) }}
+                                    </div>
+                                    
+                                    <!-- List Varian (Bisa Diklik & Punya Thumbnail) -->
                                     <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="mt-2">
                                         <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px;"><i class="fas fa-list-ul me-2"></i>Pilihan Varian:</h6>
-                                        <div class="row g-3">
-                                            
-                                            <div class="col-sm-6" v-for="v in selectedProduct.variants" :key="v.name">
-                                                <div class="card border border-2 rounded-4 h-100 transition-all position-relative overflow-hidden" :class="isVariantOutOfStock(v) ? 'bg-light border-light opacity-75' : 'border-primary border-opacity-25 shadow-sm'">
+                                        <div class="row g-2">
+                                            <div class="col-12 col-sm-6" v-for="v in selectedProduct.variants" :key="v.name">
+                                                <div class="card rounded-3 h-100 transition-all position-relative overflow-hidden cursor-pointer" 
+                                                     :class="{
+                                                        'border-danger bg-danger bg-opacity-10 border-2': activeVariant === v, 
+                                                        'border-primary border-opacity-25 shadow-sm border-2': activeVariant !== v && !isVariantOutOfStock(v), 
+                                                        'bg-light border-light opacity-75 border-1': isVariantOutOfStock(v)
+                                                     }"
+                                                     @click="activeVariant = v">
                                                     
-                                                    <!-- Overlay Habis (Hanya muncul jika stok 0 & negative inventory OFF) -->
-                                                    <div v-if="isVariantOutOfStock(v)" class="position-absolute top-0 end-0 m-2 badge bg-dark text-white rounded-pill shadow-sm" style="font-size: 0.65rem;">HABIS</div>
+                                                    <div v-if="isVariantOutOfStock(v)" class="position-absolute top-0 end-0 m-2 badge bg-dark text-white rounded-pill shadow-sm" style="font-size: 0.6rem;">HABIS</div>
                                                     
-                                                    <div class="card-body p-3 d-flex flex-column">
-                                                        <div class="fw-bold text-dark mb-1 fs-6 lh-sm pe-4">{{ v.name }}</div>
-                                                        <div class="mt-auto pt-2 text-danger fw-bold fs-5">Rp {{ formatRupiah(v.sellPrice || selectedProduct.sellPrice) }}</div>
+                                                    <div class="d-flex p-2 gap-2 align-items-center">
+                                                        <!-- Thumbnail Varian Kecil -->
+                                                        <div style="width: 45px; height: 45px; border-radius: 6px; overflow: hidden; background: #fff;" class="flex-shrink-0 border shadow-sm">
+                                                            <img v-if="v.imageBase64 || v.image || v.gambar" :src="v.imageBase64 || v.image || v.gambar" style="width:100%; height:100%; object-fit:cover;">
+                                                            <img v-else-if="selectedProduct.imageBase64" :src="selectedProduct.imageBase64" style="width:100%; height:100%; object-fit:cover;">
+                                                            <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted"><i class="fas fa-box" style="font-size: 1rem;"></i></div>
+                                                        </div>
+                                                        <div class="d-flex flex-column justify-content-center">
+                                                            <div class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.85rem; padding-right: 25px;">{{ v.name }}</div>
+                                                            <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sellPrice || selectedProduct.sellPrice) }}</div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-
                                         </div>
                                     </div>
                                     <div v-else class="alert alert-secondary border-0 bg-light d-flex align-items-center mt-3">
                                         <i class="fas fa-info-circle fs-4 me-3 text-secondary"></i> 
                                         <span class="fw-medium">Produk ini langsung tersedia tanpa pilihan varian khusus.</span>
                                     </div>
+
+                                    <!-- 🌟 Pilihan Identifier / Opsi Tambahan -->
+                                    <div v-if="(activeVariant && activeVariant.identifiers && activeVariant.identifiers.length > 0) || (!activeVariant && selectedProduct.identifiers && selectedProduct.identifiers.length > 0)" class="mt-4 pt-3 border-top">
+                                        <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.9rem;"><i class="fas fa-tags me-2"></i>Pilihan / Identifier Tersedia:</h6>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span v-for="(idtf, idx) in (activeVariant ? activeVariant.identifiers : selectedProduct.identifiers)" :key="idx" class="badge border border-secondary text-secondary bg-light px-3 py-2 rounded-pill fs-6 fw-medium">
+                                                {{ typeof idtf === 'object' ? (idtf.name || idtf.label || JSON.stringify(idtf)) : idtf }}
+                                            </span>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -438,7 +464,7 @@
                 </div>
 
                 <!-- ========================================================= -->
-                <!-- 🌟 MODAL PENGATURAN CDS (OVERLAY) -->
+                <!-- 🌟 MODAL PENGATURAN CDS (HIERARKI KATEGORI TREE VIEW) -->
                 <!-- ========================================================= -->
                 <div v-if="isSettingsOpen" class="position-absolute top-0 start-0 w-100 h-100 glass-overlay d-flex align-items-center justify-content-center">
                     <div class="card border-0 shadow-lg slide-up" style="width: 500px; max-width: 90%; border-radius: 20px; overflow: hidden;">
@@ -452,18 +478,38 @@
                                 <i class="fas fa-info-circle me-2"></i> Pengaturan ini hanya tersimpan di perangkat ini (Local Kiosk).
                             </div>
 
-                            <!-- Pilihan Kategori -->
-                            <h6 class="fw-bold text-dark mb-3">Kategori Ditampilkan di Sidebar:</h6>
-                            <div class="bg-white border rounded-3 p-3 mb-4 shadow-sm" style="max-height: 200px; overflow-y: auto;">
-                                <div class="form-check mb-2 border-bottom pb-2">
-                                    <input class="form-check-input" type="checkbox" id="catAll" 
-                                           :checked="tempSettings.selectedCategories.length === 0" 
-                                           @change="toggleAllCategories($event)">
+                            <!-- Pilihan Kategori Berstruktur Hierarki -->
+                            <h6 class="fw-bold text-dark mb-3">Kategori Ditampilkan (Pilih/Centang):</h6>
+                            <div class="bg-white border rounded-3 p-3 mb-4 shadow-sm" style="max-height: 250px; overflow-y: auto;">
+                                <div class="form-check mb-3 border-bottom pb-3">
+                                    <input class="form-check-input" type="checkbox" id="catAll" :checked="tempSettings.selectedCategories.length === 0" @change="toggleAllCategories($event)">
                                     <label class="form-check-label fw-bold text-primary" for="catAll">Tampilkan Semua Kategori</label>
                                 </div>
-                                <div class="form-check mb-2" v-for="cat in allMainCategories" :key="'set-'+cat.id">
-                                    <input class="form-check-input" type="checkbox" :id="'set-'+cat.id" :value="cat.id" v-model="tempSettings.selectedCategories">
-                                    <label class="form-check-label text-dark fw-medium" :for="'set-'+cat.id">{{ cat.name }}</label>
+                                
+                                <!-- Render Tree View Level 1, 2, 3 -->
+                                <div v-for="main in categoryTree" :key="main.id" class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" :id="'set-'+main.id" :value="main.id" v-model="tempSettings.selectedCategories">
+                                        <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id">{{ main.name }}</label>
+                                    </div>
+                                    
+                                    <!-- Level 2 -->
+                                    <div v-if="main.children && main.children.length > 0" class="ms-4 mt-1 border-start border-2 ps-3 border-light">
+                                        <div v-for="sub in main.children" :key="sub.id" class="mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" :id="'set-'+sub.id" :value="sub.id" v-model="tempSettings.selectedCategories">
+                                                <label class="form-check-label text-secondary fw-semibold" :for="'set-'+sub.id">{{ sub.name }}</label>
+                                            </div>
+                                            
+                                            <!-- Level 3 -->
+                                            <div v-if="sub.children && sub.children.length > 0" class="ms-4 mt-1">
+                                                <div class="form-check mb-1" v-for="grand in sub.children" :key="grand.id">
+                                                    <input class="form-check-input" type="checkbox" :id="'set-'+grand.id" :value="grand.id" v-model="tempSettings.selectedCategories">
+                                                    <label class="form-check-label text-muted" :for="'set-'+grand.id">{{ grand.name }}</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -483,7 +529,7 @@
                                     <input class="form-check-input" type="checkbox" id="allowNegative" v-model="tempSettings.allowNegativeInventory">
                                     <label class="form-check-label fw-medium text-dark" for="allowNegative">
                                         Izinkan Negative Inventory / Abaikan Stok<br>
-                                        <small class="text-muted fw-normal">Jika aktif, label "HABIS" akan dihilangkan dan semua barang dianggap ada (Bisa dibeli tanpa batas).</small>
+                                        <small class="text-muted fw-normal">Jika aktif, label "HABIS" akan dihilangkan dan semua barang dianggap ada.</small>
                                     </label>
                                 </div>
 
@@ -602,11 +648,12 @@
                 selectedMainCategory: 'ALL',
                 selectedSubCategory: 'ALL',
 
-                // 🌟 VARIABEL LOKAL SETTING CDS & MODAL
+                // VARIABEL LOKAL SETTING CDS & MODAL
                 selectedProduct: null,
+                activeVariant: null,
                 isSettingsOpen: false,
                 localSettings: {
-                    selectedCategories: [], // Array ID kategori yg dipilih
+                    selectedCategories: [], 
                     hideOutOfStock: false,
                     allowNegativeInventory: false
                 },
@@ -614,6 +661,39 @@
             }
         },
         computed: {
+            // 🌟 LOGIKA: Membangun Struktur Pohon Kategori (Tree View) untuk Modal Pengaturan
+            categoryTree() {
+                let tree = [];
+                // 1. Ambil Kategori Induk (Level 1)
+                let mainCats = this.categories.filter(c => c.level === 1 || c.level === 'Level 1' || !c.parentId || c.parentId === '0');
+                
+                mainCats.forEach(main => {
+                    let node = { ...main, children: [] };
+                    // 2. Ambil Anak (Level 2)
+                    let subCats = this.categories.filter(c => c.parentId === main.id);
+                    subCats.forEach(sub => {
+                        let subNode = { ...sub, children: [] };
+                        // 3. Ambil Cucu (Level 3)
+                        let grandCats = this.categories.filter(c => c.parentId === sub.id);
+                        subNode.children = grandCats;
+                        node.children.push(subNode);
+                    });
+                    tree.push(node);
+                });
+                return tree;
+            },
+
+            // 🌟 LOGIKA: Foto Dinamis (Mengubah foto utama berdasarkan varian yang diklik)
+            activeVariantImage() {
+                if (this.activeVariant && (this.activeVariant.imageBase64 || this.activeVariant.image || this.activeVariant.gambar)) {
+                    return this.activeVariant.imageBase64 || this.activeVariant.image || this.activeVariant.gambar;
+                }
+                if (this.selectedProduct && (this.selectedProduct.imageBase64 || this.selectedProduct.image || this.selectedProduct.gambar)) {
+                    return this.selectedProduct.imageBase64 || this.selectedProduct.image || this.selectedProduct.gambar;
+                }
+                return null;
+            },
+
             allMainCategories() {
                 return this.categories.filter(c => {
                     if (c.level === 1 || c.level === 'Level 1') return true;
@@ -666,6 +746,11 @@
         methods: {
             openProductDetail(prod) {
                 this.selectedProduct = prod;
+                this.activeVariant = null; // Reset seleksi varian saat membuka produk baru
+            },
+            closeProductDetail() {
+                this.selectedProduct = null;
+                this.activeVariant = null;
             },
             openSettingsModal() {
                 this.tempSettings = JSON.parse(JSON.stringify(this.localSettings));
@@ -677,6 +762,7 @@
                 this.isSettingsOpen = false;
                 this.selectedMainCategory = 'ALL'; // Reset view ke Semua
                 this.selectedProduct = null;
+                this.activeVariant = null;
             },
             toggleAllCategories(e) {
                 if (e.target.checked) this.tempSettings.selectedCategories = []; // Kosong = Pilih Semua
@@ -717,7 +803,7 @@
         mounted() {
             if (!companyId) return;
 
-            // 🌟 MUAT PENGATURAN LOKAL SAAT HALAMAN DIBUKA
+            // MUAT PENGATURAN LOKAL SAAT HALAMAN DIBUKA
             let savedSettings = localStorage.getItem('cds_local_settings_' + outletId);
             if (savedSettings) {
                 try { this.localSettings = JSON.parse(savedSettings); } catch(e) {}
