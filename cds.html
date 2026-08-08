@@ -157,15 +157,33 @@
         .cat-item.active { background-color: #dc3545; color: white; box-shadow: 0 4px 10px rgba(220,53,69,0.25); }
         .cat-item.active i { color: white; }
         
-        .btn-white { background-color: #fff; color: #495057; border-color: #dee2e6; }
-        .btn-white:hover { background-color: #f8f9fa; color: #212529; }
+        .btn-white { background-color: #fff; border-color: #dee2e6; }
+        .btn-white:hover { background-color: #f8f9fa; }
         
-        .product-card-cds { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-radius: 12px; border: 1px solid #e9ecef; background: #fff; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+        /* 🌟 CSS PRODUCT CARD (MENDUKUNG GRID DAN LIST MODE) */
+        .product-card-cds { 
+            transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-radius: 12px; 
+            border: 1px solid #e9ecef; background: #fff; height: 100%; display: flex; overflow: hidden; 
+        }
         .product-card-cds:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important; border-color: #dee2e6; }
         
-        .product-img-wrapper { width: 100%; aspect-ratio: 1 / 1; background-color: #f1f3f5; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; border-bottom: 1px solid #f1f3f5; }
+        /* Default Column Mode (Grid) */
+        .product-card-cds.view-grid { flex-direction: column; }
+        .product-card-cds.view-grid .product-img-wrapper { 
+            width: 100%; aspect-ratio: 1 / 1; background-color: #f1f3f5; display: flex; 
+            align-items: center; justify-content: center; position: relative; overflow: hidden; border-bottom: 1px solid #f1f3f5; 
+        }
+        
+        /* List Mode (Horizontal) */
+        .product-card-cds.view-list { flex-direction: row !important; align-items: stretch; }
+        .product-card-cds.view-list .product-img-wrapper { 
+            width: 130px; height: 100%; aspect-ratio: auto; background-color: #f1f3f5; 
+            display: flex; align-items: center; justify-content: center; position: relative; 
+            overflow: hidden; border-bottom: none; border-right: 1px solid #f1f3f5; flex-shrink: 0;
+        }
+        
         .product-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-        .product-img-placeholder-cds { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #adb5bd; }
+        .product-img-placeholder-cds { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #adb5bd; width: 100%; height: 100%; }
         
         .chips-container::-webkit-scrollbar { display: none; }
         .chips-container { -ms-overflow-style: none; scrollbar-width: none; }
@@ -371,24 +389,44 @@
                 <!-- Grid Produk Kanan -->
                 <div class="catalog-grid d-flex flex-column">
                     
-                    <div class="d-flex flex-wrap gap-2 mb-3 chips-container" style="overflow-x: auto; white-space: nowrap;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
-                        <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
-                                :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white border'" @click="selectedSubCategory = 'ALL'">
-                            Semua
-                        </button>
-                        <button v-for="sub in activeSubCategories" :key="sub.id"
-                                class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
-                                :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white border'" @click="selectedSubCategory = sub.id">
-                            {{ sub.name }}
-                        </button>
+                    <!-- 🌟 TOOLBAR ATAS: Filter Sub Kategori & Toggle Mode Tampilan -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <!-- Chips Sub Kategori -->
+                        <div class="chips-container d-flex gap-2" style="overflow-x: auto; white-space: nowrap; flex-grow: 1;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
+                            <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
+                                    :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = 'ALL'">
+                                Semua
+                            </button>
+                            <button v-for="sub in activeSubCategories" :key="sub.id"
+                                    class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
+                                    :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = sub.id">
+                                {{ sub.name }}
+                            </button>
+                        </div>
+                        <div v-else class="flex-grow-1">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-cube text-secondary me-2"></i>Katalog Produk</h5>
+                        </div>
+                        
+                        <!-- 🌟 TOGGLE VIEW MODE (GRID / LARGE / LIST) -->
+                        <div class="btn-group shadow-sm bg-white rounded-pill flex-shrink-0 border p-1">
+                            <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'grid' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid'" title="Mode Grid"><i class="fas fa-th"></i></button>
+                            <button class="btn btn-sm rounded-pill border-0 px-3 mx-1" :class="viewMode === 'large' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'large'" title="Mode Besar"><i class="fas fa-th-large"></i></button>
+                            <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'list' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'list'" title="Mode List"><i class="fas fa-list"></i></button>
+                        </div>
                     </div>
 
-                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 align-content-start">
+                    <!-- 🌟 LIST PRODUK (Dinamis berdasarkan View Mode) -->
+                    <div class="row g-3 align-content-start" 
+                         :class="[
+                            viewMode === 'grid' ? 'row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5' : '', 
+                            viewMode === 'large' ? 'row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-3' : '', 
+                            viewMode === 'list' ? 'row-cols-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-2' : ''
+                         ]">
                         
                         <div class="col" v-for="prod in filteredProducts" :key="prod.id">
-                            <div class="product-card-cds position-relative" @click="openProductDetail(prod)">
+                            <div class="product-card-cds position-relative" :class="'view-' + viewMode" @click="openProductDetail(prod)">
                                 
-                                <div v-if="isOutOfStock(prod)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255, 255, 255, 0.75); z-index: 10;">
+                                <div v-if="isOutOfStock(prod)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255, 255, 255, 0.75); z-index: 15;">
                                     <span class="badge bg-dark px-3 py-2 rounded-pill shadow-sm" style="letter-spacing: 1.5px; font-size: 0.85rem;">HABIS</span>
                                 </div>
 
@@ -410,19 +448,25 @@
                                         </div>
                                     </template>
                                     
-                                    <span v-if="prod.tag" class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
+                                    <!-- 🌟 TAG PRODUK PADA KARTU (Mendukung Tipe String & Array) -->
+                                    <div class="position-absolute top-0 start-0 p-2 d-flex flex-column gap-1" style="z-index: 10;">
+                                        <span v-if="prod.tag && typeof prod.tag === 'string'" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
+                                        <template v-if="prod.tags && Array.isArray(prod.tags)">
+                                            <span v-for="t in prod.tags" :key="t" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ t }}</span>
+                                        </template>
+                                    </div>
                                 </div>
                                 
                                 <div class="p-2 pb-3 d-flex flex-column flex-grow-1 bg-white">
-                                    <h6 class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ prod.name || 'Tanpa Nama' }}</h6>
+                                    <h6 class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ prod.name || 'Tanpa Nama' }}</h6>
                                     
-                                    <div class="mb-2">
-                                        <span v-if="prod.sku" class="badge bg-light text-secondary border fw-normal me-1" style="font-size: 0.65rem;">{{ prod.sku }}</span>
+                                    <div class="mb-2 d-flex flex-wrap gap-1 mt-1">
+                                        <span v-if="prod.sku" class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;"><i class="fas fa-barcode me-1"></i>{{ prod.sku }}</span>
                                         <span v-if="prod.variants && prod.variants.length > 0" class="badge bg-info bg-opacity-10 text-info border border-info fw-semibold" style="font-size: 0.65rem;">{{ prod.variants.length }} Varian</span>
                                     </div>
                                     
                                     <div class="mt-auto pt-1">
-                                        <div class="text-danger fw-bold" style="font-size: 0.95rem;">Rp {{ formatRupiah(prod.sellPrice || prod.price) }}</div>
+                                        <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.sellPrice || prod.price) }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -463,9 +507,12 @@
                                 </div>
                                 <div class="col-md-7 p-4 p-lg-5 bg-white d-flex flex-column">
                                     
-                                    <div class="mb-2 d-flex gap-2">
-                                        <span v-if="selectedProduct.tag" class="badge bg-warning text-dark px-3 py-2 rounded-pill">{{ selectedProduct.tag }}</span>
-                                        <!-- 🌟 KODE SKU / IDENTIFIER VARIAN YANG AKTIF -->
+                                    <div class="mb-2 d-flex flex-wrap gap-2">
+                                        <span v-if="selectedProduct.tag && typeof selectedProduct.tag === 'string'" class="badge bg-danger text-white px-3 py-2 rounded-pill">{{ selectedProduct.tag }}</span>
+                                        <template v-if="selectedProduct.tags && Array.isArray(selectedProduct.tags)">
+                                            <span v-for="t in selectedProduct.tags" :key="t" class="badge bg-danger text-white px-3 py-2 rounded-pill">{{ t }}</span>
+                                        </template>
+                                        
                                         <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
                                             <i class="fas fa-barcode me-1"></i> 
                                             {{ activeVariant ? (activeVariant.sku || activeVariant.code || selectedProduct.sku || 'N/A') : (selectedProduct.sku || 'N/A') }}
@@ -473,8 +520,13 @@
                                     </div>
 
                                     <h2 class="fw-black text-dark mb-1 lh-sm">{{ selectedProduct.name }}</h2>
-                                    <h5 class="text-secondary fw-semibold mb-3" v-if="activeVariant">
-                                        Varian: <span class="text-dark">{{ activeVariant.name }}</span>
+                                    
+                                    <!-- 🌟 SKU MUNCUL DI SAMPING NAMA VARIAN AKTIF -->
+                                    <h5 class="text-secondary fw-semibold mb-3 d-flex align-items-center flex-wrap gap-2" v-if="activeVariant">
+                                        <span>Varian: <span class="text-dark">{{ activeVariant.name }}</span></span>
+                                        <span v-if="activeVariant.sku || activeVariant.code" class="text-muted fw-normal" style="font-size: 0.9rem;">
+                                            (SKU: {{ activeVariant.sku || activeVariant.code }})
+                                        </span>
                                     </h5>
                                     
                                     <div class="text-danger fw-black mb-4" style="font-size: 2rem; letter-spacing: -1px;">
@@ -603,11 +655,11 @@
     </div>
 
     <!-- ================================================================= -->
-    <!-- 🌟 KANAN: AREA KERANJANG REAL-TIME (TAMPILAN & UKURAN FONT DIKECILKAN) -->
+    <!-- 🌟 KANAN: AREA KERANJANG REAL-TIME -->
     <!-- ================================================================= -->
     <div class="cart-area position-relative"> 
         
-        <!-- Header Merah Dibuat Ramping/Kecil -->
+        <!-- Header Merah -->
         <div class="cart-header-box">
             <h5 class="mb-1 fw-bold fs-6">{{ storeName }}</h5>
             <span class="d-block" style="font-size: 0.75rem; opacity: 0.85;" v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</span>
@@ -645,7 +697,7 @@
             </div>
         </div>
 
-        <!-- Footer Keranjang dengan Ukuran Font Proporsional Tablet -->
+        <!-- Footer Keranjang -->
         <div class="cart-footer">
             <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
                 <span class="text-muted">Subtotal Produk</span>
@@ -746,6 +798,9 @@
                 products: [], 
                 selectedMainCategory: 'ALL',
                 selectedSubCategory: 'ALL',
+                
+                // 🌟 VARIABEL UNTUK TOGGLE VIEW MODE
+                viewMode: 'grid', // Pilihan: 'grid', 'large', atau 'list'
 
                 selectedProduct: null,
                 activeVariant: null,
@@ -781,7 +836,6 @@
                 return tree;
             },
 
-            // Foto Dinamis & Fallback Varian
             activeVariantImage() {
                 if (this.activeVariant) {
                     if (this.activeVariant.imageBase64 && this.activeVariant.imageBase64.trim() !== '') {
