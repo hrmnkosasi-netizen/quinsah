@@ -369,13 +369,13 @@
                 <!-- Sidebar Kategori Kiri -->
                 <div class="catalog-sidebar shadow-sm">
                     <div class="sidebar-menu">
-                        <!-- 🌟 IKON SEMUA DIGANTI MENJADI BUKU TERBUKA -->
+                        <!-- 🌟 IKON SEMUA MENGGUNAKAN BUKU TERBUKA -->
                         <div class="cat-item" :class="{'active': selectedMainCategory === 'ALL'}" @click="selectMainCategory('ALL')">
                             <i class="fas fa-book-open"></i>
                             <span>Semua</span>
                         </div>
                         <div v-for="cat in mainCategories" :key="cat.id" class="cat-item" :class="{'active': selectedMainCategory === cat.id}" @click="selectMainCategory(cat.id)">
-                            <!-- 🌟 MEMBACA FIELD 'ICON' DARI DATABASE ATAU GUNAKAN DETEKSI CERDAS -->
+                            <!-- 🌟 IKON UMUM UNTUK SEMUA JENIS USAHA -->
                             <i :class="cat.icon || getCategoryIcon(cat.name)" class="mb-1"></i>
                             <span>{{ cat.name }}</span>
                         </div>
@@ -409,7 +409,7 @@
                             <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-cube text-secondary me-2"></i>Katalog Produk</h5>
                         </div>
                         
-                        <!-- 🌟 TOGGLE VIEW MODE DIUBAH (GRID, GRID 6, LIST) -->
+                        <!-- TOGGLE VIEW MODE DIUBAH (GRID, GRID 6, LIST) -->
                         <div class="btn-group shadow-sm bg-white rounded-pill flex-shrink-0 border p-1">
                             <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'grid' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid'" title="Mode Grid"><i class="fas fa-th-large"></i></button>
                             <button class="btn btn-sm rounded-pill border-0 px-3 mx-1" :class="viewMode === 'grid6' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid6'" title="Mode Grid 6"><i class="fas fa-th"></i></button>
@@ -417,7 +417,7 @@
                         </div>
                     </div>
 
-                    <!-- 🌟 LIST PRODUK (Dinamis berdasarkan View Mode) -->
+                    <!-- LIST PRODUK (Dinamis berdasarkan View Mode) -->
                     <div class="row g-3 align-content-start" 
                          :class="[
                             viewMode === 'grid' ? 'row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5' : '', 
@@ -504,13 +504,17 @@
                         <div class="card border-0 shadow-sm rounded-4 overflow-hidden mx-auto" style="max-width: 950px;">
                             <div class="row g-0">
                                 <div class="col-md-5 bg-white border-end d-flex align-items-center justify-content-center p-4">
-                                    <div class="product-img-wrapper rounded-3 shadow-sm w-100" style="border-bottom: none;">
+                                    <!-- 🌟 PERBAIKAN WADAH FOTO: Dikunci agar bentuknya kotak sempurna (aspect-ratio 1/1) -->
+                                    <div class="product-img-wrapper rounded-3 shadow-sm w-100" style="border-bottom: none; aspect-ratio: 1/1; background-color: #f8f9fa;">
                                         <!-- Foto Dinamis Varian -->
                                         <template v-if="activeVariantImage">
-                                            <img :src="activeVariantImage" class="rounded-3" alt="Product / Variant" style="transition: opacity 0.3s ease; width: 100%; height: 100%; object-fit: cover;">
+                                            <!-- 🌟 PERBAIKAN GAMBAR: object-fit diubah menjadi contain agar keseluruhan gambar selalu muat tanpa terpotong -->
+                                            <img :src="activeVariantImage" class="rounded-3" alt="Product / Variant" style="transition: opacity 0.3s ease; width: 100%; height: 100%; object-fit: contain; padding: 10px;">
                                         </template>
                                         <template v-else>
-                                            <div class="product-img-placeholder-cds w-100 h-100 rounded-3 bg-light"><i class="fas fa-box-open" style="font-size: 4rem;"></i></div>
+                                            <div class="w-100 h-100 rounded-3 d-flex align-items-center justify-content-center text-muted">
+                                                <i class="fas fa-box-open" style="font-size: 5rem; opacity: 0.5;"></i>
+                                            </div>
                                         </template>
                                     </div>
                                 </div>
@@ -566,7 +570,8 @@
                                                         <div class="d-flex flex-column justify-content-center">
                                                             <div class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.85rem; padding-right: 25px;">
                                                                 {{ v.name }}
-                                                                <span v-if="v.sku || v.code" class="text-muted fw-normal d-block mt-1" style="font-size: 0.7rem;">SKU: {{ v.sku || v.code }}</span>
+                                                                <!-- 🌟 PERBAIKAN VARIABEL SKU: Mendukung format v.sku, v.code, v.kode, atau v.barcode -->
+                                                                <span v-if="v.sku || v.code || v.kode || v.barcode" class="text-muted fw-normal d-block mt-1" style="font-size: 0.7rem;"><i class="fas fa-barcode me-1"></i>{{ v.sku || v.code || v.kode || v.barcode }}</span>
                                                             </div>
                                                             <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sellPrice || selectedProduct.sellPrice) }}</div>
                                                         </div>
@@ -925,24 +930,8 @@
             }
         },
         methods: {
-            // 🌟 FUNGSI BARU UNTUK IKON KATEGORI DINAMIS
+            // 🌟 IKON KATEGORI UMUM: Menggunakan Ikon Label/Tag yang cocok untuk semua jenis usaha
             getCategoryIcon(catName) {
-                if (!catName) return 'fas fa-tags';
-                let name = catName.toLowerCase();
-                
-                if (name.includes('baju') || name.includes('pakaian') || name.includes('kaos') || name.includes('atasan') || name.includes('bawahan') || name.includes('rok') || name.includes('tunik')) return 'fas fa-tshirt';
-                if (name.includes('buku') || name.includes('tulis')) return 'fas fa-book';
-                if (name.includes('makanan') || name.includes('snack') || name.includes('cemilan')) return 'fas fa-hamburger';
-                if (name.includes('minuman') || name.includes('jus') || name.includes('kopi') || name.includes('cafe')) return 'fas fa-coffee';
-                if (name.includes('sepatu') || name.includes('sandal') || name.includes('alas kaki')) return 'fas fa-shoe-prints';
-                if (name.includes('tas') || name.includes('bag')) return 'fas fa-shopping-bag';
-                if (name.includes('elektronik') || name.includes('hp') || name.includes('gadget')) return 'fas fa-mobile-alt';
-                if (name.includes('kosmetik') || name.includes('makeup') || name.includes('skincare')) return 'fas fa-magic';
-                if (name.includes('bahan') || name.includes('baku')) return 'fas fa-boxes';
-                if (name.includes('dapur') || name.includes('masak')) return 'fas fa-utensils';
-                if (name.includes('laundry') || name.includes('cuci')) return 'fas fa-soap';
-                if (name.includes('jasa') || name.includes('service')) return 'fas fa-concierge-bell';
-                
                 return 'fas fa-tag';
             },
             
@@ -1028,7 +1017,6 @@
                     cats.push({ 
                         id: doc.id, 
                         name: data.name || data.nama || data.kategori || 'Kategori', 
-                        // 🌟 MENAMBAHKAN PEMBACAAN FIELD ICON DARI DATABASE
                         icon: data.icon || null, 
                         parentId: data.parentId || data.parent_id || data.parent || null, 
                         level: data.level || 1, 
