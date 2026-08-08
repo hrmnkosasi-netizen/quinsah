@@ -48,12 +48,20 @@
         .promo-area { 
             background-color: #000; 
             display: flex; 
-            align-items: center; 
-            justify-content: center; 
+            flex-direction: column;
             overflow: hidden; 
             position: relative;
         }
-        .promo-area video, .promo-area img { 
+        .promo-media-container {
+            flex-grow: 1;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .promo-media-container video, .promo-media-container img { 
             width: 100%; 
             height: 100%; 
             object-fit: cover; 
@@ -88,7 +96,7 @@
             to { opacity: 1; transform: translateY(0); } 
         }
 
-        /* 🌟 AREA KERANJANG DISESUAIKAN AGAR PROPORSIONAL DI TABLET/PC */
+        /* AREA KERANJANG DISESUAIKAN AGAR PROPORSIONAL DI TABLET/PC */
         .cart-area { 
             background-color: #fff; 
             box-shadow: -10px 0 25px rgba(0,0,0,0.08); 
@@ -130,7 +138,7 @@
         .confetti { width: 15px; height: 15px; background-color: #f2d74e; position: absolute; top: -20px; animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
         
-        /* 🌟 CSS KHUSUS KATALOG & SIDEBAR CDS */
+        /* CSS KHUSUS KATALOG & SIDEBAR CDS */
         .catalog-sidebar { 
             width: 90px; flex-shrink: 0; background: #ffffff; border-right: 1px solid #dee2e6;
             display: flex; flex-direction: column; justify-content: space-between; z-index: 5;
@@ -160,7 +168,7 @@
         .btn-white { background-color: #fff; border-color: #dee2e6; }
         .btn-white:hover { background-color: #f8f9fa; }
         
-        /* 🌟 CSS PRODUCT CARD (MENDUKUNG GRID DAN LIST MODE) */
+        /* CSS PRODUCT CARD (MENDUKUNG GRID DAN LIST MODE) */
         .product-card-cds { 
             transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-radius: 12px; 
             border: 1px solid #e9ecef; background: #fff; height: 100%; display: flex; overflow: hidden; 
@@ -361,131 +369,133 @@
 
         <template v-else>
             
-            <!-- ================================================================= -->
             <!-- KATALOG MENU / CDS INTERAKTIF -->
-            <!-- ================================================================= -->
-            <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex text-start bg-light fade-in position-relative">
+            <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex flex-column text-start bg-light fade-in position-relative">
                 
-                <!-- Sidebar Kategori Kiri -->
-                <div class="catalog-sidebar shadow-sm">
-                    <div class="sidebar-menu">
-                        <!-- 🌟 IKON SEMUA MENGGUNAKAN BUKU TERBUKA -->
-                        <div class="cat-item" :class="{'active': selectedMainCategory === 'ALL'}" @click="selectMainCategory('ALL')">
-                            <i class="fas fa-book-open"></i>
-                            <span>Semua</span>
-                        </div>
-                        <div v-for="cat in mainCategories" :key="cat.id" class="cat-item" :class="{'active': selectedMainCategory === cat.id}" @click="selectMainCategory(cat.id)">
-                            <!-- 🌟 IKON UMUM UNTUK SEMUA JENIS USAHA -->
-                            <i :class="cat.icon || getCategoryIcon(cat.name)" class="mb-1"></i>
-                            <span>{{ cat.name }}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sidebar-footer">
-                        <button class="btn btn-sm btn-light text-muted border rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="openSettingsModal" title="Pengaturan Layar CDS">
-                            <i class="fas fa-cog fs-5"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Grid Produk Kanan -->
-                <div class="catalog-grid d-flex flex-column">
-                    
-                    <!-- TOOLBAR ATAS: Filter Sub Kategori & Toggle Mode Tampilan -->
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <!-- Chips Sub Kategori -->
-                        <div class="chips-container d-flex gap-2" style="overflow-x: auto; white-space: nowrap; flex-grow: 1;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
-                            <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
-                                    :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = 'ALL'">
-                                Semua
-                            </button>
-                            <button v-for="sub in activeSubCategories" :key="sub.id"
-                                    class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
-                                    :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = sub.id">
-                                {{ sub.name }}
-                            </button>
-                        </div>
-                        <div v-else class="flex-grow-1">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-cube text-secondary me-2"></i>Katalog Produk</h5>
+                <div class="d-flex flex-grow-1 overflow-hidden w-100 h-100">
+                    <!-- Sidebar Kategori Kiri -->
+                    <div class="catalog-sidebar shadow-sm">
+                        <div class="sidebar-menu">
+                            <div class="cat-item" :class="{'active': selectedMainCategory === 'ALL'}" @click="selectMainCategory('ALL')">
+                                <i class="fas fa-book-open"></i>
+                                <span>Semua</span>
+                            </div>
+                            <div v-for="cat in mainCategories" :key="cat.id" class="cat-item" :class="{'active': selectedMainCategory === cat.id}" @click="selectMainCategory(cat.id)">
+                                <i :class="cat.icon || getCategoryIcon(cat.name)" class="mb-1"></i>
+                                <span>{{ cat.name }}</span>
+                            </div>
                         </div>
                         
-                        <!-- TOGGLE VIEW MODE DIUBAH (GRID, GRID 6, LIST) -->
-                        <div class="btn-group shadow-sm bg-white rounded-pill flex-shrink-0 border p-1">
-                            <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'grid' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid'" title="Mode Grid"><i class="fas fa-th-large"></i></button>
-                            <button class="btn btn-sm rounded-pill border-0 px-3 mx-1" :class="viewMode === 'grid6' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid6'" title="Mode Grid 6"><i class="fas fa-th"></i></button>
-                            <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'list' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'list'" title="Mode List"><i class="fas fa-list"></i></button>
+                        <div class="sidebar-footer">
+                            <button class="btn btn-sm btn-light text-muted border rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="openSettingsModal" title="Pengaturan Layar CDS">
+                                <i class="fas fa-cog fs-5"></i>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- LIST PRODUK (Dinamis berdasarkan View Mode) -->
-                    <div class="row g-3 align-content-start" 
-                         :class="[
-                            viewMode === 'grid' ? 'row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5' : '', 
-                            viewMode === 'grid6' ? 'row-cols-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6' : '', 
-                            viewMode === 'list' ? 'row-cols-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-2' : ''
-                         ]">
+                    <!-- Grid Produk Kanan -->
+                    <div class="catalog-grid d-flex flex-column">
                         
-                        <div class="col" v-for="prod in filteredProducts" :key="prod.id">
-                            <!-- Class disesuaikan agar grid6 memanggil style kotak (column) -->
-                            <div class="product-card-cds position-relative" :class="viewMode.startsWith('grid') ? 'view-grid' : 'view-list'" @click="openProductDetail(prod)">
-                                
-                                <div v-if="isOutOfStock(prod)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255, 255, 255, 0.75); z-index: 15;">
-                                    <span class="badge bg-dark px-3 py-2 rounded-pill shadow-sm" style="letter-spacing: 1.5px; font-size: 0.85rem;">HABIS</span>
-                                </div>
-
-                                <div class="product-img-wrapper">
-                                    <template v-if="prod.imageBase64 && prod.imageBase64.trim() !== ''">
-                                        <img :src="prod.imageBase64" @error="prod.imageBase64 = ''" alt="Product">
-                                    </template>
-                                    <template v-else-if="prod.image || prod.gambar">
-                                        <img :src="prod.image || prod.gambar" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" alt="Product">
-                                        <div class="product-img-placeholder-cds w-100 h-100" style="display: none;">
-                                            <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 5px;"></i>
-                                            <span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span>
-                                        </div>
-                                    </template>
-                                    <template v-else>
-                                        <div class="product-img-placeholder-cds">
-                                            <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 5px;"></i>
-                                            <span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span>
-                                        </div>
-                                    </template>
-                                    
-                                    <!-- TAG PRODUK PADA KARTU (Mendukung Tipe String & Array termasuk productTags) -->
-                                    <div class="position-absolute top-0 start-0 p-2 d-flex flex-column gap-1" style="z-index: 10;">
-                                        <span v-if="prod.tag && typeof prod.tag === 'string'" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
-                                        
-                                        <template v-if="prod.tags && Array.isArray(prod.tags)">
-                                            <span v-for="t in prod.tags" :key="t" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ t }}</span>
-                                        </template>
-                                        
-                                        <!-- MENDUKUNG VARIABLE POS (productTags) -->
-                                        <template v-if="prod.productTags && Array.isArray(prod.productTags)">
-                                            <span v-for="t in prod.productTags" :key="'pt-'+t" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ t }}</span>
-                                        </template>
-                                    </div>
-                                </div>
-                                
-                                <div class="p-2 pb-3 d-flex flex-column flex-grow-1 bg-white">
-                                    <h6 class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ prod.name || 'Tanpa Nama' }}</h6>
-                                    
-                                    <div class="mb-2 d-flex flex-wrap gap-1 mt-1">
-                                        <span v-if="prod.sku" class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;"><i class="fas fa-barcode me-1"></i>{{ prod.sku }}</span>
-                                        <span v-if="prod.variants && prod.variants.length > 0" class="badge bg-info bg-opacity-10 text-info border border-info fw-semibold" style="font-size: 0.65rem;">{{ prod.variants.length }} Varian</span>
-                                    </div>
-                                    
-                                    <div class="mt-auto pt-1">
-                                        <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.sellPrice || prod.price) }}</div>
-                                    </div>
-                                </div>
+                        <!-- TOOLBAR ATAS -->
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div class="chips-container d-flex gap-2" style="overflow-x: auto; white-space: nowrap; flex-grow: 1;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
+                                <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
+                                        :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = 'ALL'">
+                                    Semua
+                                </button>
+                                <button v-for="sub in activeSubCategories" :key="sub.id"
+                                        class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
+                                        :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = sub.id">
+                                    {{ sub.name }}
+                                </button>
+                            </div>
+                            <div v-else class="flex-grow-1">
+                                <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-cube text-secondary me-2"></i>Katalog Produk</h5>
+                            </div>
+                            
+                            <!-- TOGGLE VIEW MODE -->
+                            <div class="btn-group shadow-sm bg-white rounded-pill flex-shrink-0 border p-1">
+                                <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'grid' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid'" title="Mode Grid"><i class="fas fa-th-large"></i></button>
+                                <button class="btn btn-sm rounded-pill border-0 px-3 mx-1" :class="viewMode === 'grid6' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid6'" title="Mode Grid 6"><i class="fas fa-th"></i></button>
+                                <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'list' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'list'" title="Mode List"><i class="fas fa-list"></i></button>
                             </div>
                         </div>
 
-                        <div v-if="filteredProducts.length === 0" class="col-12 text-center text-muted mt-5 py-5 w-100">
-                            <i class="fas fa-search fs-1 mb-3 d-block opacity-50"></i>
-                            <span class="fw-bold fs-5">Tidak ada produk yang ditampilkan.</span>
+                        <!-- LIST PRODUK -->
+                        <div class="row g-3 align-content-start" 
+                             :class="[
+                                viewMode === 'grid' ? 'row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5' : '', 
+                                viewMode === 'grid6' ? 'row-cols-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6' : '', 
+                                viewMode === 'list' ? 'row-cols-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-2' : ''
+                             ]">
+                            
+                            <div class="col" v-for="prod in filteredProducts" :key="prod.id">
+                                <div class="product-card-cds position-relative" :class="viewMode.startsWith('grid') ? 'view-grid' : 'view-list'" @click="openProductDetail(prod)">
+                                    
+                                    <div v-if="isOutOfStock(prod)" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255, 255, 255, 0.75); z-index: 15;">
+                                        <span class="badge bg-dark px-3 py-2 rounded-pill shadow-sm" style="letter-spacing: 1.5px; font-size: 0.85rem;">HABIS</span>
+                                    </div>
+
+                                    <div class="product-img-wrapper">
+                                        <template v-if="prod.imageBase64 && prod.imageBase64.trim() !== ''">
+                                            <img :src="prod.imageBase64" @error="prod.imageBase64 = ''" alt="Product">
+                                        </template>
+                                        <template v-else-if="prod.image || prod.gambar">
+                                            <img :src="prod.image || prod.gambar" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" alt="Product">
+                                            <div class="product-img-placeholder-cds w-100 h-100" style="display: none;">
+                                                <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 5px;"></i>
+                                                <span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span>
+                                            </div>
+                                        </template>
+                                        <template v-else>
+                                            <div class="product-img-placeholder-cds">
+                                                <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 5px;"></i>
+                                                <span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span>
+                                            </div>
+                                        </template>
+                                        
+                                        <!-- TAG PRODUK PADA KARTU -->
+                                        <div class="position-absolute top-0 start-0 p-2 d-flex flex-column gap-1" style="z-index: 10;">
+                                            <span v-if="prod.tag && typeof prod.tag === 'string'" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
+                                            <template v-if="prod.tags && Array.isArray(prod.tags)">
+                                                <span v-for="t in prod.tags" :key="t" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ t }}</span>
+                                            </template>
+                                            <template v-if="prod.productTags && Array.isArray(prod.productTags)">
+                                                <span v-for="t in prod.productTags" :key="'pt-'+t" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ t }}</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-2 pb-3 d-flex flex-column flex-grow-1 bg-white">
+                                        <h6 class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ prod.name || 'Tanpa Nama' }}</h6>
+                                        
+                                        <div class="mb-2 d-flex flex-wrap gap-1 mt-1">
+                                            <!-- 🌟 BACA DARI variantSku JUGA JIKA sku KOSONG -->
+                                            <span v-if="prod.sku || prod.variantSku" class="badge bg-light text-secondary border fw-normal" style="font-size: 0.65rem;"><i class="fas fa-barcode me-1"></i>{{ prod.sku || prod.variantSku }}</span>
+                                            <span v-if="prod.variants && prod.variants.length > 0" class="badge bg-info bg-opacity-10 text-info border border-info fw-semibold" style="font-size: 0.65rem;">{{ prod.variants.length }} Varian</span>
+                                        </div>
+                                        
+                                        <div class="mt-auto pt-1">
+                                            <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.sellPrice || prod.price) }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="filteredProducts.length === 0" class="col-12 text-center text-muted mt-5 py-5 w-100">
+                                <i class="fas fa-search fs-1 mb-3 d-block opacity-50"></i>
+                                <span class="fw-bold fs-5">Tidak ada produk yang ditampilkan.</span>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- RUNNING TEXT MARQUEE PROMO -->
+                <div class="bg-danger text-white overflow-hidden py-2 px-3 fw-bold d-flex align-items-center shadow-lg" style="font-size: 0.9rem; letter-spacing: 0.5px; z-index: 10;">
+                    <i class="fas fa-bullhorn me-3 fs-5"></i>
+                    <marquee behavior="scroll" direction="left" scrollamount="6" class="flex-grow-1">
+                        🌟 Selamat datang di {{ storeName }}! 🌟 Kepuasan Anda adalah prioritas kami. Pastikan Anda memeriksa kembali rincian pesanan di layar sebelah kanan sebelum melakukan pembayaran. Terima kasih telah berbelanja! 🌟
+                    </marquee>
                 </div>
 
                 <!-- ========================================================= -->
@@ -504,11 +514,8 @@
                         <div class="card border-0 shadow-sm rounded-4 overflow-hidden mx-auto" style="max-width: 950px;">
                             <div class="row g-0">
                                 <div class="col-md-5 bg-white border-end d-flex align-items-center justify-content-center p-4">
-                                    <!-- 🌟 PERBAIKAN WADAH FOTO: Dikunci agar bentuknya kotak sempurna (aspect-ratio 1/1) -->
                                     <div class="product-img-wrapper rounded-3 shadow-sm w-100" style="border-bottom: none; aspect-ratio: 1/1; background-color: #f8f9fa;">
-                                        <!-- Foto Dinamis Varian -->
                                         <template v-if="activeVariantImage">
-                                            <!-- 🌟 PERBAIKAN GAMBAR: object-fit diubah menjadi contain agar keseluruhan gambar selalu muat tanpa terpotong -->
                                             <img :src="activeVariantImage" class="rounded-3" alt="Product / Variant" style="transition: opacity 0.3s ease; width: 100%; height: 100%; object-fit: contain; padding: 10px;">
                                         </template>
                                         <template v-else>
@@ -530,9 +537,10 @@
                                             <span v-for="t in selectedProduct.productTags" :key="'pt-'+t" class="badge bg-danger text-white px-3 py-2 rounded-pill">{{ t }}</span>
                                         </template>
                                         
+                                        <!-- 🌟 MENDUKUNG variantSku PADA BADGE UTAMA -->
                                         <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
                                             <i class="fas fa-barcode me-1"></i> 
-                                            {{ activeVariant ? (activeVariant.sku || activeVariant.code || selectedProduct.sku || 'N/A') : (selectedProduct.sku || 'N/A') }}
+                                            {{ activeVariant ? (activeVariant.sku || activeVariant.variantSku || activeVariant.code || selectedProduct.sku || selectedProduct.variantSku || 'N/A') : (selectedProduct.sku || selectedProduct.variantSku || 'N/A') }}
                                         </span>
                                     </div>
 
@@ -542,8 +550,9 @@
                                         <span>Varian: <span class="text-dark">{{ activeVariant.name }}</span></span>
                                     </h5>
                                     
-                                    <div class="text-danger fw-black mb-4" style="font-size: 2rem; letter-spacing: -1px;">
-                                        Rp {{ formatRupiah(activeVariant ? (activeVariant.sellPrice || selectedProduct.sellPrice) : (selectedProduct.sellPrice || selectedProduct.price)) }}
+                                    <!-- 🌟 HARGA OTOMATIS BERUBAH MENGIKUTI TOTAL (Varian + Topping/Modifier) -->
+                                    <div class="text-danger fw-black mb-4" style="font-size: 2.2rem; letter-spacing: -1px;">
+                                        Rp {{ formatRupiah(detailTotalPrice) }}
                                     </div>
                                     
                                     <!-- List Varian -->
@@ -568,11 +577,16 @@
                                                             <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted"><i class="fas fa-box-open" style="font-size: 1rem;"></i></div>
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-center">
+                                                            
+                                                            <!-- 🌟 MEMBACA KODE DARI v.variantSku SESUAI SCRIPT ANDA -->
                                                             <div class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.85rem; padding-right: 25px;">
                                                                 {{ v.name }}
-                                                                <!-- 🌟 PERBAIKAN VARIABEL SKU: Mendukung format v.sku, v.code, v.kode, atau v.barcode -->
-                                                                <span v-if="v.sku || v.code || v.kode || v.barcode" class="text-muted fw-normal d-block mt-1" style="font-size: 0.7rem;"><i class="fas fa-barcode me-1"></i>{{ v.sku || v.code || v.kode || v.barcode }}</span>
+                                                                <span class="text-muted fw-normal d-block mt-1" style="font-size: 0.7rem;">
+                                                                    <i class="fas fa-barcode me-1"></i>
+                                                                    {{ v.variantSku || v.sku || v.code || v.kode || v.barcode || (selectedProduct.sku ? selectedProduct.sku + ' - ' + v.name : 'SKU Belum Diatur') }}
+                                                                </span>
                                                             </div>
+
                                                             <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sellPrice || selectedProduct.sellPrice) }}</div>
                                                         </div>
                                                     </div>
@@ -585,8 +599,36 @@
                                         <span class="fw-medium">Produk ini langsung tersedia tanpa pilihan varian khusus.</span>
                                     </div>
 
-                                    <!-- Pilihan Identifier / Opsi Tambahan -->
-                                    <div v-if="(activeVariant && activeVariant.identifiers && activeVariant.identifiers.length > 0) || (!activeVariant && selectedProduct.identifiers && selectedProduct.identifiers.length > 0)" class="mt-4 pt-3 border-top">
+                                    <!-- 🌟 FITUR BARU: MODIFIER (TOPPING DLL) TAMPIL INTERAKTIF -->
+                                    <div v-if="selectedProduct.modifiers && selectedProduct.modifiers.length > 0" class="mt-4 pt-3 border-top">
+                                        <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-plus-circle me-2"></i>Pilihan Tambahan / Opsi Khusus:</h6>
+                                        
+                                        <div v-for="(mod, mIdx) in selectedProduct.modifiers" :key="mIdx" class="mb-3 bg-white p-3 rounded-3 border shadow-sm">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <span class="fw-bold text-dark fs-6">{{ mod.groupName || 'Grup Pilihan ' + (mIdx + 1) }}</span>
+                                                <span class="badge" :class="mod.isRequired ? 'bg-danger' : 'bg-secondary'">{{ mod.isRequired ? 'Wajib Pilih 1 (Radio)' : 'Bebas Pilih (Checkbox)' }}</span>
+                                            </div>
+                                            
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <!-- Opsi Modifier Dapat Diklik -->
+                                                <div v-for="(opt, oIdx) in mod.options" :key="oIdx"
+                                                     class="card rounded-pill transition-all cursor-pointer border-2"
+                                                     :class="isModifierSelected(mIdx, opt) ? 'border-danger bg-danger bg-opacity-10 text-danger fw-bold shadow-sm' : 'border-light bg-light text-secondary fw-medium'"
+                                                     @click="toggleModifier(mIdx, opt, mod.isRequired)"
+                                                     style="padding: 8px 18px; font-size: 0.85rem;">
+                                                    
+                                                    <span>
+                                                        <i class="me-2" :class="isModifierSelected(mIdx, opt) ? 'fas fa-check-circle' : (mod.isRequired ? 'far fa-circle' : 'far fa-square')"></i>
+                                                        {{ opt.name }} 
+                                                        <span v-if="opt.price > 0" class="ms-1">(+Rp {{ formatRupiah(opt.price) }})</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Fallback untuk format identifiers lama jika masih ada -->
+                                    <div v-else-if="(activeVariant && activeVariant.identifiers && activeVariant.identifiers.length > 0) || (!activeVariant && selectedProduct.identifiers && selectedProduct.identifiers.length > 0)" class="mt-4 pt-3 border-top">
                                         <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.9rem;"><i class="fas fa-tags me-2"></i>Pilihan / Opsi Tersedia:</h6>
                                         <div class="d-flex flex-wrap gap-2">
                                             <span v-for="(idtf, idx) in (activeVariant ? activeVariant.identifiers : selectedProduct.identifiers)" :key="idx" class="badge border border-secondary text-secondary bg-light px-3 py-2 rounded-pill fs-6 fw-medium shadow-sm">
@@ -663,17 +705,21 @@
 
             </div>
 
-            <iframe v-else-if="cdsSettings.mediaType === 'youtube' && cdsSettings.youtubeUrl" :src="getYouTubeEmbedUrl(cdsSettings.youtubeUrl)" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="width: 100%; height: 100%; pointer-events: none;"></iframe>
-            <video v-else-if="cdsSettings.mediaType === 'video' && cdsSettings.videoUrl" :src="cdsSettings.videoUrl" autoplay loop muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-            <img v-else-if="currentImage" :src="currentImage" alt="Promo" style="width: 100%; height: 100%; object-fit: cover;">
+            <div v-else-if="cdsSettings.mediaType === 'youtube' && cdsSettings.youtubeUrl" class="promo-media-container">
+                <iframe :src="getYouTubeEmbedUrl(cdsSettings.youtubeUrl)" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="width: 100%; height: 100%; pointer-events: none;"></iframe>
+            </div>
+            <div v-else-if="cdsSettings.mediaType === 'video' && cdsSettings.videoUrl" class="promo-media-container">
+                <video :src="cdsSettings.videoUrl" autoplay loop muted></video>
+            </div>
+            <div v-else-if="currentImage" class="promo-media-container">
+                <img :src="currentImage" alt="Promo">
+            </div>
             
             <div v-if="cdsSettings.mediaType !== 'catalog'" class="welcome-text">{{ cdsSettings.welcomeText || 'Terima kasih telah berbelanja!' }}</div>
         </template>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- 🌟 KANAN: AREA KERANJANG REAL-TIME -->
-    <!-- ================================================================= -->
+    <!-- AREA KERANJANG KANAN -->
     <div class="cart-area position-relative"> 
         
         <!-- Header Merah -->
@@ -820,6 +866,8 @@
 
                 selectedProduct: null,
                 activeVariant: null,
+                selectedModifiers: {}, // 🌟 Object untuk menyimpan opsi modifier yang diklik
+                
                 isSettingsOpen: false,
                 localSettings: {
                     selectedCategories: [], 
@@ -927,10 +975,34 @@
                     result = result.filter(p => !this.isOutOfStock(p));
                 }
                 return result;
+            },
+            
+            // 🌟 KALKULASI HARGA OTOMATIS BERDASARKAN VARIAN & MODIFIER YANG DIKLIK
+            detailTotalPrice() {
+                if (!this.selectedProduct) return 0;
+                
+                // Harga Dasar dari Produk / Varian
+                let basePrice = 0;
+                if (this.activeVariant) {
+                    basePrice = this.activeVariant.sellPrice || this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
+                } else {
+                    basePrice = this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
+                }
+
+                // Tambahkan Harga dari Modifier/Topping yang dipilih
+                let modPrice = 0;
+                if (this.selectedModifiers) {
+                    Object.values(this.selectedModifiers).forEach(arr => {
+                        arr.forEach(opt => {
+                            modPrice += Number(opt.price || 0);
+                        });
+                    });
+                }
+                
+                return Number(basePrice) + modPrice;
             }
         },
         methods: {
-            // 🌟 IKON KATEGORI UMUM: Menggunakan Ikon Label/Tag yang cocok untuk semua jenis usaha
             getCategoryIcon(catName) {
                 return 'fas fa-tag';
             },
@@ -938,11 +1010,50 @@
             openProductDetail(prod) {
                 this.selectedProduct = prod;
                 this.activeVariant = null;
+                this.selectedModifiers = {};
+                
+                // 🌟 Auto-select opsi pertama untuk grup modifier yang Wajib (isRequired)
+                if (prod.modifiers && prod.modifiers.length > 0) {
+                    prod.modifiers.forEach((mod, idx) => {
+                        if (mod.isRequired && mod.options && mod.options.length > 0) {
+                            this.selectedModifiers[idx] = [mod.options[0]];
+                        } else {
+                            this.selectedModifiers[idx] = [];
+                        }
+                    });
+                }
             },
             closeProductDetail() {
                 this.selectedProduct = null;
                 this.activeVariant = null;
+                this.selectedModifiers = {};
             },
+            
+            // 🌟 FUNGSI KLIK MODIFIER
+            toggleModifier(mIdx, opt, isRequired) {
+                if (!this.selectedModifiers[mIdx]) {
+                    this.selectedModifiers[mIdx] = [];
+                }
+
+                if (isRequired) {
+                    // Jika wajib, hanya bisa pilih 1 (ganti pilihan sebelumnya)
+                    this.selectedModifiers[mIdx] = [opt];
+                } else {
+                    // Jika tidak wajib, bisa pilih/batal pilih banyak (seperti Checkbox)
+                    const existingIdx = this.selectedModifiers[mIdx].findIndex(o => o.name === opt.name);
+                    if (existingIdx >= 0) {
+                        this.selectedModifiers[mIdx].splice(existingIdx, 1);
+                    } else {
+                        this.selectedModifiers[mIdx].push(opt);
+                    }
+                }
+            },
+            // 🌟 CEK APAKAH MODIFIER SEDANG AKTIF
+            isModifierSelected(mIdx, opt) {
+                if (!this.selectedModifiers[mIdx]) return false;
+                return this.selectedModifiers[mIdx].some(o => o.name === opt.name);
+            },
+            
             openSettingsModal() {
                 this.tempSettings = JSON.parse(JSON.stringify(this.localSettings));
                 this.isSettingsOpen = true;
