@@ -271,7 +271,7 @@
                                     <div class="p-4 text-center flex-grow-1 d-flex flex-column justify-content-center align-items-center">
                                         <div class="qris-amount mb-3" style="font-size: 3rem;">Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : remainingSplitTagihan) }}</div>
                                         <div class="d-flex justify-content-center gap-3 mb-4 text-muted" style="font-size: 0.95rem;">
-                                            <span class="fw-semibold"><i class="fas fa-box text-secondary"></i> Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : remainingSplitTagihan) }}</span>
+                                            <span class="fw-semibold"><i class="fas fa-box-open text-secondary"></i> Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : remainingSplitTagihan) }}</span>
                                             <span v-if="currentPaymentAmount > 0 && (currentPaymentTotal - currentPaymentAmount) > 0" class="fw-bold text-danger bg-danger bg-opacity-10 px-2 py-1 rounded">
                                                 <i class="fas fa-tag"></i> Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}
                                             </span>
@@ -314,7 +314,7 @@
                                 <span class="badge bg-light text-dark border mb-3 px-4 py-2 fs-5 shadow-sm">{{ paymentMethod }}</span>
                                 <div class="qris-amount mb-3">Rp {{ formatRupiah(currentPaymentTotal > 0 ? currentPaymentTotal : total) }}</div>
                                 <div class="text-muted fs-5 mt-4">
-                                    <div class="fw-semibold mb-2"><i class="fas fa-box text-secondary"></i> Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : total) }}</div>
+                                    <div class="fw-semibold mb-2"><i class="fas fa-box-open text-secondary"></i> Pokok: Rp {{ formatRupiah(currentPaymentAmount > 0 ? currentPaymentAmount : total) }}</div>
                                     <div v-if="currentPaymentAmount > 0 && (currentPaymentTotal - currentPaymentAmount) > 0" class="fw-bold text-danger bg-danger bg-opacity-10 px-3 py-1 rounded d-inline-block">
                                         <i class="fas fa-tag"></i> Admin: Rp {{ formatRupiah(currentPaymentTotal - currentPaymentAmount) }}
                                     </div>
@@ -374,7 +374,8 @@
                             <span>Semua</span>
                         </div>
                         <div v-for="cat in mainCategories" :key="cat.id" class="cat-item" :class="{'active': selectedMainCategory === cat.id}" @click="selectMainCategory(cat.id)">
-                            <i class="fas fa-tags"></i>
+                            <!-- 🌟 IKON KATEGORI DINAMIS -->
+                            <i :class="getCategoryIcon(cat.name)"></i>
                             <span>{{ cat.name }}</span>
                         </div>
                     </div>
@@ -436,23 +437,31 @@
                                     </template>
                                     <template v-else-if="prod.image || prod.gambar">
                                         <img :src="prod.image || prod.gambar" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" alt="Product">
+                                        <!-- 🌟 Placeholder Ikon Diperbaiki menjadi fa-box-open -->
                                         <div class="product-img-placeholder-cds w-100 h-100" style="display: none;">
-                                            <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i>
+                                            <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 5px;"></i>
                                             <span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span>
                                         </div>
                                     </template>
                                     <template v-else>
+                                        <!-- 🌟 Placeholder Ikon Diperbaiki menjadi fa-box-open -->
                                         <div class="product-img-placeholder-cds">
-                                            <i class="fas fa-box" style="font-size: 2rem; margin-bottom: 5px;"></i>
+                                            <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 5px;"></i>
                                             <span style="font-size: 0.65rem; font-weight: bold;">NO IMAGE</span>
                                         </div>
                                     </template>
                                     
-                                    <!-- 🌟 TAG PRODUK PADA KARTU (Mendukung Tipe String & Array) -->
+                                    <!-- 🌟 TAG PRODUK PADA KARTU (Mendukung Tipe String & Array termasuk productTags) -->
                                     <div class="position-absolute top-0 start-0 p-2 d-flex flex-column gap-1" style="z-index: 10;">
                                         <span v-if="prod.tag && typeof prod.tag === 'string'" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
+                                        
                                         <template v-if="prod.tags && Array.isArray(prod.tags)">
                                             <span v-for="t in prod.tags" :key="t" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ t }}</span>
+                                        </template>
+                                        
+                                        <!-- MENDUKUNG VARIABLE POS (productTags) -->
+                                        <template v-if="prod.productTags && Array.isArray(prod.productTags)">
+                                            <span v-for="t in prod.productTags" :key="'pt-'+t" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ t }}</span>
                                         </template>
                                     </div>
                                 </div>
@@ -501,16 +510,20 @@
                                             <img :src="activeVariantImage" class="rounded-3" alt="Product / Variant" style="transition: opacity 0.3s ease; width: 100%; height: 100%; object-fit: cover;">
                                         </template>
                                         <template v-else>
-                                            <div class="product-img-placeholder-cds w-100 h-100 rounded-3 bg-light"><i class="fas fa-box" style="font-size: 4rem;"></i></div>
+                                            <div class="product-img-placeholder-cds w-100 h-100 rounded-3 bg-light"><i class="fas fa-box-open" style="font-size: 4rem;"></i></div>
                                         </template>
                                     </div>
                                 </div>
                                 <div class="col-md-7 p-4 p-lg-5 bg-white d-flex flex-column">
                                     
                                     <div class="mb-2 d-flex flex-wrap gap-2">
+                                        <!-- MENDUKUNG VARIABLE POS (productTags) -->
                                         <span v-if="selectedProduct.tag && typeof selectedProduct.tag === 'string'" class="badge bg-danger text-white px-3 py-2 rounded-pill">{{ selectedProduct.tag }}</span>
                                         <template v-if="selectedProduct.tags && Array.isArray(selectedProduct.tags)">
                                             <span v-for="t in selectedProduct.tags" :key="t" class="badge bg-danger text-white px-3 py-2 rounded-pill">{{ t }}</span>
+                                        </template>
+                                        <template v-if="selectedProduct.productTags && Array.isArray(selectedProduct.productTags)">
+                                            <span v-for="t in selectedProduct.productTags" :key="'pt-'+t" class="badge bg-danger text-white px-3 py-2 rounded-pill">{{ t }}</span>
                                         </template>
                                         
                                         <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
@@ -521,12 +534,8 @@
 
                                     <h2 class="fw-black text-dark mb-1 lh-sm">{{ selectedProduct.name }}</h2>
                                     
-                                    <!-- 🌟 SKU MUNCUL DI SAMPING NAMA VARIAN AKTIF -->
                                     <h5 class="text-secondary fw-semibold mb-3 d-flex align-items-center flex-wrap gap-2" v-if="activeVariant">
                                         <span>Varian: <span class="text-dark">{{ activeVariant.name }}</span></span>
-                                        <span v-if="activeVariant.sku || activeVariant.code" class="text-muted fw-normal" style="font-size: 0.9rem;">
-                                            (SKU: {{ activeVariant.sku || activeVariant.code }})
-                                        </span>
                                     </h5>
                                     
                                     <div class="text-danger fw-black mb-4" style="font-size: 2rem; letter-spacing: -1px;">
@@ -552,10 +561,14 @@
                                                         <div style="width: 45px; height: 45px; border-radius: 6px; overflow: hidden; background: #fff;" class="flex-shrink-0 border shadow-sm">
                                                             <img v-if="v.imageBase64 || v.image || v.gambar" :src="v.imageBase64 || v.image || v.gambar" style="width:100%; height:100%; object-fit:cover;">
                                                             <img v-else-if="selectedProduct.imageBase64" :src="selectedProduct.imageBase64" style="width:100%; height:100%; object-fit:cover;">
-                                                            <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted"><i class="fas fa-box" style="font-size: 1rem;"></i></div>
+                                                            <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center bg-light text-muted"><i class="fas fa-box-open" style="font-size: 1rem;"></i></div>
                                                         </div>
                                                         <div class="d-flex flex-column justify-content-center">
-                                                            <div class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.85rem; padding-right: 25px;">{{ v.name }}</div>
+                                                            <!-- 🌟 SKU MUNCUL DI SAMPING BAWAH NAMA VARIAN -->
+                                                            <div class="fw-bold text-dark mb-1 lh-sm" style="font-size: 0.85rem; padding-right: 25px;">
+                                                                {{ v.name }}
+                                                                <span v-if="v.sku || v.code" class="text-muted fw-normal d-block mt-1" style="font-size: 0.7rem;">SKU: {{ v.sku || v.code }}</span>
+                                                            </div>
                                                             <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sellPrice || selectedProduct.sellPrice) }}</div>
                                                         </div>
                                                     </div>
@@ -606,7 +619,7 @@
                                 <div v-for="main in categoryTree" :key="main.id" class="mb-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" :id="'set-'+main.id" :value="main.id" v-model="tempSettings.selectedCategories">
-                                        <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id"><i class="fas fa-folder text-warning me-1"></i> {{ main.name }}</label>
+                                        <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id"><i :class="getCategoryIcon(main.name)" class="text-warning me-1"></i> {{ main.name }}</label>
                                     </div>
                                     <div v-if="main.children && main.children.length > 0" class="ms-4 mt-2 border-start border-2 ps-3 border-light">
                                         <div v-for="sub in main.children" :key="sub.id" class="mb-2">
@@ -680,7 +693,7 @@
                 <div v-if="item.imageBase64" class="product-img-container">
                     <img :src="item.imageBase64" class="product-img" alt="Produk">
                 </div>
-                <div v-else class="product-img-placeholder"><i class="fas fa-box opacity-50"></i></div>
+                <div v-else class="product-img-placeholder"><i class="fas fa-box-open opacity-50"></i></div>
                 
                 <div class="flex-grow-1">
                     <div class="item-name">{{ item.name }}</div>
@@ -799,8 +812,7 @@
                 selectedMainCategory: 'ALL',
                 selectedSubCategory: 'ALL',
                 
-                // 🌟 VARIABEL UNTUK TOGGLE VIEW MODE
-                viewMode: 'grid', // Pilihan: 'grid', 'large', atau 'list'
+                viewMode: 'grid',
 
                 selectedProduct: null,
                 activeVariant: null,
@@ -914,6 +926,25 @@
             }
         },
         methods: {
+            // 🌟 FUNGSI BARU UNTUK IKON KATEGORI DINAMIS
+            getCategoryIcon(catName) {
+                if (!catName) return 'fas fa-tags';
+                let name = catName.toLowerCase();
+                
+                if (name.includes('baju') || name.includes('pakaian') || name.includes('kaos') || name.includes('atasan') || name.includes('bawahan') || name.includes('rok') || name.includes('tunik')) return 'fas fa-tshirt';
+                if (name.includes('buku') || name.includes('tulis')) return 'fas fa-book';
+                if (name.includes('makanan') || name.includes('snack') || name.includes('cemilan')) return 'fas fa-hamburger';
+                if (name.includes('minuman') || name.includes('jus')) return 'fas fa-coffee';
+                if (name.includes('sepatu') || name.includes('sandal') || name.includes('alas kaki')) return 'fas fa-shoe-prints';
+                if (name.includes('tas') || name.includes('bag')) return 'fas fa-shopping-bag';
+                if (name.includes('elektronik') || name.includes('hp') || name.includes('gadget')) return 'fas fa-mobile-alt';
+                if (name.includes('kosmetik') || name.includes('makeup')) return 'fas fa-magic';
+                if (name.includes('bahan') || name.includes('baku')) return 'fas fa-boxes';
+                if (name.includes('dapur') || name.includes('masak')) return 'fas fa-utensils';
+                
+                return 'fas fa-tag';
+            },
+            
             openProductDetail(prod) {
                 this.selectedProduct = prod;
                 this.activeVariant = null;
