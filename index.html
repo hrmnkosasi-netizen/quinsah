@@ -1454,8 +1454,15 @@ body.sidebar-open {
                     </div>
                     
                     <div class="mb-3 pt-3 border-top">
-                        <label class="form-label small fw-bold"><i class="bi bi-chat-text me-1"></i>Teks Selamat Datang (Bawah Layar)</label>
-                        <input type="text" class="form-control" v-model="cdsSettings.welcomeText" placeholder="Terima kasih telah berbelanja di tempat kami!">
+                        <label class="form-label small fw-bold">
+                        <i class="bi bi-chat-text me-1"></i> Teks Berjalan (Running Text)
+                        </label>
+                        <input type="text" class="form-control border-primary border-opacity-25" 
+                         v-model="cdsSettings.welcomeText" 
+                         placeholder="Contoh: Selamat datang di Quinsah Collection! Nikmati promo menarik...">
+                        <div class="small text-muted mt-2">
+                        <i class="bi bi-info-circle-fill text-primary me-1"></i>Teks ini akan tampil berjalan (marquee) di bagian bawah layar pelanggan.
+                    </div>
                     </div>
                 </div>
             </div>
@@ -10214,12 +10221,14 @@ body.sidebar-open {
             previewData: []     // Kosongkan
         },
 
-        cdsSettings: {
-            mediaType: 'video', // Pilihan: 'video', 'image_single', 'image_slider'
-            videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            imageUrls: '', // Kosongkan dulu
-            welcomeText: 'Terima kasih telah berbelanja!'
-        },
+        // Di bagian data() { return { ... } }
+        cdsSettings: { 
+            mediaType: 'video', 
+            videoUrl: '', 
+            youtubeUrl: '', 
+            imageUrls: '', 
+            welcomeText: 'Selamat datang di Toko Kami! Terima kasih telah berbelanja.' // Tambahkan default text
+},
 
         // Variabel Printer Bluetooth
         printerDevice: null,
