@@ -103,8 +103,7 @@
         .cart-header-box { 
             background-color: #dc3545; 
             color: white; 
-            text-align: center; 
-            padding: 12px 15px; 
+            padding: 15px 20px; 
             box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
         }
         .cart-items { flex-grow: 1; overflow-y: auto; padding: 12px; }
@@ -405,7 +404,7 @@
                                 <!-- Kelompok Search, Sorting & Toggle View (Merapat Kanan) -->
                                 <div class="d-flex align-items-center gap-2 flex-nowrap justify-content-end">
                                     
-                                    <!-- 🌟 Ikon Search Expandable (Bisa Tumbuh) -->
+                                    <!-- Ikon Search Expandable (Bisa Tumbuh) -->
                                     <div class="transition-all d-flex align-items-center">
                                         <button v-if="!isSearchActive && !searchQuery" 
                                                 class="btn btn-sm bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center" 
@@ -422,9 +421,9 @@
                                         </div>
                                     </div>
 
-                                    <!-- 🌟 Filter Sorting (ps-3 tanpa px agar tidak merusak padding panah dropdown) -->
-                                    <select class="form-select form-select-sm rounded-pill border-0 shadow-sm ps-3 fw-semibold text-secondary" style="width: 135px; box-shadow: inset 0 0 0 1px #dee2e6; cursor: pointer; height: 32px;" v-model="sortBy">
-                                        <option value="default">Sort: Default</option>
+                                    <!-- 🌟 Filter Sorting (Dilengkapi Padding End 'pe-4' dan Lebar yang pas agar teks tidak nabrak panah) -->
+                                    <select class="form-select form-select-sm rounded-pill border-0 shadow-sm ps-3 pe-4 fw-semibold text-secondary" style="width: 125px; box-shadow: inset 0 0 0 1px #dee2e6; cursor: pointer; height: 32px; font-size: 0.85rem;" v-model="sortBy">
+                                        <option value="default">Urutkan</option>
                                         <option value="terlaris">🔥 Terlaris</option>
                                         <option value="termurah">💵 Termurah</option>
                                         <option value="termahal">💎 Termahal</option>
@@ -761,12 +760,21 @@
     <!-- AREA KERANJANG KANAN -->
     <div class="cart-area position-relative"> 
         
+        <!-- 🌟 PERBAIKAN HEADER KERANJANG (LAYOUT KIRI KANAN) -->
         <div class="cart-header-box">
-            <h5 class="mb-1 fw-bold fs-6">{{ storeName }}</h5>
-            <span class="d-block" style="font-size: 0.75rem; opacity: 0.85;" v-if="outletName && outletName !== 'Pusat' && outletName !== '-'">Cabang: {{ outletName }}</span>
-            <div class="d-flex flex-column align-items-center px-2 mt-2 opacity-75 gap-1" style="font-size: 0.75rem;">
-                <span><i class="fas fa-file-invoice"></i> {{ invoiceNumber || 'INV-...' }}</span>
-                <span><i class="fas fa-clock"></i> {{ currentTime }}</span>
+            <h5 class="mb-3 fw-bold fs-6 text-center">{{ storeName }}</h5>
+            
+            <div class="d-flex justify-content-between align-items-end" style="font-size: 0.75rem;">
+                <!-- Kolom Kiri -->
+                <div class="text-start d-flex flex-column gap-1 opacity-75">
+                    <span><i class="fas fa-store me-1"></i> {{ outletName && outletName !== '-' ? outletName : 'Pusat' }}</span>
+                    <span><i class="fas fa-file-invoice me-1"></i> {{ invoiceNumber || 'INV-...' }}</span>
+                </div>
+                <!-- Kolom Kanan -->
+                <div class="text-end d-flex flex-column gap-1 opacity-75">
+                    <span><i class="fas fa-user-circle me-1"></i> {{ cashierName }}</span>
+                    <span><i class="fas fa-clock me-1"></i> {{ currentTime }}</span>
+                </div>
             </div>
         </div>
 
@@ -858,6 +866,8 @@
                 outletName: '', 
                 invoiceNumber: '', 
                 currentTime: '',
+                cashierName: deviceId || 'Kasir', // 🌟 MENAMPUNG NAMA KASIR
+                
                 isPaymentOpen: false, 
                 paymentMethod: null, 
                 paymentType: 'CASH',
@@ -900,7 +910,6 @@
                 selectedMainCategory: 'ALL',
                 selectedSubCategory: 'ALL',
                 
-                // STATE BARU UNTUK SEARCH & FILTER
                 searchQuery: '',
                 isSearchActive: false,
                 sortBy: 'default',
@@ -1241,6 +1250,9 @@
                     this.storeName = data.storeName || 'QUINSAH COLLECTION';
                     this.outletName = data.outletName || ''; 
                     this.invoiceNumber = data.invoiceNumber || '';
+                    
+                    // 🌟 Mengambil nama kasir dari Firebase jika tersedia, kalau tidak, memakai Device ID
+                    this.cashierName = data.cashierName || data.kasir || deviceId || 'Kasir';
                     
                     let signalOpen = data.isPaymentOpen !== undefined ? data.isPaymentOpen : data.isPaymentModalOpen;
                     this.isPaymentOpen = (signalOpen === true || signalOpen === "true");
