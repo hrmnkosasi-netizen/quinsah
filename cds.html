@@ -393,28 +393,52 @@
                     <!-- Grid Produk Kanan -->
                     <div class="catalog-grid d-flex flex-column">
                         
-                        <!-- TOOLBAR ATAS -->
-                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                            <div class="chips-container d-flex gap-2" style="overflow-x: auto; white-space: nowrap; flex-grow: 1;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
-                                <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
-                                        :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = 'ALL'">
-                                    Semua
-                                </button>
-                                <button v-for="sub in activeSubCategories" :key="sub.id"
-                                        class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
-                                        :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = sub.id">
-                                    {{ sub.name }}
-                                </button>
-                            </div>
-                            <div v-else class="flex-grow-1">
-                                <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-cube text-secondary me-2"></i>Katalog Produk</h5>
-                            </div>
-                            
-                            <!-- TOGGLE VIEW MODE -->
-                            <div class="btn-group shadow-sm bg-white rounded-pill flex-shrink-0 border p-1">
-                                <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'grid' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid'" title="Mode Grid"><i class="fas fa-th-large"></i></button>
-                                <button class="btn btn-sm rounded-pill border-0 px-3 mx-1" :class="viewMode === 'grid6' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid6'" title="Mode Grid 6"><i class="fas fa-th"></i></button>
-                                <button class="btn btn-sm rounded-pill border-0 px-3" :class="viewMode === 'list' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'list'" title="Mode List"><i class="fas fa-list"></i></button>
+                        <!-- 🌟 TOOLBAR ATAS DENGAN FITUR PENCARIAN & SORTING BARU -->
+                        <div class="d-flex flex-column mb-3 gap-2">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                
+                                <div class="chips-container d-flex gap-2" style="overflow-x: auto; white-space: nowrap; flex-grow: 1;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
+                                    <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
+                                            :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = 'ALL'">
+                                        Semua
+                                    </button>
+                                    <button v-for="sub in activeSubCategories" :key="sub.id"
+                                            class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all"
+                                            :class="selectedSubCategory === sub.id ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = sub.id">
+                                        {{ sub.name }}
+                                    </button>
+                                </div>
+                                <div v-else class="flex-grow-1">
+                                    <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-cube text-secondary me-2"></i>Katalog Produk</h5>
+                                </div>
+                                
+                                <!-- KOLOM PENCARIAN, FILTER SORT & TOGGLE VIEW -->
+                                <div class="d-flex flex-wrap align-items-center gap-2 justify-content-end">
+                                    
+                                    <!-- Search Input -->
+                                    <div class="position-relative shadow-sm rounded-pill" style="width: 200px;">
+                                        <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="font-size: 0.85rem;"></i>
+                                        <input type="text" class="form-control form-control-sm rounded-pill border-0 ps-5 pe-4" placeholder="Cari produk..." v-model="searchQuery" style="box-shadow: inset 0 0 0 1px #dee2e6; outline: none; height: 32px;">
+                                        <i v-if="searchQuery" class="fas fa-times-circle position-absolute top-50 end-0 translate-middle-y me-2 text-muted cursor-pointer" @click="searchQuery = ''"></i>
+                                    </div>
+
+                                    <!-- Filter Sort -->
+                                    <select class="form-select form-select-sm rounded-pill border-0 shadow-sm px-3 fw-semibold text-secondary" style="width: 135px; box-shadow: inset 0 0 0 1px #dee2e6; cursor: pointer; height: 32px;" v-model="sortBy">
+                                        <option value="default">Sort: Default</option>
+                                        <option value="terlaris">🔥 Terlaris</option>
+                                        <option value="termurah">💵 Termurah</option>
+                                        <option value="termahal">💎 Termahal</option>
+                                        <option value="az">A - Z</option>
+                                        <option value="za">Z - A</option>
+                                    </select>
+
+                                    <!-- Toggle Mode -->
+                                    <div class="btn-group shadow-sm bg-white rounded-pill flex-shrink-0 border p-1" style="height: 32px;">
+                                        <button class="btn btn-sm rounded-pill border-0 px-2 d-flex align-items-center" :class="viewMode === 'grid' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid'" title="Mode Grid"><i class="fas fa-th-large"></i></button>
+                                        <button class="btn btn-sm rounded-pill border-0 px-2 mx-1 d-flex align-items-center" :class="viewMode === 'grid6' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid6'" title="Mode Grid 6"><i class="fas fa-th"></i></button>
+                                        <button class="btn btn-sm rounded-pill border-0 px-2 d-flex align-items-center" :class="viewMode === 'list' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'list'" title="Mode List"><i class="fas fa-list"></i></button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -480,7 +504,7 @@
 
                             <div v-if="filteredProducts.length === 0" class="col-12 text-center text-muted mt-5 py-5 w-100">
                                 <i class="fas fa-search fs-1 mb-3 d-block opacity-50"></i>
-                                <span class="fw-bold fs-5">Tidak ada produk yang ditampilkan.</span>
+                                <span class="fw-bold fs-5">Produk tidak ditemukan.</span>
                             </div>
                         </div>
                     </div>
@@ -863,6 +887,10 @@
                 selectedMainCategory: 'ALL',
                 selectedSubCategory: 'ALL',
                 
+                // 🌟 STATE BARU UNTUK SEARCH & FILTER
+                searchQuery: '',
+                sortBy: 'default',
+                
                 viewMode: 'grid',
 
                 selectedProduct: null,
@@ -946,7 +974,10 @@
             },
             
             filteredProducts() {
-                let result = this.products;
+                // Gunakan slice() agar tidak memodifikasi array aslinya
+                let result = this.products.slice(); 
+                
+                // 1. FILTER KATEGORI
                 if (this.selectedMainCategory !== 'ALL') {
                     let targetCatId = this.selectedSubCategory !== 'ALL' ? this.selectedSubCategory : this.selectedMainCategory;
                     let allowedCatIds = this.getDescendantCategoryIds(targetCatId);
@@ -976,9 +1007,38 @@
                     );
                 }
                 
+                // 2. FILTER STOK
                 if (this.localSettings.hideOutOfStock) {
                     result = result.filter(p => !this.isOutOfStock(p));
                 }
+
+                // 🌟 3. FILTER SEARCH PENCARIAN (Berdasarkan Nama & SKU)
+                if (this.searchQuery && this.searchQuery.trim() !== '') {
+                    const q = this.searchQuery.toLowerCase();
+                    result = result.filter(p => {
+                        const name = (p.name || '').toLowerCase();
+                        const sku = (p.sku || p.variantSku || '').toLowerCase();
+                        return name.includes(q) || sku.includes(q);
+                    });
+                }
+
+                // 🌟 4. FILTER SORTING (Pengurutan)
+                if (this.sortBy === 'terlaris') {
+                    result = result.sort((a, b) => {
+                        let soldA = Number(a.terjual || a.sold || a.sales || 0);
+                        let soldB = Number(b.terjual || b.sold || b.sales || 0);
+                        return soldB - soldA; // Dari terbesar ke terkecil
+                    });
+                } else if (this.sortBy === 'termurah') {
+                    result = result.sort((a, b) => Number(a.sellPrice || a.price || 0) - Number(b.sellPrice || b.price || 0));
+                } else if (this.sortBy === 'termahal') {
+                    result = result.sort((a, b) => Number(b.sellPrice || b.price || 0) - Number(a.sellPrice || a.price || 0));
+                } else if (this.sortBy === 'az') {
+                    result = result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                } else if (this.sortBy === 'za') {
+                    result = result.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+                }
+
                 return result;
             },
             
