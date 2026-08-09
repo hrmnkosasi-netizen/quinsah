@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Quinsah Collection - Katalog</title>
+    <title>Katalog Produk</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -23,50 +23,27 @@
             box-shadow: 0 0 40px rgba(0,0,0,0.05);
             overflow-x: hidden;
         }
-        /* Hide scrollbar */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Animations */
-        @keyframes slide-up {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        .animate-slide-up {
-            animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes fade-in-up {
-            from { opacity: 0; transform: translate(-50%, 20px); }
-            to { opacity: 1; transform: translate(-50%, 0); }
-        }
-        .toast-enter {
-            animation: fade-in-up 0.3s ease-out forwards;
-        }
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fade-in-up { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .toast-enter { animation: fade-in-up 0.3s ease-out forwards; }
         
-        /* Fix for Images */
-        .img-cover {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-        }
-        .img-contain {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background-color: #f8f9fa;
-        }
+        .img-cover { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+        .img-contain { width: 100%; height: 100%; object-fit: contain; background-color: #f8f9fa; }
     </style>
 </head>
 <body class="text-zinc-800 antialiased selection:bg-zinc-900 selection:text-white">
 
     <div id="app" v-cloak class="app-container">
         
-        <!-- HEADER -->
+        <!-- HEADER (Nama Toko Dinamis) -->
         <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-lg border-b border-zinc-100 px-5 py-4 flex items-center justify-between">
             <div class="flex flex-col">
-                <span class="text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-0.5">Quinsah</span>
-                <span class="text-xl font-extrabold text-zinc-900 tracking-tight leading-none">Koleksi Eksklusif</span>
+                <span class="text-[10px] text-zinc-400 font-bold tracking-widest uppercase mb-0.5">{{ storeSubtitle }}</span>
+                <span class="text-xl font-extrabold text-zinc-900 tracking-tight leading-none truncate max-w-[250px]">{{ storeName }}</span>
             </div>
             
             <button @click="isCartOpen = true" class="relative p-2.5 bg-zinc-50 rounded-full border border-zinc-100 text-zinc-700 hover:bg-zinc-100 active:scale-95 transition-all">
@@ -80,8 +57,17 @@
         <!-- KONTEN UTAMA -->
         <main class="px-5 py-6 pb-28">
             
+            <!-- STATE ERROR COMPANY ID (JIKA DIAKSES TANPA LINK YANG BENAR) -->
+            <div v-if="!companyIdValid" class="text-center py-16 bg-red-50 rounded-3xl border border-red-100 flex flex-col items-center justify-center mb-6">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-200">
+                    <i class="fa-solid fa-link-slash text-2xl text-red-500"></i>
+                </div>
+                <h3 class="font-bold text-red-700 mb-1">Akses Ditolak</h3>
+                <p class="text-xs text-red-600 px-4">Link katalog tidak lengkap. Pastikan link mengandung ID Toko (contoh: ...katalog.html?company=ID_TOKO).</p>
+            </div>
+
             <!-- HERO BANNER -->
-            <div class="mb-6 relative rounded-2xl overflow-hidden bg-zinc-900 text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] group">
+            <div v-if="companyIdValid" class="mb-6 relative rounded-2xl overflow-hidden bg-zinc-900 text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] group">
                 <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop" class="w-full h-40 object-cover opacity-60">
                 <div class="absolute inset-0 p-5 flex flex-col justify-center">
                     <span class="text-[10px] font-bold tracking-widest text-zinc-300 mb-1 uppercase drop-shadow-md">Katalog Online</span>
@@ -90,31 +76,31 @@
             </div>
 
             <!-- SEARCH BAR -->
-            <div class="relative mb-6">
+            <div v-if="companyIdValid" class="relative mb-6">
                 <i class="fa-solid fa-search absolute left-4 top-3.5 text-zinc-400 text-sm"></i>
                 <input type="text" v-model="searchQuery" placeholder="Cari produk..." class="w-full pl-11 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-zinc-900 focus:bg-white text-sm transition-all placeholder:text-zinc-400">
                 <i v-if="searchQuery" @click="searchQuery = ''" class="fa-solid fa-circle-xmark absolute right-4 top-3.5 text-zinc-300 text-sm cursor-pointer hover:text-zinc-500"></i>
             </div>
             
             <!-- HORIZONTAL KATEGORI -->
-            <div class="mb-6 flex overflow-x-auto gap-2.5 pb-2 scrollbar-hide -mx-5 px-5 snap-x">
+            <div v-if="companyIdValid" class="mb-6 flex overflow-x-auto gap-2.5 pb-2 scrollbar-hide -mx-5 px-5 snap-x">
                 <button 
                     @click="selectCategory('')" 
-                    :class="selectedCategory === '' ? 'bg-zinc-900 text-white border-zinc-900 shadow-md' : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'"
-                    class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all duration-300">
+                    :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border-zinc-200'"
+                    class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all">
                     Semua
                 </button>
                 <button 
                     v-for="cat in categories" :key="cat.id" 
                     @click="selectCategory(cat.name || cat.nama)" 
-                    :class="selectedCategory === (cat.name || cat.nama) ? 'bg-zinc-900 text-white border-zinc-900 shadow-md' : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'"
-                    class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all duration-300">
+                    :class="selectedCategory === (cat.name || cat.nama) ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border-zinc-200'"
+                    class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all">
                     {{ cat.name || cat.nama }}
                 </button>
             </div>
 
             <!-- GRID PRODUK SKELETON (LOADING) -->
-            <div v-if="isLoading" class="grid grid-cols-2 gap-4 w-full">
+            <div v-if="isLoading && companyIdValid" class="grid grid-cols-2 gap-4 w-full">
                 <div v-for="i in 4" :key="i" class="bg-white rounded-2xl border border-zinc-100 p-2 animate-pulse shadow-sm">
                     <div class="aspect-square bg-zinc-200 rounded-xl mb-3"></div>
                     <div class="h-3 bg-zinc-200 rounded w-3/4 mb-2 ml-1"></div>
@@ -123,7 +109,7 @@
             </div>
 
             <!-- STATE KOSONG -->
-            <div v-else-if="filteredProducts.length === 0" class="text-center py-16 bg-zinc-50 rounded-3xl border border-zinc-100 flex flex-col items-center justify-center">
+            <div v-else-if="filteredProducts.length === 0 && companyIdValid && !isLoading" class="text-center py-16 bg-zinc-50 rounded-3xl border border-zinc-100 flex flex-col items-center justify-center">
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-zinc-100">
                     <i class="fa-solid fa-box-open text-2xl text-zinc-300"></i>
                 </div>
@@ -131,9 +117,9 @@
             </div>
 
             <!-- GRID PRODUK AKTIF -->
-            <div v-else class="grid grid-cols-2 gap-4 w-full">
+            <div v-else-if="companyIdValid" class="grid grid-cols-2 gap-4 w-full">
                 <div v-for="prod in filteredProducts" :key="prod.id" @click="openProductDetail(prod)" class="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden flex flex-col relative cursor-pointer active:scale-[0.97] transition-all hover:shadow-md">
-                    <!-- FOTO PRODUK -->
+                    
                     <div class="aspect-square w-full relative overflow-hidden bg-zinc-50 border-b border-zinc-100 flex items-center justify-center">
                         <template v-if="prod.displayImage">
                             <img :src="prod.displayImage" @error="handleImageError(prod)" class="img-cover">
@@ -161,38 +147,31 @@
         <!-- BOTTOM SHEET: DETAIL PRODUK & VARIAN -->
         <!-- ========================================== -->
         <div v-if="selectedProduct" class="fixed inset-0 z-50 flex items-end justify-center">
-            <!-- Overlay Gelap -->
             <div class="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity" @click="closeProductDetail"></div>
             
-            <!-- Panel Detail -->
             <div class="relative w-full max-w-[480px] bg-white rounded-t-[32px] h-[90vh] flex flex-col shadow-2xl animate-slide-up overflow-hidden">
-                <!-- Drag Handle -->
                 <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-zinc-300 rounded-full z-20"></div>
 
-                <!-- Tombol Close -->
                 <button @click="closeProductDetail" class="absolute top-4 right-5 w-8 h-8 bg-black/30 backdrop-blur-md rounded-full text-white flex items-center justify-center z-20 hover:bg-black/50 transition-colors">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
 
                 <div class="flex-1 overflow-y-auto pb-28">
-                    <!-- FOTO DETAIL -->
                     <div class="w-full bg-zinc-50 relative h-[350px] flex items-center justify-center">
                         <img v-if="selectedProduct.displayImage" :src="selectedProduct.displayImage" class="img-contain p-4">
                         <i v-else class="fa-solid fa-image text-6xl text-zinc-300"></i>
                     </div>
                     
-                    <!-- Informasi Utama -->
                     <div class="p-6 border-b border-zinc-100 bg-white relative -mt-5 rounded-t-[24px]">
                         <div class="flex justify-between items-start mb-2">
                             <h2 class="text-xl font-extrabold text-zinc-900 leading-tight flex-1 pr-4">{{ selectedProduct.name }}</h2>
                             <div class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded text-[10px] font-bold uppercase tracking-wider border border-green-100 whitespace-nowrap">
-                                <i class="fa-solid fa-box"></i> Stok: {{ selectedProduct.stock }}
+                                <i class="fa-solid fa-box"></i> Stok: {{ selectedProduct.stock > 900 ? 'Tersedia' : selectedProduct.stock }}
                             </div>
                         </div>
                         <p class="text-2xl font-black text-red-600">Rp{{ formatRupiah(selectedProduct.price) }}</p>
                     </div>
 
-                    <!-- Pilihan Varian -->
                     <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="p-6 border-b border-zinc-100 bg-white">
                         <h3 class="text-xs font-bold text-zinc-800 uppercase tracking-widest mb-4">Pilih Varian</h3>
                         <div class="flex flex-wrap gap-2.5">
@@ -200,8 +179,8 @@
                                 v-for="(v, index) in selectedProduct.variants" 
                                 :key="index"
                                 @click="activeVariant = v"
-                                :class="activeVariant === v ? 'bg-zinc-900 text-white border-zinc-900 shadow-md' : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400'"
-                                class="px-5 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200"
+                                :class="activeVariant === v ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border border-zinc-200'"
+                                class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
                             >
                                 {{ v }}
                             </button>
@@ -209,7 +188,6 @@
                     </div>
                 </div>
 
-                <!-- Footer CTA Beli -->
                 <div class="absolute bottom-0 left-0 right-0 p-5 bg-white border-t border-zinc-100 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
                     <button @click="addToCartFromDetail" :disabled="selectedProduct.stock <= 0" :class="selectedProduct.stock <= 0 ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed' : 'bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.98] shadow-md'" class="w-full py-4 rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all">
                         <i class="fa-solid fa-cart-plus"></i> {{ selectedProduct.stock <= 0 ? 'Stok Habis' : 'Masukkan Keranjang' }}
@@ -225,7 +203,6 @@
             <div class="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity" @click="isCartOpen = false"></div>
             
             <div class="relative w-full max-w-[480px] bg-zinc-50 mt-auto rounded-t-[32px] h-[85vh] flex flex-col shadow-2xl animate-slide-up overflow-hidden">
-                <!-- Drag Handle -->
                 <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-zinc-300 rounded-full z-20"></div>
 
                 <div class="p-5 pt-8 bg-white border-b border-zinc-100 flex items-center justify-between rounded-t-[32px]">
@@ -281,9 +258,7 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
         <!-- TOAST NOTIFICATION -->
-        <!-- ========================================== -->
         <div v-if="toast.show" class="fixed bottom-10 left-1/2 z-[60] toast-enter">
             <div class="bg-zinc-900 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 text-sm font-medium">
                 <i :class="toast.icon" class="text-green-400"></i>
@@ -296,26 +271,31 @@
     <!-- SCRIPT VUE & FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
 
-        // GANTI DENGAN FIREBASE CONFIG ANDA JIKA BERBEDA
+        // GANTI DENGAN FIREBASE CONFIG ANDA
         const firebaseConfig = { 
             apiKey: "AIzaSyBvwkhhUoFOMoKTPL4TWTCJxlx0AXoA3t4", 
             authDomain: "quinsahcollection-36926.firebaseapp.com", 
             projectId: "quinsahcollection-36926" 
         };
-        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // GANTI COMPANY ID ANDA (Misal: dari localStorage atau hardcode jika cuma 1 toko)
-        const COMPANY_ID = localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId') || 'COMPANY_ID_ANDA';
+        // MENDAPATKAN COMPANY ID DARI URL (Contoh: katalog.html?company=xyz123)
+        // Jika tidak ada di URL, coba ambil dari localStorage HANYA untuk kebutuhan test POS
+        const urlParams = new URLSearchParams(window.location.search);
+        const URL_COMPANY_ID = urlParams.get('company');
+        const COMPANY_ID = URL_COMPANY_ID || localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
 
         createApp({
             data() {
                 return {
-                    whatsappNumber: "628123456789", // Ganti dengan nomor WA Admin
+                    companyIdValid: !!COMPANY_ID,
+                    storeName: "Memuat Toko...", 
+                    storeSubtitle: "KATALOG ONLINE",
+                    whatsappNumber: "628123456789", 
                     products: [],
                     categories: [],
                     cart: [],
@@ -340,50 +320,71 @@
                 cartTotal() { return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0); }
             },
             async mounted() {
+                if (!this.companyIdValid) {
+                    this.isLoading = false;
+                    return; // Hentikan script jika Company ID kosong
+                }
+                await this.fetchStoreData();
                 await this.fetchData();
             },
             methods: {
+                async fetchStoreData() {
+                    try {
+                        // Mengambil nama toko dan WA dari collection 'settings' atau 'users' (sesuaikan)
+                        const settingsSnap = await getDoc(doc(db, "settings", COMPANY_ID));
+                        if (settingsSnap.exists()) {
+                            const data = settingsSnap.data();
+                            this.storeName = data.storeName || data.namaToko || data.nama || 'Katalog Eksklusif';
+                            if(data.whatsappNumber || data.wa) this.whatsappNumber = data.whatsappNumber || data.wa;
+                        } else {
+                            this.storeName = "Katalog Toko";
+                        }
+                    } catch (error) {
+                        this.storeName = "Katalog Toko";
+                    }
+                },
                 async fetchData() {
                     try {
                         this.isLoading = true;
                         
-                        // 1. AMBIL KATEGORI
-                        // Jika Anda menggunakan Company ID (multi-tenant), gunakan query WHERE
-                        // let catRef = query(collection(db, "categories"), where("companyId", "==", COMPANY_ID));
-                        // Jika tidak, gunakan collection biasa:
-                        let catRef = collection(db, "categories");
+                        // WAJIB WHERE COMPANY ID AGAR TIDAK BERCAMPUR
+                        let catRef = query(collection(db, "categories"), where("companyId", "==", COMPANY_ID));
                         const catSnap = await getDocs(catRef);
-                        
                         this.categories = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                        // 2. AMBIL PRODUK
-                        // let prodRef = query(collection(db, "products"), where("companyId", "==", COMPANY_ID));
-                        let prodRef = collection(db, "products");
+                        let prodRef = query(collection(db, "products"), where("companyId", "==", COMPANY_ID));
                         const prodSnap = await getDocs(prodRef);
                         
                         this.products = prodSnap.docs.map(doc => {
                             const data = doc.data();
                             
-                            // 🌟 LOGIKA GAMBAR SAMA PERSIS SEPERTI DI CDS 🌟
-                            let finalImage = '';
-                            if (data.imageBase64 && data.imageBase64.trim() !== '') {
-                                finalImage = data.imageBase64;
-                            } else if (data.image || data.gambar) {
-                                finalImage = data.image || data.gambar;
-                            } else if (data.imageUrl || data.foto) {
-                                finalImage = data.imageUrl || data.foto;
+                            // LOGIKA FOTO
+                            let finalImage = data.imageBase64 || data.imageUrl || data.foto || data.image || data.gambar || '';
+
+                            // LOGIKA HARGA
+                            let finalPrice = Number(data.sellPrice || data.price || data.hargaJual || data.harga || 0);
+
+                            // LOGIKA STOK AKURAT (MENCEGAH "HABIS" JIKA FORMATNYA OBJECT/KOSONG)
+                            let finalStock = 999; // Default anggap selalu ada jika field stok tidak ditemukan
+                            if (data.stock !== undefined) {
+                                if (typeof data.stock === 'object' && data.stock !== null) {
+                                    // Jika stok per outlet (object), jumlahkan semua value-nya
+                                    finalStock = Object.values(data.stock).reduce((a, b) => a + (Number(b) || 0), 0);
+                                } else {
+                                    finalStock = Number(data.stock);
+                                }
+                            } else if (data.qty !== undefined) {
+                                finalStock = Number(data.qty);
+                            } else if (data.stok !== undefined) {
+                                finalStock = Number(data.stok);
                             }
+                            
+                            // Pastikan jika hasil akhir NaN, kita jadikan 0
+                            if (isNaN(finalStock)) finalStock = 0;
 
-                            // 🌟 LOGIKA HARGA SAMA SEPERTI DI CDS 🌟
-                            let finalPrice = Number(data.sellPrice || data.price || data.harga || 0);
-
-                            // 🌟 LOGIKA STOK SAMA SEPERTI DI CDS 🌟
-                            let currentStock = Number(data.qty || data.stok || data.stock || 0);
-
-                            // 🌟 LOGIKA VARIAN SAMA SEPERTI DI CDS 🌟
+                            // LOGIKA VARIAN
                             let productVariants = [];
                             if (data.variants && Array.isArray(data.variants)) {
-                                // Kadang di CDS varian bentuknya object [{name: 'Merah'}, {name: 'Biru'}]
                                 productVariants = data.variants.map(v => typeof v === 'object' ? v.name : v).filter(v => v);
                             }
 
@@ -392,19 +393,19 @@
                                 ...data,
                                 name: data.name || data.nama || 'Tanpa Nama',
                                 price: finalPrice,
-                                stock: currentStock,
+                                stock: finalStock,
                                 displayImage: finalImage,
                                 variants: productVariants,
                                 category: data.category || data.kategori || data.categoryId || ''
                             };
                         });
                         
-                        // Sortir produk berdasarkan nama (A-Z)
+                        // Urutkan abjad A-Z
                         this.products.sort((a, b) => a.name.localeCompare(b.name));
 
                     } catch (error) {
-                        console.error("Error fetching data:", error);
-                        this.showToast("Gagal memuat data dari server", "fa-solid fa-triangle-exclamation");
+                        console.error("Error memuat produk:", error);
+                        this.showToast("Gagal memuat katalog", "fa-solid fa-triangle-exclamation");
                     } finally {
                         this.isLoading = false;
                     }
@@ -431,7 +432,10 @@
 
                 addToCartFromDetail() {
                     if (!this.selectedProduct) return;
-                    if (this.selectedProduct.stock <= 0) return;
+                    if (this.selectedProduct.stock <= 0) {
+                        this.showToast("Maaf, stok produk habis", "fa-solid fa-ban text-red-400");
+                        return;
+                    }
                     
                     if (this.selectedProduct.variants && this.selectedProduct.variants.length > 0 && !this.activeVariant) {
                         this.showToast("Pilih varian terlebih dahulu", "fa-solid fa-circle-exclamation text-yellow-400");
@@ -454,7 +458,7 @@
                             variant: this.activeVariant,
                             qty: 1
                         });
-                        this.showToast("Dimasukkan ke keranjang");
+                        this.showToast("Berhasil masuk keranjang");
                     }
                     this.closeProductDetail();
                 },
@@ -474,7 +478,7 @@
                 },
 
                 handleImageError(product) { 
-                    product.displayImage = ''; // Kosongkan agar icon placeholder muncul
+                    product.displayImage = ''; 
                 },
                 
                 formatRupiah(val) { return new Intl.NumberFormat('id-ID').format(val || 0); },
@@ -482,7 +486,7 @@
                 checkoutWhatsApp() {
                     if (this.cart.length === 0) return;
                     
-                    let text = `*ORDER BARU - QUINSAH COLLECTION*\n`;
+                    let text = `*ORDER BARU - ${this.storeName.toUpperCase()}*\n`;
                     text += `----------------------------------\n\n`;
                     
                     this.cart.forEach((item, index) => {
