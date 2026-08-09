@@ -15,22 +15,15 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f4f5; }
         [v-cloak] { display: none !important; }
         .app-container {
-            max-width: 480px; 
-            margin: 0 auto; 
-            background-color: #ffffff;
-            min-height: 100vh; 
-            position: relative; 
-            box-shadow: 0 0 40px rgba(0,0,0,0.05);
-            overflow-x: hidden;
+            max-width: 480px; margin: 0 auto; background-color: #ffffff;
+            min-height: 100vh; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.05); overflow-x: hidden;
         }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fade-in-up { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         .toast-enter { animation: fade-in-up 0.3s ease-out forwards; }
-        
         .img-cover { width: 100%; height: 100%; object-fit: cover; object-position: center; }
         .img-contain { width: 100%; height: 100%; object-fit: contain; background-color: #f8f9fa; }
     </style>
@@ -57,17 +50,23 @@
         <!-- KONTEN UTAMA -->
         <main class="px-5 py-6 pb-28">
             
-            <!-- STATE ERROR COMPANY ID (JIKA DIAKSES TANPA LINK YANG BENAR) -->
-            <div v-if="!companyIdValid" class="text-center py-16 bg-red-50 rounded-3xl border border-red-100 flex flex-col items-center justify-center mb-6">
+            <!-- STATE ERROR COMPANY ID (SUBDOMAIN TIDAK DITEMUKAN) -->
+            <div v-if="!companyIdValid && !isLoading" class="text-center py-16 bg-red-50 rounded-3xl border border-red-100 flex flex-col items-center justify-center mb-6">
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-red-200">
                     <i class="fa-solid fa-link-slash text-2xl text-red-500"></i>
                 </div>
-                <h3 class="font-bold text-red-700 mb-1">Akses Ditolak</h3>
-                <p class="text-xs text-red-600 px-4">Link katalog tidak lengkap. Pastikan link mengandung ID Toko (contoh: ...katalog.html?company=ID_TOKO).</p>
+                <h3 class="font-bold text-red-700 mb-1">Toko Tidak Ditemukan</h3>
+                <p class="text-xs text-red-600 px-4">Kami tidak dapat menemukan data toko untuk subdomain ini. Pastikan alamat URL Anda sudah benar.</p>
+            </div>
+
+            <!-- TAMPILAN LOADING AWAL SAAT MENCARI SUBDOMAIN -->
+            <div v-if="isLoading && !companyIdValid" class="flex flex-col items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-zinc-900 mb-4"></div>
+                <p class="text-sm font-semibold text-zinc-500">Menghubungkan ke toko...</p>
             </div>
 
             <!-- HERO BANNER -->
-            <div v-if="companyIdValid" class="mb-6 relative rounded-2xl overflow-hidden bg-zinc-900 text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] group">
+            <div v-if="companyIdValid && !isLoading" class="mb-6 relative rounded-2xl overflow-hidden bg-zinc-900 text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] group">
                 <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop" class="w-full h-40 object-cover opacity-60">
                 <div class="absolute inset-0 p-5 flex flex-col justify-center">
                     <span class="text-[10px] font-bold tracking-widest text-zinc-300 mb-1 uppercase drop-shadow-md">Katalog Online</span>
@@ -76,40 +75,20 @@
             </div>
 
             <!-- SEARCH BAR -->
-            <div v-if="companyIdValid" class="relative mb-6">
+            <div v-if="companyIdValid && !isLoading" class="relative mb-6">
                 <i class="fa-solid fa-search absolute left-4 top-3.5 text-zinc-400 text-sm"></i>
                 <input type="text" v-model="searchQuery" placeholder="Cari produk..." class="w-full pl-11 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-zinc-900 focus:bg-white text-sm transition-all placeholder:text-zinc-400">
                 <i v-if="searchQuery" @click="searchQuery = ''" class="fa-solid fa-circle-xmark absolute right-4 top-3.5 text-zinc-300 text-sm cursor-pointer hover:text-zinc-500"></i>
             </div>
             
             <!-- HORIZONTAL KATEGORI -->
-            <div v-if="companyIdValid" class="mb-6 flex overflow-x-auto gap-2.5 pb-2 scrollbar-hide -mx-5 px-5 snap-x">
-                <button 
-                    @click="selectCategory('')" 
-                    :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border-zinc-200'"
-                    class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all">
-                    Semua
-                </button>
-                <button 
-                    v-for="cat in categories" :key="cat.id" 
-                    @click="selectCategory(cat.name || cat.nama)" 
-                    :class="selectedCategory === (cat.name || cat.nama) ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border-zinc-200'"
-                    class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all">
-                    {{ cat.name || cat.nama }}
-                </button>
+            <div v-if="companyIdValid && !isLoading" class="mb-6 flex overflow-x-auto gap-2.5 pb-2 scrollbar-hide -mx-5 px-5 snap-x">
+                <button @click="selectCategory('')" :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border-zinc-200'" class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all">Semua</button>
+                <button v-for="cat in categories" :key="cat.id" @click="selectCategory(cat.name || cat.nama)" :class="selectedCategory === (cat.name || cat.nama) ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border-zinc-200'" class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all">{{ cat.name || cat.nama }}</button>
             </div>
 
-            <!-- GRID PRODUK SKELETON (LOADING) -->
-            <div v-if="isLoading && companyIdValid" class="grid grid-cols-2 gap-4 w-full">
-                <div v-for="i in 4" :key="i" class="bg-white rounded-2xl border border-zinc-100 p-2 animate-pulse shadow-sm">
-                    <div class="aspect-square bg-zinc-200 rounded-xl mb-3"></div>
-                    <div class="h-3 bg-zinc-200 rounded w-3/4 mb-2 ml-1"></div>
-                    <div class="h-4 bg-zinc-200 rounded w-1/2 ml-1"></div>
-                </div>
-            </div>
-
-            <!-- STATE KOSONG -->
-            <div v-else-if="filteredProducts.length === 0 && companyIdValid && !isLoading" class="text-center py-16 bg-zinc-50 rounded-3xl border border-zinc-100 flex flex-col items-center justify-center">
+            <!-- STATE KOSONG (PRODUK TIDAK DITEMUKAN) -->
+            <div v-if="filteredProducts.length === 0 && companyIdValid && !isLoading" class="text-center py-16 bg-zinc-50 rounded-3xl border border-zinc-100 flex flex-col items-center justify-center">
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-zinc-100">
                     <i class="fa-solid fa-box-open text-2xl text-zinc-300"></i>
                 </div>
@@ -117,9 +96,8 @@
             </div>
 
             <!-- GRID PRODUK AKTIF -->
-            <div v-else-if="companyIdValid" class="grid grid-cols-2 gap-4 w-full">
+            <div v-if="companyIdValid && !isLoading" class="grid grid-cols-2 gap-4 w-full">
                 <div v-for="prod in filteredProducts" :key="prod.id" @click="openProductDetail(prod)" class="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden flex flex-col relative cursor-pointer active:scale-[0.97] transition-all hover:shadow-md">
-                    
                     <div class="aspect-square w-full relative overflow-hidden bg-zinc-50 border-b border-zinc-100 flex items-center justify-center">
                         <template v-if="prod.displayImage">
                             <img :src="prod.displayImage" @error="handleImageError(prod)" class="img-cover">
@@ -143,15 +121,11 @@
             </div>
         </main>
 
-        <!-- ========================================== -->
-        <!-- BOTTOM SHEET: DETAIL PRODUK & VARIAN -->
-        <!-- ========================================== -->
+                <!-- BOTTOM SHEET: DETAIL PRODUK & VARIAN -->
         <div v-if="selectedProduct" class="fixed inset-0 z-50 flex items-end justify-center">
             <div class="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity" @click="closeProductDetail"></div>
-            
             <div class="relative w-full max-w-[480px] bg-white rounded-t-[32px] h-[90vh] flex flex-col shadow-2xl animate-slide-up overflow-hidden">
                 <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-zinc-300 rounded-full z-20"></div>
-
                 <button @click="closeProductDetail" class="absolute top-4 right-5 w-8 h-8 bg-black/30 backdrop-blur-md rounded-full text-white flex items-center justify-center z-20 hover:bg-black/50 transition-colors">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
@@ -175,13 +149,7 @@
                     <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="p-6 border-b border-zinc-100 bg-white">
                         <h3 class="text-xs font-bold text-zinc-800 uppercase tracking-widest mb-4">Pilih Varian</h3>
                         <div class="flex flex-wrap gap-2.5">
-                            <button 
-                                v-for="(v, index) in selectedProduct.variants" 
-                                :key="index"
-                                @click="activeVariant = v"
-                                :class="activeVariant === v ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border border-zinc-200'"
-                                class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-                            >
+                            <button v-for="(v, index) in selectedProduct.variants" :key="index" @click="activeVariant = v" :class="activeVariant === v ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border border-zinc-200'" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200">
                                 {{ v }}
                             </button>
                         </div>
@@ -196,15 +164,11 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
         <!-- SLIDE KANTONG BELANJA (CART) -->
-        <!-- ========================================== -->
         <div v-if="isCartOpen" class="fixed inset-0 z-50 flex justify-center">
             <div class="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity" @click="isCartOpen = false"></div>
-            
             <div class="relative w-full max-w-[480px] bg-zinc-50 mt-auto rounded-t-[32px] h-[85vh] flex flex-col shadow-2xl animate-slide-up overflow-hidden">
                 <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-zinc-300 rounded-full z-20"></div>
-
                 <div class="p-5 pt-8 bg-white border-b border-zinc-100 flex items-center justify-between rounded-t-[32px]">
                     <h2 class="font-extrabold text-base text-zinc-900 flex items-center gap-2">
                         <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center"><i class="fa-solid fa-bag-shopping text-sm"></i></div>
@@ -282,17 +246,12 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
-        // MENDAPATKAN COMPANY ID DARI URL (Contoh: katalog.html?company=xyz123)
-        // Jika tidak ada di URL, coba ambil dari localStorage HANYA untuk kebutuhan test POS
-        const urlParams = new URLSearchParams(window.location.search);
-        const URL_COMPANY_ID = urlParams.get('company');
-        const COMPANY_ID = URL_COMPANY_ID || localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
 
         createApp({
             data() {
                 return {
-                    companyIdValid: !!COMPANY_ID,
+                    companyId: null,
+                    companyIdValid: true, // Default true agar loader jalan duluan
                     storeName: "Memuat Toko...", 
                     storeSubtitle: "KATALOG ONLINE",
                     whatsappNumber: "628123456789", 
@@ -320,18 +279,61 @@
                 cartTotal() { return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0); }
             },
             async mounted() {
-                if (!this.companyIdValid) {
+                try {
+                    this.isLoading = true;
+                    let foundCompanyId = null;
+
+                    // 1. Prioritas Pertama: Cek dari Parameter URL (Misal: ?company=xyz)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    foundCompanyId = urlParams.get('company');
+
+                    // 2. Prioritas Kedua: Cek dari Subdomain (Misal: yarch.queenpos.id)
+                    if (!foundCompanyId) {
+                        const hostname = window.location.hostname;
+                        const parts = hostname.split('.');
+                        
+                        // Validasi agar tidak mencari jika di localhost atau domain utama tanpa subdomain
+                        if (hostname !== 'localhost' && hostname !== '127.0.0.1' && parts.length >= 2 && parts[0] !== 'www') {
+                            const subdomain = parts[0]; // Mendapatkan 'yarch'
+                            
+                            // Lakukan query ke database berdasarkan urlToko
+                            const qCompany = query(collection(db, "companies"), where("urlToko", "==", subdomain));
+                            const companySnap = await getDocs(qCompany);
+                            
+                            if (!companySnap.empty) {
+                                foundCompanyId = companySnap.docs[0].id;
+                            }
+                        }
+                    }
+
+                    // 3. Prioritas Ketiga: Fallback ke LocalStorage (Berguna untuk Testing Lokal)
+                    if (!foundCompanyId) {
+                        foundCompanyId = localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
+                    }
+
+                    // Eksekusi jika Company ID Ditemukan atau Tidak
+                    if (foundCompanyId) {
+                        this.companyId = foundCompanyId;
+                        this.companyIdValid = true;
+                        
+                        // Setelah ID Toko valid, jalankan fungsi penarikan data
+                        await this.fetchStoreData();
+                        await this.fetchData();
+                    } else {
+                        // Munculkan Error UI jika benar-benar tidak ada ID yang ditemukan
+                        this.companyIdValid = false;
+                        this.isLoading = false;
+                    }
+                } catch (error) {
+                    console.error("Gagal mendeteksi toko:", error);
+                    this.companyIdValid = false;
                     this.isLoading = false;
-                    return; // Hentikan script jika Company ID kosong
                 }
-                await this.fetchStoreData();
-                await this.fetchData();
             },
             methods: {
                 async fetchStoreData() {
                     try {
-                        // Mengambil nama toko dan WA dari collection 'settings' atau 'users' (sesuaikan)
-                        const settingsSnap = await getDoc(doc(db, "settings", COMPANY_ID));
+                        const settingsSnap = await getDoc(doc(db, "settings", this.companyId));
                         if (settingsSnap.exists()) {
                             const data = settingsSnap.data();
                             this.storeName = data.storeName || data.namaToko || data.nama || 'Katalog Eksklusif';
@@ -347,28 +349,24 @@
                     try {
                         this.isLoading = true;
                         
-                        // WAJIB WHERE COMPANY ID AGAR TIDAK BERCAMPUR
-                        let catRef = query(collection(db, "categories"), where("companyId", "==", COMPANY_ID));
+                        // WAJIB WHERE COMPANY ID AGAR TIDAK BERCAMPUR ANTAR TENANT
+                        let catRef = query(collection(db, "categories"), where("companyId", "==", this.companyId));
                         const catSnap = await getDocs(catRef);
                         this.categories = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                        let prodRef = query(collection(db, "products"), where("companyId", "==", COMPANY_ID));
+                        let prodRef = query(collection(db, "products"), where("companyId", "==", this.companyId));
                         const prodSnap = await getDocs(prodRef);
                         
                         this.products = prodSnap.docs.map(doc => {
                             const data = doc.data();
                             
-                            // LOGIKA FOTO
                             let finalImage = data.imageBase64 || data.imageUrl || data.foto || data.image || data.gambar || '';
-
-                            // LOGIKA HARGA
                             let finalPrice = Number(data.sellPrice || data.price || data.hargaJual || data.harga || 0);
 
-                            // LOGIKA STOK AKURAT (MENCEGAH "HABIS" JIKA FORMATNYA OBJECT/KOSONG)
-                            let finalStock = 999; // Default anggap selalu ada jika field stok tidak ditemukan
+                            // LOGIKA STOK AKURAT (Mengatasi format stok object multi-outlet)
+                            let finalStock = 999;
                             if (data.stock !== undefined) {
                                 if (typeof data.stock === 'object' && data.stock !== null) {
-                                    // Jika stok per outlet (object), jumlahkan semua value-nya
                                     finalStock = Object.values(data.stock).reduce((a, b) => a + (Number(b) || 0), 0);
                                 } else {
                                     finalStock = Number(data.stock);
@@ -379,10 +377,8 @@
                                 finalStock = Number(data.stok);
                             }
                             
-                            // Pastikan jika hasil akhir NaN, kita jadikan 0
                             if (isNaN(finalStock)) finalStock = 0;
 
-                            // LOGIKA VARIAN
                             let productVariants = [];
                             if (data.variants && Array.isArray(data.variants)) {
                                 productVariants = data.variants.map(v => typeof v === 'object' ? v.name : v).filter(v => v);
@@ -400,7 +396,6 @@
                             };
                         });
                         
-                        // Urutkan abjad A-Z
                         this.products.sort((a, b) => a.name.localeCompare(b.name));
 
                     } catch (error) {
@@ -510,3 +505,4 @@
     </script>
 </body>
 </html>
+
