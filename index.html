@@ -898,17 +898,8 @@ body.sidebar-open {
             <h4 class="mb-0 fw-bold">{{ viewTitles[currentView] }}</h4>
             <span class="badge mt-1" :class="userRole === 'Admin' ? 'bg-danger' : 'bg-primary'">Akses: {{ userRole }}</span>
         </div>
-        
-        <!-- BUNGKUSAN BARU: Menyatukan tombol fullscreen dan profil agar sejajar di kanan -->
+ 
         <div class="d-flex align-items-center gap-3">
-            
-            <!-- TOMBOL FULLSCREEN -->
-            <button class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center" 
-                    style="width: 38px; height: 38px;" 
-                    @click="toggleFullScreen()" 
-                    title="Mode Layar Penuh">
-                <i class="bi bi-arrows-fullscreen text-secondary" id="icon-fullscreen"></i>
-            </button>
             
             <!-- PROFIL USER -->
 <div class="dropdown">
