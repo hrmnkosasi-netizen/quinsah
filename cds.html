@@ -224,7 +224,7 @@
                     <p class="text-muted fs-6 mt-1">Silakan tunggu kasir memilih metode pembayaran.</p>
                 </div>
                 
-                <!-- SPLIT PAYMENT VIEW (DIKECILKAN AGAR PAS DI TABLET) -->
+                <!-- SPLIT PAYMENT VIEW -->
                 <div v-else-if="isSplitPayment" class="w-100 h-100 fade-in p-3 d-flex align-items-center justify-content-center">
                     <div class="card shadow-lg border-0 w-100" style="max-width: 850px; border-radius: 20px; overflow: hidden;">
                         <div class="row g-0 h-100 align-items-stretch">
@@ -294,7 +294,7 @@
                     </div>
                 </div>
                 
-                <!-- QRIS VIEW FULL (PROPOSIONAL DI TABLET) -->
+                <!-- QRIS VIEW FULL -->
                 <div v-else-if="paymentType === 'QRIS'" class="text-center w-100 h-100 fade-in d-flex justify-content-center align-items-center p-3">
                     <div class="qris-card">
                         <div class="qris-header d-flex justify-content-between align-items-center py-2 px-3">
@@ -436,7 +436,7 @@
                                 </div>
                             </div>
 
-                            <!-- LIST PRODUK -->
+                            <!-- LIST PRODUK (Sudah termasuk 'base' dan 'sell' untuk harga coret) -->
                             <div class="row g-3 align-content-start" 
                                  :class="[
                                     viewMode === 'grid' ? 'row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5' : '', 
@@ -490,10 +490,10 @@
                                             
                                             <div class="mt-auto pt-1 d-flex flex-column">
                                                 <!-- HARGA CORET DI GRID -->
-                                                <span v-if="(prod.originalPrice || prod.hargaNormal || prod.hargaCoret || prod.hargaAsli) > (prod.sellPrice || prod.price)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
-                                                    Rp {{ formatRupiah(prod.originalPrice || prod.hargaNormal || prod.hargaCoret || prod.hargaAsli) }}
+                                                <span v-if="(prod.base || prod.originalPrice || prod.hargaNormal || prod.hargaCoret || prod.hargaAsli) > (prod.sell || prod.sellPrice || prod.price)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
+                                                    Rp {{ formatRupiah(prod.base || prod.originalPrice || prod.hargaNormal || prod.hargaCoret || prod.hargaAsli) }}
                                                 </span>
-                                                <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.sellPrice || prod.price) }}</div>
+                                                <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.sell || prod.sellPrice || prod.price) }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -560,9 +560,9 @@
                                             <div class="text-danger fw-black" style="font-size: 2.2rem; letter-spacing: -1px; line-height: 1;">
                                                 Rp {{ formatRupiah(detailTotalPrice) }}
                                             </div>
-                                            <div v-if="(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal || activeVariant.hargaCoret || activeVariant.hargaAsli) : (selectedProduct.originalPrice || selectedProduct.hargaNormal || selectedProduct.hargaCoret || selectedProduct.hargaAsli)) > (activeVariant ? (activeVariant.sellPrice || selectedProduct.sellPrice) : selectedProduct.sellPrice)" 
+                                            <div v-if="(activeVariant ? (activeVariant.base || activeVariant.originalPrice || activeVariant.hargaNormal || activeVariant.hargaCoret || activeVariant.hargaAsli) : (selectedProduct.base || selectedProduct.originalPrice || selectedProduct.hargaNormal || selectedProduct.hargaCoret || selectedProduct.hargaAsli)) > (activeVariant ? (activeVariant.sell || activeVariant.sellPrice) : (selectedProduct.sell || selectedProduct.sellPrice))" 
                                                  class="text-decoration-line-through text-muted fw-semibold" style="font-size: 1.2rem; margin-bottom: 2px;">
-                                                Rp {{ formatRupiah(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal || activeVariant.hargaCoret || activeVariant.hargaAsli) : (selectedProduct.originalPrice || selectedProduct.hargaNormal || selectedProduct.hargaCoret || selectedProduct.hargaAsli)) }}
+                                                Rp {{ formatRupiah(activeVariant ? (activeVariant.base || activeVariant.originalPrice || activeVariant.hargaNormal || activeVariant.hargaCoret || activeVariant.hargaAsli) : (selectedProduct.base || selectedProduct.originalPrice || selectedProduct.hargaNormal || selectedProduct.hargaCoret || selectedProduct.hargaAsli)) }}
                                             </div>
                                         </div>
                                         
@@ -598,8 +598,8 @@
                                                                 </div>
 
                                                                 <div class="d-flex align-items-center gap-1">
-                                                                    <span v-if="(v.originalPrice || v.hargaNormal || v.hargaCoret || v.hargaAsli) > (v.sellPrice || selectedProduct.sellPrice)" class="text-decoration-line-through text-muted" style="font-size: 0.7rem;">Rp {{ formatRupiah(v.originalPrice || v.hargaNormal || v.hargaCoret || v.hargaAsli) }}</span>
-                                                                    <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sellPrice || selectedProduct.sellPrice) }}</div>
+                                                                    <span v-if="(v.base || v.originalPrice || v.hargaNormal || v.hargaCoret || v.hargaAsli) > (v.sell || v.sellPrice || selectedProduct.sell || selectedProduct.sellPrice)" class="text-decoration-line-through text-muted" style="font-size: 0.7rem;">Rp {{ formatRupiah(v.base || v.originalPrice || v.hargaNormal || v.hargaCoret || v.hargaAsli) }}</span>
+                                                                    <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sell || v.sellPrice || selectedProduct.sell || selectedProduct.sellPrice) }}</div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -760,7 +760,7 @@
                     <span><i class="fas fa-store me-1"></i> {{ outletName && outletName !== '-' ? outletName : 'Pusat' }}</span>
                     <span><i class="fas fa-file-invoice me-1"></i> {{ invoiceNumber || 'INV-...' }}</span>
                 </div>
-                <!-- NAMA KASIR -->
+                <!-- PERBAIKAN: Tampilan Kasir di Keranjang CDS -->
                 <div class="text-end d-flex flex-column gap-1 opacity-75">
                     <span><i class="fas fa-user-circle me-1"></i> Kasir: <span class="fw-bold">{{ cashierName && cashierName !== 'Kasir' ? cashierName : 'Menunggu...' }}</span></span>
                     <span><i class="fas fa-clock me-1"></i> {{ currentTime }}</span>
@@ -787,11 +787,11 @@
                     <div class="d-flex justify-content-between align-items-center mt-1">
                         <div class="item-price">
                             <span class="fw-bold text-dark">{{ item.qty }}</span> x 
-                            <!-- HARGA CORET DI KERANJANG -->
-                            <span v-if="(item.originalPrice || item.hargaNormal || item.hargaCoret || item.hargaAsli) > (item.sellPrice || item.price)" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(item.originalPrice || item.hargaNormal || item.hargaCoret || item.hargaAsli) }}</span>
-                            <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice || item.price) }}</span>
+                            <!-- PERBAIKAN: Harga coret di daftar Keranjang menggunakan base dan sell -->
+                            <span v-if="(item.base || item.originalPrice || item.hargaNormal || item.hargaCoret || item.hargaAsli) > (item.sell || item.sellPrice || item.price)" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(item.base || item.originalPrice || item.hargaNormal || item.hargaCoret || item.hargaAsli) }}</span>
+                            <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sell || item.sellPrice || item.price) }}</span>
                         </div>
-                        <div class="item-total">Rp {{ formatRupiah(item.qty * (item.sellPrice || item.price)) }}</div>
+                        <div class="item-total">Rp {{ formatRupiah(item.qty * (item.sell || item.sellPrice || item.price)) }}</div>
                     </div>
                 </div>
             </div>
@@ -1039,9 +1039,11 @@
                         return soldB - soldA;
                     });
                 } else if (this.sortBy === 'termurah') {
-                    result = result.sort((a, b) => Number(a.sellPrice || a.price || 0) - Number(b.sellPrice || b.price || 0));
+                    // PERBAIKAN SORTING MENGGUNAKAN sell
+                    result = result.sort((a, b) => Number(a.sell || a.sellPrice || a.price || 0) - Number(b.sell || b.sellPrice || b.price || 0));
                 } else if (this.sortBy === 'termahal') {
-                    result = result.sort((a, b) => Number(b.sellPrice || b.price || 0) - Number(a.sellPrice || a.price || 0));
+                    // PERBAIKAN SORTING MENGGUNAKAN sell
+                    result = result.sort((a, b) => Number(b.sell || b.sellPrice || b.price || 0) - Number(a.sell || a.sellPrice || a.price || 0));
                 } else if (this.sortBy === 'az') {
                     result = result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                 } else if (this.sortBy === 'za') {
@@ -1056,9 +1058,10 @@
                 
                 let basePrice = 0;
                 if (this.activeVariant) {
-                    basePrice = this.activeVariant.sellPrice || this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
+                    // PERBAIKAN MENGGUNAKAN sell
+                    basePrice = this.activeVariant.sell || this.activeVariant.sellPrice || this.selectedProduct.sell || this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
                 } else {
-                    basePrice = this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
+                    basePrice = this.selectedProduct.sell || this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
                 }
 
                 let modPrice = 0;
@@ -1253,8 +1256,8 @@
                     this.outletName = data.outletName || ''; 
                     this.invoiceNumber = data.invoiceNumber || '';
                     
-                    // PEMETAAN NAMA KASIR
-                    this.cashierName = data.namaKasir || data.cashierName || data.kasir || data.userName || data.operator || data.user || deviceId || 'Menunggu...';
+                    // PERBAIKAN: Mengambil nama kasir dari Firebase berdasarkan data.cashier atau data.cashierName
+                    this.cashierName = data.cashier || data.cashierName || data.namaKasir || data.kasir || data.userName || data.operator || data.user || deviceId || 'Menunggu...';
                     
                     let signalOpen = data.isPaymentOpen !== undefined ? data.isPaymentOpen : data.isPaymentModalOpen;
                     this.isPaymentOpen = (signalOpen === true || signalOpen === "true");
