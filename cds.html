@@ -59,6 +59,7 @@
             background-color: #000;
         }
         
+        /* 🌟 PERBAIKAN: Agar foto tidak kebesaran / terpotong */
         .promo-media-container video, .promo-media-container img { 
             width: 100%; 
             height: 100%; 
@@ -104,6 +105,7 @@
         .product-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #dfe6e9; flex-shrink: 0; }
         .product-img-placeholder { width: 50px; height: 50px; background: #f1f2f6; border-radius: 8px; border: 1px solid #dfe6e9; display: flex; align-items: center; justify-content: center; color: #a4b0be; flex-shrink: 0; }
         
+        /* PERBAIKAN UKURAN FONT QRIS AGAR TIDAK KEBESARAN & TURUN BARIS DI TABLET */
         .qris-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; border: 1px solid #f1f2f6; margin: 0 auto; max-width: 720px; }
         .qris-header { background: linear-gradient(135deg, #e84118 0%, #c23616 100%); padding: 14px 20px; color: white; }
         .qris-qr-box { background: white; padding: 12px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f1f2f6; }
@@ -224,7 +226,7 @@
                     <p class="text-muted fs-6 mt-1">Silakan tunggu kasir memilih metode pembayaran.</p>
                 </div>
                 
-                <!-- SPLIT PAYMENT VIEW -->
+                <!-- SPLIT PAYMENT VIEW (DIKECILKAN AGAR PAS DI TABLET) -->
                 <div v-else-if="isSplitPayment" class="w-100 h-100 fade-in p-3 d-flex align-items-center justify-content-center">
                     <div class="card shadow-lg border-0 w-100" style="max-width: 850px; border-radius: 20px; overflow: hidden;">
                         <div class="row g-0 h-100 align-items-stretch">
@@ -294,7 +296,7 @@
                     </div>
                 </div>
                 
-                <!-- QRIS VIEW FULL -->
+                <!-- QRIS VIEW FULL (PROPOSIONAL DI TABLET) -->
                 <div v-else-if="paymentType === 'QRIS'" class="text-center w-100 h-100 fade-in d-flex justify-content-center align-items-center p-3">
                     <div class="qris-card">
                         <div class="qris-header d-flex justify-content-between align-items-center py-2 px-3">
@@ -353,6 +355,7 @@
 
         <template v-else>
             
+            <!-- 🌟 PERBAIKAN: Kontainer Tampilan Menu/Media agar Teks Berjalan selalu ada di bawah -->
             <div class="w-100 flex-grow-1 position-relative d-flex overflow-hidden">
                 <!-- KATALOG MENU / CDS INTERAKTIF -->
                 <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex flex-column text-start bg-light fade-in position-relative">
@@ -381,15 +384,19 @@
                         <!-- Grid Produk Kanan -->
                         <div class="catalog-grid d-flex flex-column">
                             
-                            <!-- TOOLBAR ATAS -->
+                            <!-- 🌟 TOOLBAR ATAS (Search Dinamis, Sort Fix, View Toggles) -->
                             <div class="d-flex flex-column mb-3 gap-2">
+                                <!-- Judul & Aksi berada di satu baris yang sama -->
                                 <div class="d-flex justify-content-between align-items-center gap-2 w-100">
                                     
                                     <h5 class="mb-0 fw-bold text-dark text-truncate me-auto">
                                         <i class="fas fa-cube text-secondary me-2"></i>Katalog Produk
                                     </h5>
                                     
+                                    <!-- Kelompok Search, Sorting & Toggle View (Merapat Kanan) -->
                                     <div class="d-flex align-items-center gap-2 flex-nowrap justify-content-end">
+                                        
+                                        <!-- Ikon Search Expandable (Bisa Tumbuh) -->
                                         <div class="transition-all d-flex align-items-center">
                                             <button v-if="!isSearchActive && !searchQuery" 
                                                     class="btn btn-sm bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center" 
@@ -406,6 +413,7 @@
                                             </div>
                                         </div>
 
+                                        <!-- Filter Sorting (Dilengkapi Padding End 'pe-4' dan Lebar yang pas agar teks tidak nabrak panah) -->
                                         <select class="form-select form-select-sm rounded-pill border-0 shadow-sm ps-3 pe-4 fw-semibold text-secondary" style="width: 125px; box-shadow: inset 0 0 0 1px #dee2e6; cursor: pointer; height: 32px; font-size: 0.85rem;" v-model="sortBy">
                                             <option value="default">Urutkan</option>
                                             <option value="terlaris">🔥 Terlaris</option>
@@ -415,6 +423,7 @@
                                             <option value="za">Z - A</option>
                                         </select>
 
+                                        <!-- Toggle Mode -->
                                         <div class="btn-group shadow-sm bg-white rounded-pill flex-shrink-0 border p-1" style="height: 32px;">
                                             <button class="btn btn-sm rounded-pill border-0 px-2 d-flex align-items-center" :class="viewMode === 'grid' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid'" title="Mode Grid"><i class="fas fa-th-large"></i></button>
                                             <button class="btn btn-sm rounded-pill border-0 px-2 mx-1 d-flex align-items-center" :class="viewMode === 'grid6' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid6'" title="Mode Grid 6"><i class="fas fa-th"></i></button>
@@ -423,6 +432,7 @@
                                     </div>
                                 </div>
 
+                                <!-- Chips Categories (Diletakkan di bawah baris Toolbar agar lebih lega) -->
                                 <div class="chips-container d-flex gap-2 pb-1" style="overflow-x: auto; white-space: nowrap; width: 100%;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
                                     <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all flex-shrink-0"
                                             :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = 'ALL'">
@@ -436,7 +446,7 @@
                                 </div>
                             </div>
 
-                            <!-- LIST PRODUK (Sudah termasuk 'base' dan 'sell' untuk harga coret) -->
+                            <!-- LIST PRODUK -->
                             <div class="row g-3 align-content-start" 
                                  :class="[
                                     viewMode === 'grid' ? 'row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5' : '', 
@@ -469,6 +479,7 @@
                                                 </div>
                                             </template>
                                             
+                                            <!-- TAG PRODUK PADA KARTU -->
                                             <div class="position-absolute top-0 start-0 p-2 d-flex flex-column gap-1" style="z-index: 10;">
                                                 <span v-if="prod.tag && typeof prod.tag === 'string'" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
                                                 <template v-if="prod.tags && Array.isArray(prod.tags)">
@@ -489,11 +500,11 @@
                                             </div>
                                             
                                             <div class="mt-auto pt-1 d-flex flex-column">
-                                                <!-- HARGA CORET DI GRID -->
-                                                <span v-if="(prod.base || prod.originalPrice || prod.hargaNormal || prod.hargaCoret || prod.hargaAsli) > (prod.sell || prod.sellPrice || prod.price)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
-                                                    Rp {{ formatRupiah(prod.base || prod.originalPrice || prod.hargaNormal || prod.hargaCoret || prod.hargaAsli) }}
+                                                <!-- 🌟 PERBAIKAN: FITUR HARGA CORET (ORIGINAL PRICE) DI GRID PRODUK -->
+                                                <span v-if="(prod.originalPrice || prod.hargaNormal || prod.hargaCoret) > (prod.sellPrice || prod.price)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
+                                                    Rp {{ formatRupiah(prod.originalPrice || prod.hargaNormal || prod.hargaCoret) }}
                                                 </span>
-                                                <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.sell || prod.sellPrice || prod.price) }}</div>
+                                                <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.sellPrice || prod.price) }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -507,7 +518,9 @@
                         </div>
                     </div>
 
-                    <!-- OVERLAY DETAIL PRODUK & VARIAN -->
+                    <!-- ========================================================= -->
+                    <!-- OVERLAY DETAIL PRODUK & KODE/FOTO VARIAN -->
+                    <!-- ========================================================= -->
                     <div v-if="selectedProduct" class="position-absolute top-0 start-0 w-100 h-100 bg-white fade-in d-flex flex-column" style="z-index: 50;">
                         
                         <div class="p-3 border-bottom d-flex align-items-center shadow-sm sticky-top bg-white">
@@ -555,14 +568,15 @@
                                             <span>Varian: <span class="text-dark">{{ activeVariant.name }}</span></span>
                                         </h5>
                                         
-                                        <!-- HARGA CORET DI DETAIL PRODUK -->
+                                        <!-- 🌟 PERBAIKAN: HARGA CORET JUGA DI HALAMAN DETAIL PRODUK -->
                                         <div class="d-flex align-items-end gap-2 mb-4">
                                             <div class="text-danger fw-black" style="font-size: 2.2rem; letter-spacing: -1px; line-height: 1;">
                                                 Rp {{ formatRupiah(detailTotalPrice) }}
                                             </div>
-                                            <div v-if="(activeVariant ? (activeVariant.base || activeVariant.originalPrice || activeVariant.hargaNormal || activeVariant.hargaCoret || activeVariant.hargaAsli) : (selectedProduct.base || selectedProduct.originalPrice || selectedProduct.hargaNormal || selectedProduct.hargaCoret || selectedProduct.hargaAsli)) > (activeVariant ? (activeVariant.sell || activeVariant.sellPrice) : (selectedProduct.sell || selectedProduct.sellPrice))" 
+                                            <!-- Logic: Cek harga asli varian jika varian dipilih, jika tidak cek harga asli produk parent -->
+                                            <div v-if="(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal || activeVariant.hargaCoret) : (selectedProduct.originalPrice || selectedProduct.hargaNormal || selectedProduct.hargaCoret)) > (activeVariant ? (activeVariant.sellPrice || selectedProduct.sellPrice) : selectedProduct.sellPrice)" 
                                                  class="text-decoration-line-through text-muted fw-semibold" style="font-size: 1.2rem; margin-bottom: 2px;">
-                                                Rp {{ formatRupiah(activeVariant ? (activeVariant.base || activeVariant.originalPrice || activeVariant.hargaNormal || activeVariant.hargaCoret || activeVariant.hargaAsli) : (selectedProduct.base || selectedProduct.originalPrice || selectedProduct.hargaNormal || selectedProduct.hargaCoret || selectedProduct.hargaAsli)) }}
+                                                Rp {{ formatRupiah(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal || activeVariant.hargaCoret) : (selectedProduct.originalPrice || selectedProduct.hargaNormal || selectedProduct.hargaCoret)) }}
                                             </div>
                                         </div>
                                         
@@ -597,10 +611,7 @@
                                                                     </span>
                                                                 </div>
 
-                                                                <div class="d-flex align-items-center gap-1">
-                                                                    <span v-if="(v.base || v.originalPrice || v.hargaNormal || v.hargaCoret || v.hargaAsli) > (v.sell || v.sellPrice || selectedProduct.sell || selectedProduct.sellPrice)" class="text-decoration-line-through text-muted" style="font-size: 0.7rem;">Rp {{ formatRupiah(v.base || v.originalPrice || v.hargaNormal || v.hargaCoret || v.hargaAsli) }}</span>
-                                                                    <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sell || v.sellPrice || selectedProduct.sell || selectedProduct.sellPrice) }}</div>
-                                                                </div>
+                                                                <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sellPrice || selectedProduct.sellPrice) }}</div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -612,6 +623,7 @@
                                             <span class="fw-medium">Produk ini langsung tersedia tanpa pilihan varian khusus.</span>
                                         </div>
 
+                                        <!-- MODIFIER (TOPPING DLL) -->
                                         <div v-if="selectedProduct.modifiers && selectedProduct.modifiers.length > 0" class="mt-4 pt-3 border-top">
                                             <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-plus-circle me-2"></i>Pilihan Tambahan / Opsi Khusus:</h6>
                                             
@@ -738,7 +750,7 @@
                 </div>
             </div>
             
-            <!-- MARQUEE TEXT -->
+            <!-- 🌟 PERBAIKAN: RUNNING TEXT MARQUEE PROMO Diletakkan DI LUAR mode media agar selalu tampil di semua mode -->
             <div class="bg-danger text-white overflow-hidden py-2 px-3 fw-bold d-flex align-items-center shadow-lg w-100" style="font-size: 0.9rem; letter-spacing: 0.5px; z-index: 10; flex-shrink: 0;">
                 <i class="fas fa-bullhorn me-3 fs-5"></i>
                 <marquee behavior="scroll" direction="left" scrollamount="6" class="flex-grow-1">
@@ -752,15 +764,17 @@
     <!-- AREA KERANJANG KANAN -->
     <div class="cart-area position-relative"> 
         
+        <!-- PERBAIKAN HEADER KERANJANG (LAYOUT KIRI KANAN) -->
         <div class="cart-header-box">
             <h5 class="mb-3 fw-bold fs-6 text-center">{{ storeName }}</h5>
             
             <div class="d-flex justify-content-between align-items-end" style="font-size: 0.75rem;">
+                <!-- Kolom Kiri -->
                 <div class="text-start d-flex flex-column gap-1 opacity-75">
                     <span><i class="fas fa-store me-1"></i> {{ outletName && outletName !== '-' ? outletName : 'Pusat' }}</span>
                     <span><i class="fas fa-file-invoice me-1"></i> {{ invoiceNumber || 'INV-...' }}</span>
                 </div>
-                <!-- PERBAIKAN: Tampilan Kasir di Keranjang CDS -->
+                <!-- Kolom Kanan (🌟 PERBAIKAN: MENAMPILKAN NAMA KASIR DENGAN LABEL "Kasir:") -->
                 <div class="text-end d-flex flex-column gap-1 opacity-75">
                     <span><i class="fas fa-user-circle me-1"></i> Kasir: <span class="fw-bold">{{ cashierName && cashierName !== 'Kasir' ? cashierName : 'Menunggu...' }}</span></span>
                     <span><i class="fas fa-clock me-1"></i> {{ currentTime }}</span>
@@ -787,11 +801,10 @@
                     <div class="d-flex justify-content-between align-items-center mt-1">
                         <div class="item-price">
                             <span class="fw-bold text-dark">{{ item.qty }}</span> x 
-                            <!-- PERBAIKAN: Harga coret di daftar Keranjang menggunakan base dan sell -->
-                            <span v-if="(item.base || item.originalPrice || item.hargaNormal || item.hargaCoret || item.hargaAsli) > (item.sell || item.sellPrice || item.price)" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(item.base || item.originalPrice || item.hargaNormal || item.hargaCoret || item.hargaAsli) }}</span>
-                            <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sell || item.sellPrice || item.price) }}</span>
+                            <span v-if="item.originalPrice > item.sellPrice" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(item.originalPrice) }}</span>
+                            <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice) }}</span>
                         </div>
-                        <div class="item-total">Rp {{ formatRupiah(item.qty * (item.sell || item.sellPrice || item.price)) }}</div>
+                        <div class="item-total">Rp {{ formatRupiah(item.qty * item.sellPrice) }}</div>
                     </div>
                 </div>
             </div>
@@ -857,7 +870,7 @@
                 outletName: '', 
                 invoiceNumber: '', 
                 currentTime: '',
-                cashierName: deviceId || 'Kasir',
+                cashierName: deviceId || 'Kasir', // MENAMPUNG NAMA KASIR
                 
                 isPaymentOpen: false, 
                 paymentMethod: null, 
@@ -1039,11 +1052,9 @@
                         return soldB - soldA;
                     });
                 } else if (this.sortBy === 'termurah') {
-                    // PERBAIKAN SORTING MENGGUNAKAN sell
-                    result = result.sort((a, b) => Number(a.sell || a.sellPrice || a.price || 0) - Number(b.sell || b.sellPrice || b.price || 0));
+                    result = result.sort((a, b) => Number(a.sellPrice || a.price || 0) - Number(b.sellPrice || b.price || 0));
                 } else if (this.sortBy === 'termahal') {
-                    // PERBAIKAN SORTING MENGGUNAKAN sell
-                    result = result.sort((a, b) => Number(b.sell || b.sellPrice || b.price || 0) - Number(a.sell || a.sellPrice || a.price || 0));
+                    result = result.sort((a, b) => Number(b.sellPrice || b.price || 0) - Number(a.sellPrice || a.price || 0));
                 } else if (this.sortBy === 'az') {
                     result = result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                 } else if (this.sortBy === 'za') {
@@ -1058,10 +1069,9 @@
                 
                 let basePrice = 0;
                 if (this.activeVariant) {
-                    // PERBAIKAN MENGGUNAKAN sell
-                    basePrice = this.activeVariant.sell || this.activeVariant.sellPrice || this.selectedProduct.sell || this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
+                    basePrice = this.activeVariant.sellPrice || this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
                 } else {
-                    basePrice = this.selectedProduct.sell || this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
+                    basePrice = this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
                 }
 
                 let modPrice = 0;
@@ -1256,8 +1266,8 @@
                     this.outletName = data.outletName || ''; 
                     this.invoiceNumber = data.invoiceNumber || '';
                     
-                    // PERBAIKAN: Mengambil nama kasir dari Firebase berdasarkan data.cashier atau data.cashierName
-                    this.cashierName = data.cashier || data.cashierName || data.namaKasir || data.kasir || data.userName || data.operator || data.user || deviceId || 'Menunggu...';
+                    // 🌟 PERBAIKAN: Mengambil nama kasir dari Firebase jika tersedia, memprioritaskan field namaKasir dan cashierName
+                    this.cashierName = data.namaKasir || data.cashierName || data.kasir || deviceId || 'Menunggu...';
                     
                     let signalOpen = data.isPaymentOpen !== undefined ? data.isPaymentOpen : data.isPaymentModalOpen;
                     this.isPaymentOpen = (signalOpen === true || signalOpen === "true");
