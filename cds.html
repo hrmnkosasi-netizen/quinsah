@@ -500,11 +500,12 @@
                                             </div>
                                             
                                             <div class="mt-auto pt-1 d-flex flex-column">
-                                                <!-- 🌟 PERBAIKAN: HARGA CORET MENGGUNAKAN prod.base DAN prod.sell -->
-                                                <span v-if="prod.base > prod.sell" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
-                                                    Rp {{ formatRupiah(prod.base) }}
+                                                <!-- 🌟 PERBAIKAN: HARGA CORET DIKEMBALIKAN KE VARIABEL ASLI (originalPrice/hargaNormal) -->
+                                                <span v-if="(prod.originalPrice || prod.hargaNormal) > (prod.price || prod.sellPrice)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
+                                                    Rp {{ formatRupiah(prod.originalPrice || prod.hargaNormal) }}
                                                 </span>
-                                                <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.sell) }}</div>
+                                                <!-- 🌟 PERBAIKAN: HARGA JUAL DIKEMBALIKAN KE VARIABEL ASLI (price/sellPrice) -->
+                                                <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.price || prod.sellPrice) }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -568,15 +569,15 @@
                                             <span>Varian: <span class="text-dark">{{ activeVariant.name }}</span></span>
                                         </h5>
                                         
-                                        <!-- 🌟 PERBAIKAN: HARGA CORET DI HALAMAN DETAIL MENGGUNAKAN base DAN sell -->
+                                        <!-- 🌟 PERBAIKAN: HARGA CORET DI HALAMAN DETAIL MENGGUNAKAN VARIABEL ASLI -->
                                         <div class="d-flex align-items-end gap-2 mb-4">
                                             <div class="text-danger fw-black" style="font-size: 2.2rem; letter-spacing: -1px; line-height: 1;">
                                                 Rp {{ formatRupiah(detailTotalPrice) }}
                                             </div>
                                             <!-- Logic: Cek harga asli varian jika varian dipilih, jika tidak cek harga asli produk parent -->
-                                            <div v-if="(activeVariant ? activeVariant.base : selectedProduct.base) > (activeVariant ? activeVariant.sell : selectedProduct.sell)" 
+                                            <div v-if="(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal) : (selectedProduct.originalPrice || selectedProduct.hargaNormal)) > (activeVariant ? (activeVariant.price || activeVariant.sellPrice) : (selectedProduct.price || selectedProduct.sellPrice))" 
                                                  class="text-decoration-line-through text-muted fw-semibold" style="font-size: 1.2rem; margin-bottom: 2px;">
-                                                Rp {{ formatRupiah(activeVariant ? activeVariant.base : selectedProduct.base) }}
+                                                Rp {{ formatRupiah(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal) : (selectedProduct.originalPrice || selectedProduct.hargaNormal)) }}
                                             </div>
                                         </div>
                                         
@@ -611,8 +612,8 @@
                                                                     </span>
                                                                 </div>
 
-                                                                <!-- 🌟 PERBAIKAN: HARGA VARIAN MENGGUNAKAN v.sell -->
-                                                                <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.sell || selectedProduct.sell) }}</div>
+                                                                <!-- 🌟 PERBAIKAN: HARGA VARIAN DIKEMBALIKAN KE VARIABEL ASLI -->
+                                                                <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.price || v.sellPrice || selectedProduct.price || selectedProduct.sellPrice) }}</div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -765,7 +766,7 @@
     <!-- AREA KERANJANG KANAN -->
     <div class="cart-area position-relative"> 
         
-        <!-- PERBAIKAN HEADER KERANJANG (LAYOUT KIRI KANAN) -->
+        <!-- HEADER KERANJANG (LAYOUT KIRI KANAN) -->
         <div class="cart-header-box">
             <h5 class="mb-3 fw-bold fs-6 text-center">{{ storeName }}</h5>
             
@@ -775,11 +776,11 @@
                     <span><i class="fas fa-store me-1"></i> {{ outletName && outletName !== '-' ? outletName : 'Pusat' }}</span>
                     <span><i class="fas fa-file-invoice me-1"></i> {{ invoiceNumber || 'INV-...' }}</span>
                 </div>
-                <!-- Kolom Kanan (🌟 PERBAIKAN: MENAMPILKAN NAMA KASIR DENGAN cashierName ATAU cashier) -->
+                <!-- Kolom Kanan (🌟 PERBAIKAN KASIR: Membaca berbagai kemungkinan variabel kasir agar tidak stuck di 'Menunggu...') -->
                 <div class="text-end d-flex flex-column gap-1 opacity-75">
                     <span><i class="fas fa-user-circle me-1"></i> Kasir: 
                         <span class="fw-bold">
-                            {{ (cashierName || cashier) && (cashierName || cashier) !== 'Kasir' ? (cashierName || cashier) : 'Menunggu...' }}
+                            {{ cashierName || cashier || kasir || 'Menunggu...' }}
                         </span>
                     </span>
                     <span><i class="fas fa-clock me-1"></i> {{ currentTime }}</span>
