@@ -642,10 +642,19 @@
                                         <label class="form-check-label fw-bold text-primary" for="catAll">Tampilkan Semua Kategori</label>
                                     </div>
                                     
+                                    <!-- LOOPING KATEGORI UTAMA & SUB KATEGORI TELAH DITAMBAHKAN KEMBALI DI SINI -->
                                     <div v-for="main in categoryTree" :key="main.id" class="mb-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" :id="'set-'+main.id" :value="main.id" v-model="tempSettings.selectedCategories">
                                             <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id"><i :class="main.icon || getCategoryIcon(main.name)" class="text-warning me-1"></i> {{ main.name }}</label>
+                                        </div>
+                                        
+                                        <!-- Menampilkan Sub-Kategori jika ada -->
+                                        <div v-if="main.children && main.children.length > 0" class="ms-4 mt-2 border-start ps-3 border-2 border-light">
+                                            <div v-for="sub in main.children" :key="sub.id" class="form-check mb-1">
+                                                <input class="form-check-input" type="checkbox" :id="'set-'+sub.id" :value="sub.id" v-model="tempSettings.selectedCategories">
+                                                <label class="form-check-label text-secondary fw-medium" :for="'set-'+sub.id" style="font-size: 0.85rem;">{{ sub.name }}</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -919,7 +928,12 @@
             mainCategories() {
                 let cats = this.categoryTree;
                 if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
-                    cats = cats.filter(c => this.localSettings.selectedCategories.includes(c.id));
+                    // Tampilkan kategori utama jika ia terpilih, ATAU ada anak (sub-kategorinya) yang terpilih
+                    cats = cats.filter(c => {
+                        let isMainSelected = this.localSettings.selectedCategories.includes(c.id);
+                        let isAnyChildSelected = c.children && c.children.some(child => this.localSettings.selectedCategories.includes(child.id));
+                        return isMainSelected || isAnyChildSelected;
+                    });
                 }
                 return cats;
             },
@@ -931,7 +945,11 @@
                 
                 let subs = mainNode.children;
                 if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
-                    subs = subs.filter(sub => this.localSettings.selectedCategories.includes(sub.id));
+                    // Jika Kategori Utama tidak dicentang (hanya sub-nya), maka tampilkan hanya sub yg dicentang
+                    let isMainSelected = this.localSettings.selectedCategories.includes(mainNode.id);
+                    if (!isMainSelected) {
+                        subs = subs.filter(sub => this.localSettings.selectedCategories.includes(sub.id));
+                    }
                 }
                 return subs;
             },
@@ -997,7 +1015,6 @@
             }
         },
         methods: {
-            // FUNGSI HARGA PINTAR: MENDETEKSI CORET VS DISKON DENGAN AKURAT
             getOriginalPrice(item, parentProduct = null) {
                 if (!item) return 0;
                 
@@ -1005,25 +1022,21 @@
                 let p = Number(item.price || 0);
                 let explicit = Number(item.originalPrice || item.hargaNormal || item.hargaCoret || item.basePrice || 0);
                 
-                // 1. Cek parameter harga normal eksplisit
                 let finalPrice = this.getFinalPrice(item, parentProduct);
                 if (explicit > finalPrice) return explicit;
                 
-                // 2. Cek apakah ada diskon dari perbedaan price vs sellPrice
                 if (p > sp && sp > 0) return p;
 
-                // 3. Cek apakah ada sistem discount nominal
                 let disc = Number(item.discountValue || item.discount || 0);
                 if (disc === 0 && parentProduct) {
                     disc = Number(parentProduct.discountValue || parentProduct.discount || 0);
                 }
 
-                // Jika memiliki nominal diskon, berarti harga dasarnya adalah harga sebelum diskon
                 if (disc > 0) {
                     return (sp > 0) ? sp : p; 
                 }
                 
-                return 0; // Tidak ada harga coret
+                return 0; 
             },
             
             getFinalPrice(item, parentProduct = null) {
@@ -1034,23 +1047,19 @@
                 let explicit = Number(item.originalPrice || item.hargaNormal || item.hargaCoret || item.basePrice || 0);
                 let basePrice = (sp > 0) ? sp : p;
                 
-                // Jika price > sellPrice, gunakan sellPrice sebagai base
                 if (p > sp && sp > 0) {
                     basePrice = sp;
                 }
                 
-                // Jika explicit originalPrice lebih tinggi, basePrice sudah merupakan harga akhir
                 if (explicit > basePrice) {
                     return basePrice;
                 }
 
-                // Hitung pengurangan dari diskon nominal
                 let disc = Number(item.discountValue || item.discount || 0);
                 if (disc === 0 && parentProduct) {
                     disc = Number(parentProduct.discountValue || parentProduct.discount || 0);
                 }
 
-                // Kurangi nominal diskon untuk menemukan harga jual final
                 if (disc > 0 && basePrice > disc) {
                     return basePrice - disc;
                 }
