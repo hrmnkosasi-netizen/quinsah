@@ -98,7 +98,16 @@
             <!-- GRID PRODUK AKTIF -->
             <div v-if="companyIdValid && !isLoading" class="grid grid-cols-2 gap-4 w-full">
                 <div v-for="prod in filteredProducts" :key="prod.id" @click="openProductDetail(prod)" class="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden flex flex-col relative cursor-pointer active:scale-[0.97] transition-all hover:shadow-md">
+                    
                     <div class="aspect-square w-full relative overflow-hidden bg-zinc-50 border-b border-zinc-100 flex items-center justify-center">
+                        
+                        <!-- Tampilan Tags / Label Khusus di pojok kiri atas foto -->
+                        <div v-if="prod.tags && prod.tags.length > 0" class="absolute top-2 left-2 flex flex-col gap-1 z-20">
+                            <span v-for="t in prod.tags" :key="t" class="bg-red-600/90 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                                {{ t }}
+                            </span>
+                        </div>
+
                         <template v-if="prod.displayImage">
                             <img :src="prod.displayImage" @error="handleImageError(prod)" class="img-cover">
                         </template>
@@ -113,7 +122,10 @@
                     
                     <div class="p-3.5 flex flex-col flex-1 justify-between bg-white">
                         <h3 class="text-[13px] font-semibold text-zinc-800 line-clamp-2 leading-snug mb-2">{{ prod.name }}</h3>
-                        <div class="flex items-end justify-between mt-auto">
+                        
+                        <!-- Penyesuaian Harga Coret -->
+                        <div class="flex flex-col justify-end mt-auto">
+                            <span v-if="prod.originalPrice > prod.price" class="text-[10px] font-bold text-zinc-400 line-through decoration-zinc-400 -mb-0.5">Rp{{ formatRupiah(prod.originalPrice) }}</span>
                             <span class="text-sm font-extrabold text-red-600">Rp{{ formatRupiah(prod.price) }}</span>
                         </div>
                     </div>
@@ -121,7 +133,7 @@
             </div>
         </main>
 
-                <!-- BOTTOM SHEET: DETAIL PRODUK & VARIAN -->
+        <!-- BOTTOM SHEET: DETAIL PRODUK & VARIAN -->
         <div v-if="selectedProduct" class="fixed inset-0 z-50 flex items-end justify-center">
             <div class="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity" @click="closeProductDetail"></div>
             <div class="relative w-full max-w-[480px] bg-white rounded-t-[32px] h-[90vh] flex flex-col shadow-2xl animate-slide-up overflow-hidden">
@@ -137,13 +149,26 @@
                     </div>
                     
                     <div class="p-6 border-b border-zinc-100 bg-white relative -mt-5 rounded-t-[24px]">
+                        
+                        <!-- Menampilkan Tag di Detail Produk -->
+                        <div v-if="selectedProduct.tags && selectedProduct.tags.length > 0" class="flex flex-wrap gap-1.5 mb-3">
+                            <span v-for="t in selectedProduct.tags" :key="'det-'+t" class="bg-red-50 text-red-600 border border-red-100 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                                {{ t }}
+                            </span>
+                        </div>
+
                         <div class="flex justify-between items-start mb-2">
                             <h2 class="text-xl font-extrabold text-zinc-900 leading-tight flex-1 pr-4">{{ selectedProduct.name }}</h2>
                             <div class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded text-[10px] font-bold uppercase tracking-wider border border-green-100 whitespace-nowrap">
                                 <i class="fa-solid fa-box"></i> Stok: {{ selectedProduct.stock > 900 ? 'Tersedia' : selectedProduct.stock }}
                             </div>
                         </div>
-                        <p class="text-2xl font-black text-red-600">Rp{{ formatRupiah(selectedProduct.price) }}</p>
+                        
+                        <!-- Harga Coret di Detail -->
+                        <div class="flex items-end gap-2 mt-1">
+                            <p class="text-2xl font-black text-red-600 leading-none">Rp{{ formatRupiah(selectedProduct.price) }}</p>
+                            <p v-if="selectedProduct.originalPrice > selectedProduct.price" class="text-sm font-bold text-zinc-400 line-through mb-0.5">Rp{{ formatRupiah(selectedProduct.originalPrice) }}</p>
+                        </div>
                     </div>
 
                     <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="p-6 border-b border-zinc-100 bg-white">
@@ -186,7 +211,7 @@
                     </div>
                     
                     <div v-for="(item, idx) in cart" :key="idx" class="flex gap-4 bg-white p-3 rounded-2xl border border-zinc-100 shadow-sm">
-                        <div class="w-20 h-24 bg-zinc-50 rounded-xl overflow-hidden border border-zinc-100 flex items-center justify-center flex-shrink-0">
+                        <div class="w-20 h-24 bg-zinc-50 rounded-xl overflow-hidden border border-zinc-100 flex items-center justify-center flex-shrink-0 relative">
                             <img v-if="item.displayImage" :src="item.displayImage" class="img-cover">
                             <i v-else class="fa-solid fa-image text-zinc-300"></i>
                         </div>
@@ -199,7 +224,13 @@
                                 <span v-if="item.variant" class="inline-block mt-1.5 px-2 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] font-bold rounded">Varian: {{ item.variant }}</span>
                             </div>
                             <div class="flex items-center justify-between mt-2">
-                                <span class="text-sm font-black text-zinc-900">Rp{{ formatRupiah(item.price) }}</span>
+                                
+                                <!-- Harga Coret di Keranjang -->
+                                <div class="flex flex-col justify-end">
+                                    <span v-if="item.originalPrice > item.price" class="text-[10px] font-bold text-zinc-400 line-through decoration-zinc-400 -mb-0.5">Rp{{ formatRupiah(item.originalPrice) }}</span>
+                                    <span class="text-sm font-black text-zinc-900">Rp{{ formatRupiah(item.price) }}</span>
+                                </div>
+
                                 <div class="flex items-center bg-zinc-50 border border-zinc-200 rounded-lg p-0.5">
                                     <button @click="updateQty(idx, -1)" class="w-7 h-7 flex items-center justify-center text-zinc-600 hover:bg-white rounded-md transition-all"><i class="fa-solid fa-minus text-[10px]"></i></button>
                                     <span class="text-xs font-bold w-8 text-center">{{ item.qty }}</span>
@@ -238,7 +269,6 @@
         import { getFirestore, collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
 
-        // GANTI DENGAN FIREBASE CONFIG ANDA
         const firebaseConfig = { 
             apiKey: "AIzaSyBvwkhhUoFOMoKTPL4TWTCJxlx0AXoA3t4", 
             authDomain: "quinsahcollection-36926.firebaseapp.com", 
@@ -251,7 +281,7 @@
             data() {
                 return {
                     companyId: null,
-                    companyIdValid: true, // Default true agar loader jalan duluan
+                    companyIdValid: true, 
                     storeName: "Memuat Toko...", 
                     storeSubtitle: "KATALOG ONLINE",
                     whatsappNumber: "628123456789", 
@@ -283,20 +313,16 @@
                     this.isLoading = true;
                     let foundCompanyId = null;
 
-                    // 1. Prioritas Pertama: Cek dari Parameter URL (Misal: ?company=xyz)
                     const urlParams = new URLSearchParams(window.location.search);
                     foundCompanyId = urlParams.get('company');
 
-                    // 2. Prioritas Kedua: Cek dari Subdomain (Misal: yarch.queenpos.id)
                     if (!foundCompanyId) {
                         const hostname = window.location.hostname;
                         const parts = hostname.split('.');
                         
-                        // Validasi agar tidak mencari jika di localhost atau domain utama tanpa subdomain
                         if (hostname !== 'localhost' && hostname !== '127.0.0.1' && parts.length >= 2 && parts[0] !== 'www') {
-                            const subdomain = parts[0]; // Mendapatkan 'yarch'
+                            const subdomain = parts[0]; 
                             
-                            // Lakukan query ke database berdasarkan urlToko
                             const qCompany = query(collection(db, "companies"), where("urlToko", "==", subdomain));
                             const companySnap = await getDocs(qCompany);
                             
@@ -306,21 +332,17 @@
                         }
                     }
 
-                    // 3. Prioritas Ketiga: Fallback ke LocalStorage (Berguna untuk Testing Lokal)
                     if (!foundCompanyId) {
                         foundCompanyId = localStorage.getItem('companyId') || localStorage.getItem('activeCompanyId');
                     }
 
-                    // Eksekusi jika Company ID Ditemukan atau Tidak
                     if (foundCompanyId) {
                         this.companyId = foundCompanyId;
                         this.companyIdValid = true;
                         
-                        // Setelah ID Toko valid, jalankan fungsi penarikan data
                         await this.fetchStoreData();
                         await this.fetchData();
                     } else {
-                        // Munculkan Error UI jika benar-benar tidak ada ID yang ditemukan
                         this.companyIdValid = false;
                         this.isLoading = false;
                     }
@@ -331,6 +353,40 @@
                 }
             },
             methods: {
+                // LOGIKA DETEKSI HARGA CORET
+                getOriginalPrice(item) {
+                    if (!item) return 0;
+                    let sp = Number(item.sellPrice || 0);
+                    let p = Number(item.price || 0);
+                    let explicit = Number(item.originalPrice || item.hargaNormal || item.hargaCoret || item.basePrice || 0);
+                    
+                    let finalPrice = this.getFinalPrice(item);
+                    if (explicit > finalPrice) return explicit;
+                    
+                    if (p > sp && sp > 0) return p;
+
+                    let disc = Number(item.discountValue || item.discount || 0);
+                    if (disc > 0) return (sp > 0) ? sp : p; 
+                    
+                    return 0;
+                },
+                getFinalPrice(item) {
+                    if (!item) return 0;
+                    let sp = Number(item.sellPrice || 0);
+                    let p = Number(item.price || 0);
+                    
+                    let explicit = Number(item.originalPrice || item.hargaNormal || item.hargaCoret || item.basePrice || 0);
+                    let basePrice = (sp > 0) ? sp : p;
+                    
+                    if (p > sp && sp > 0) basePrice = sp;
+                    if (explicit > basePrice) return basePrice;
+
+                    let disc = Number(item.discountValue || item.discount || 0);
+                    if (disc > 0 && basePrice > disc) return basePrice - disc;
+                    
+                    return basePrice;
+                },
+
                 async fetchStoreData() {
                     try {
                         const settingsSnap = await getDoc(doc(db, "settings", this.companyId));
@@ -349,7 +405,6 @@
                     try {
                         this.isLoading = true;
                         
-                        // WAJIB WHERE COMPANY ID AGAR TIDAK BERCAMPUR ANTAR TENANT
                         let catRef = query(collection(db, "categories"), where("companyId", "==", this.companyId));
                         const catSnap = await getDocs(catRef);
                         this.categories = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -361,9 +416,16 @@
                             const data = doc.data();
                             
                             let finalImage = data.imageBase64 || data.imageUrl || data.foto || data.image || data.gambar || '';
-                            let finalPrice = Number(data.sellPrice || data.price || data.hargaJual || data.harga || 0);
+                            let finalPrice = this.getFinalPrice(data);
+                            let originalPrice = this.getOriginalPrice(data);
 
-                            // LOGIKA STOK AKURAT (Mengatasi format stok object multi-outlet)
+                            // Mengumpulkan Semua Tag dari Data
+                            let tagList = [];
+                            if (data.tag && typeof data.tag === 'string') tagList.push(data.tag);
+                            if (data.tags && Array.isArray(data.tags)) tagList = tagList.concat(data.tags);
+                            if (data.productTags && Array.isArray(data.productTags)) tagList = tagList.concat(data.productTags);
+                            tagList = [...new Set(tagList)]; // Hilangkan duplikat
+
                             let finalStock = 999;
                             if (data.stock !== undefined) {
                                 if (typeof data.stock === 'object' && data.stock !== null) {
@@ -389,6 +451,8 @@
                                 ...data,
                                 name: data.name || data.nama || 'Tanpa Nama',
                                 price: finalPrice,
+                                originalPrice: originalPrice,
+                                tags: tagList,
                                 stock: finalStock,
                                 displayImage: finalImage,
                                 variants: productVariants,
@@ -449,6 +513,7 @@
                             id: this.selectedProduct.id,
                             name: this.selectedProduct.name,
                             price: this.selectedProduct.price,
+                            originalPrice: this.selectedProduct.originalPrice,
                             displayImage: this.selectedProduct.displayImage,
                             variant: this.activeVariant,
                             qty: 1
@@ -505,4 +570,3 @@
     </script>
 </body>
 </html>
-
