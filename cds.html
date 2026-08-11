@@ -59,7 +59,6 @@
             background-color: #000;
         }
         
-        /* 🌟 PERBAIKAN: Agar foto tidak kebesaran / terpotong */
         .promo-media-container video, .promo-media-container img { 
             width: 100%; 
             height: 100%; 
@@ -82,7 +81,6 @@
             to { opacity: 1; transform: translateY(0); } 
         }
 
-        /* AREA KERANJANG DISESUAIKAN AGAR PROPORSIONAL DI TABLET/PC */
         .cart-area { 
             background-color: #fff; 
             box-shadow: -10px 0 25px rgba(0,0,0,0.08); 
@@ -105,7 +103,6 @@
         .product-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #dfe6e9; flex-shrink: 0; }
         .product-img-placeholder { width: 50px; height: 50px; background: #f1f2f6; border-radius: 8px; border: 1px solid #dfe6e9; display: flex; align-items: center; justify-content: center; color: #a4b0be; flex-shrink: 0; }
         
-        /* PERBAIKAN UKURAN FONT QRIS AGAR TIDAK KEBESARAN & TURUN BARIS DI TABLET */
         .qris-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; border: 1px solid #f1f2f6; margin: 0 auto; max-width: 720px; }
         .qris-header { background: linear-gradient(135deg, #e84118 0%, #c23616 100%); padding: 14px 20px; color: white; }
         .qris-qr-box { background: white; padding: 12px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f1f2f6; }
@@ -124,7 +121,6 @@
         .confetti { width: 12px; height: 12px; background-color: #f2d74e; position: absolute; top: -20px; animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
         
-        /* CSS KHUSUS KATALOG & SIDEBAR CDS */
         .catalog-sidebar { 
             width: 90px; flex-shrink: 0; background: #ffffff; border-right: 1px solid #dee2e6;
             display: flex; flex-direction: column; justify-content: space-between; z-index: 5;
@@ -154,7 +150,6 @@
         .btn-white { background-color: #fff; border-color: #dee2e6; }
         .btn-white:hover { background-color: #f8f9fa; }
         
-        /* CSS PRODUCT CARD (MENDUKUNG GRID DAN LIST MODE) */
         .product-card-cds { 
             transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border-radius: 12px; 
             border: 1px solid #e9ecef; background: #fff; height: 100%; display: flex; overflow: hidden; 
@@ -226,7 +221,6 @@
                     <p class="text-muted fs-6 mt-1">Silakan tunggu kasir memilih metode pembayaran.</p>
                 </div>
                 
-                <!-- SPLIT PAYMENT VIEW (DIKECILKAN AGAR PAS DI TABLET) -->
                 <div v-else-if="isSplitPayment" class="w-100 h-100 fade-in p-3 d-flex align-items-center justify-content-center">
                     <div class="card shadow-lg border-0 w-100" style="max-width: 850px; border-radius: 20px; overflow: hidden;">
                         <div class="row g-0 h-100 align-items-stretch">
@@ -296,7 +290,6 @@
                     </div>
                 </div>
                 
-                <!-- QRIS VIEW FULL (PROPOSIONAL DI TABLET) -->
                 <div v-else-if="paymentType === 'QRIS'" class="text-center w-100 h-100 fade-in d-flex justify-content-center align-items-center p-3">
                     <div class="qris-card">
                         <div class="qris-header d-flex justify-content-between align-items-center py-2 px-3">
@@ -354,14 +347,11 @@
         </div>
 
         <template v-else>
-            
-            <!-- 🌟 PERBAIKAN: Kontainer Tampilan Menu/Media agar Teks Berjalan selalu ada di bawah -->
             <div class="w-100 flex-grow-1 position-relative d-flex overflow-hidden">
                 <!-- KATALOG MENU / CDS INTERAKTIF -->
                 <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex flex-column text-start bg-light fade-in position-relative">
                     
                     <div class="d-flex flex-grow-1 overflow-hidden w-100 h-100">
-                        <!-- Sidebar Kategori Kiri -->
                         <div class="catalog-sidebar shadow-sm">
                             <div class="sidebar-menu">
                                 <div class="cat-item" :class="{'active': selectedMainCategory === 'ALL'}" @click="selectMainCategory('ALL')">
@@ -381,22 +371,15 @@
                             </div>
                         </div>
 
-                        <!-- Grid Produk Kanan -->
                         <div class="catalog-grid d-flex flex-column">
-                            
-                            <!-- 🌟 TOOLBAR ATAS (Search Dinamis, Sort Fix, View Toggles) -->
                             <div class="d-flex flex-column mb-3 gap-2">
-                                <!-- Judul & Aksi berada di satu baris yang sama -->
                                 <div class="d-flex justify-content-between align-items-center gap-2 w-100">
                                     
                                     <h5 class="mb-0 fw-bold text-dark text-truncate me-auto">
                                         <i class="fas fa-cube text-secondary me-2"></i>Katalog Produk
                                     </h5>
                                     
-                                    <!-- Kelompok Search, Sorting & Toggle View (Merapat Kanan) -->
                                     <div class="d-flex align-items-center gap-2 flex-nowrap justify-content-end">
-                                        
-                                        <!-- Ikon Search Expandable (Bisa Tumbuh) -->
                                         <div class="transition-all d-flex align-items-center">
                                             <button v-if="!isSearchActive && !searchQuery" 
                                                     class="btn btn-sm bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center" 
@@ -413,7 +396,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Filter Sorting (Dilengkapi Padding End 'pe-4' dan Lebar yang pas agar teks tidak nabrak panah) -->
                                         <select class="form-select form-select-sm rounded-pill border-0 shadow-sm ps-3 pe-4 fw-semibold text-secondary" style="width: 125px; box-shadow: inset 0 0 0 1px #dee2e6; cursor: pointer; height: 32px; font-size: 0.85rem;" v-model="sortBy">
                                             <option value="default">Urutkan</option>
                                             <option value="terlaris">🔥 Terlaris</option>
@@ -423,7 +405,6 @@
                                             <option value="za">Z - A</option>
                                         </select>
 
-                                        <!-- Toggle Mode -->
                                         <div class="btn-group shadow-sm bg-white rounded-pill flex-shrink-0 border p-1" style="height: 32px;">
                                             <button class="btn btn-sm rounded-pill border-0 px-2 d-flex align-items-center" :class="viewMode === 'grid' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid'" title="Mode Grid"><i class="fas fa-th-large"></i></button>
                                             <button class="btn btn-sm rounded-pill border-0 px-2 mx-1 d-flex align-items-center" :class="viewMode === 'grid6' ? 'btn-danger text-white' : 'btn-white text-muted'" @click="viewMode = 'grid6'" title="Mode Grid 6"><i class="fas fa-th"></i></button>
@@ -432,7 +413,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Chips Categories (Diletakkan di bawah baris Toolbar agar lebih lega) -->
                                 <div class="chips-container d-flex gap-2 pb-1" style="overflow-x: auto; white-space: nowrap; width: 100%;" v-if="selectedMainCategory !== 'ALL' && activeSubCategories.length > 0">
                                     <button class="btn btn-sm rounded-pill px-3 fw-bold shadow-sm transition-all flex-shrink-0"
                                             :class="selectedSubCategory === 'ALL' ? 'btn-danger' : 'btn-white'" @click="selectedSubCategory = 'ALL'">
@@ -479,7 +459,6 @@
                                                 </div>
                                             </template>
                                             
-                                            <!-- TAG PRODUK PADA KARTU -->
                                             <div class="position-absolute top-0 start-0 p-2 d-flex flex-column gap-1" style="z-index: 10;">
                                                 <span v-if="prod.tag && typeof prod.tag === 'string'" class="badge bg-danger text-white shadow-sm" style="font-size: 0.65rem;">{{ prod.tag }}</span>
                                                 <template v-if="prod.tags && Array.isArray(prod.tags)">
@@ -500,12 +479,11 @@
                                             </div>
                                             
                                             <div class="mt-auto pt-1 d-flex flex-column">
-                                                <!-- 🌟 PERBAIKAN: HARGA CORET DIPERBAIKI DENGAN NUMBER CASTING -->
-                                                <span v-if="Number(prod.originalPrice || prod.hargaNormal || 0) > Number(prod.price || prod.sellPrice || 0)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
-                                                    Rp {{ formatRupiah(prod.originalPrice || prod.hargaNormal) }}
+                                                <!-- 🌟 PERBAIKAN HARGA CORET MENGGUNAKAN FUNGSI DETEKSI PINTAR -->
+                                                <span v-if="getOriginalPrice(prod) > getFinalPrice(prod)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
+                                                    Rp {{ formatRupiah(getOriginalPrice(prod)) }}
                                                 </span>
-                                                <!-- 🌟 PERBAIKAN: HARGA JUAL DIKEMBALIKAN KE VARIABEL ASLI (price/sellPrice) -->
-                                                <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(prod.price || prod.sellPrice) }}</div>
+                                                <div class="text-danger fw-bold" style="font-size: 1rem;">Rp {{ formatRupiah(getFinalPrice(prod)) }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -519,9 +497,7 @@
                         </div>
                     </div>
 
-                    <!-- ========================================================= -->
                     <!-- OVERLAY DETAIL PRODUK & KODE/FOTO VARIAN -->
-                    <!-- ========================================================= -->
                     <div v-if="selectedProduct" class="position-absolute top-0 start-0 w-100 h-100 bg-white fade-in d-flex flex-column" style="z-index: 50;">
                         
                         <div class="p-3 border-bottom d-flex align-items-center shadow-sm sticky-top bg-white">
@@ -553,9 +529,6 @@
                                             <template v-if="selectedProduct.tags && Array.isArray(selectedProduct.tags)">
                                                 <span v-for="t in selectedProduct.tags" :key="t" class="badge bg-danger text-white px-3 py-2 rounded-pill">{{ t }}</span>
                                             </template>
-                                            <template v-if="selectedProduct.productTags && Array.isArray(selectedProduct.productTags)">
-                                                <span v-for="t in selectedProduct.productTags" :key="'pt-'+t" class="badge bg-danger text-white px-3 py-2 rounded-pill">{{ t }}</span>
-                                            </template>
                                             
                                             <span v-if="(activeVariant && localSettings.showVariantSKU) || (!activeVariant && localSettings.showProductSKU)" class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
                                                 <i class="fas fa-barcode me-1"></i> 
@@ -569,18 +542,17 @@
                                             <span>Varian: <span class="text-dark">{{ activeVariant.name }}</span></span>
                                         </h5>
                                         
-                                        <!-- 🌟 PERBAIKAN: HARGA CORET DI HALAMAN DETAIL DENGAN NUMBER CASTING -->
+                                        <!-- 🌟 PERBAIKAN HARGA CORET MENGGUNAKAN FUNGSI DETEKSI PINTAR -->
                                         <div class="d-flex align-items-end gap-2 mb-4">
                                             <div class="text-danger fw-black" style="font-size: 2.2rem; letter-spacing: -1px; line-height: 1;">
                                                 Rp {{ formatRupiah(detailTotalPrice) }}
                                             </div>
-                                            <div v-if="Number(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal || 0) : (selectedProduct.originalPrice || selectedProduct.hargaNormal || 0)) > Number(activeVariant ? (activeVariant.price || activeVariant.sellPrice || 0) : (selectedProduct.price || selectedProduct.sellPrice || 0))" 
+                                            <div v-if="getOriginalPrice(activeVariant || selectedProduct) > getFinalPrice(activeVariant || selectedProduct)" 
                                                  class="text-decoration-line-through text-muted fw-semibold" style="font-size: 1.2rem; margin-bottom: 2px;">
-                                                Rp {{ formatRupiah(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal) : (selectedProduct.originalPrice || selectedProduct.hargaNormal)) }}
+                                                Rp {{ formatRupiah(getOriginalPrice(activeVariant || selectedProduct)) }}
                                             </div>
                                         </div>
                                         
-                                        <!-- List Varian -->
                                         <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="mt-2">
                                             <h6 class="fw-bold text-secondary mb-3 text-uppercase" style="letter-spacing: 1px;"><i class="fas fa-list-ul me-2"></i>Pilihan Varian:</h6>
                                             <div class="row g-2">
@@ -607,12 +579,15 @@
                                                                     {{ v.name }}
                                                                     <span v-if="localSettings.showVariantSKU" class="text-muted fw-normal d-block mt-1" style="font-size: 0.7rem;">
                                                                         <i class="fas fa-barcode me-1"></i>
-                                                                        {{ v.variantSku || v.sku || v.code || v.kode || v.barcode || (selectedProduct.sku ? selectedProduct.sku + ' - ' + v.name : 'SKU Belum Diatur') }}
+                                                                        {{ v.variantSku || v.sku || v.code || (selectedProduct.sku ? selectedProduct.sku + ' - ' + v.name : 'SKU Belum Diatur') }}
                                                                     </span>
                                                                 </div>
 
-                                                                <!-- 🌟 PERBAIKAN: HARGA VARIAN DIKEMBALIKAN KE VARIABEL ASLI -->
-                                                                <div class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(v.price || v.sellPrice || selectedProduct.price || selectedProduct.sellPrice) }}</div>
+                                                                <!-- 🌟 PERBAIKAN HARGA CORET DI VARIAN MENGGUNAKAN FUNGSI DETEKSI PINTAR -->
+                                                                <div>
+                                                                    <span v-if="getOriginalPrice(v) > getFinalPrice(v)" class="text-decoration-line-through text-muted me-1" style="font-size: 0.75rem;">Rp {{ formatRupiah(getOriginalPrice(v)) }}</span>
+                                                                    <span class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(getFinalPrice(v) || getFinalPrice(selectedProduct)) }}</span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -624,7 +599,6 @@
                                             <span class="fw-medium">Produk ini langsung tersedia tanpa pilihan varian khusus.</span>
                                         </div>
 
-                                        <!-- MODIFIER (TOPPING DLL) -->
                                         <div v-if="selectedProduct.modifiers && selectedProduct.modifiers.length > 0" class="mt-4 pt-3 border-top">
                                             <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-plus-circle me-2"></i>Pilihan Tambahan / Opsi Khusus:</h6>
                                             
@@ -648,15 +622,6 @@
                                                         </span>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div v-else-if="(activeVariant && activeVariant.identifiers && activeVariant.identifiers.length > 0) || (!activeVariant && selectedProduct.identifiers && selectedProduct.identifiers.length > 0)" class="mt-4 pt-3 border-top">
-                                            <h6 class="fw-bold text-secondary mb-3" style="font-size: 0.9rem;"><i class="fas fa-tags me-2"></i>Pilihan / Opsi Tersedia:</h6>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <span v-for="(idtf, idx) in (activeVariant ? activeVariant.identifiers : selectedProduct.identifiers)" :key="idx" class="badge border border-secondary text-secondary bg-light px-3 py-2 rounded-pill fs-6 fw-medium shadow-sm">
-                                                    {{ typeof idtf === 'object' ? (idtf.name || idtf.label || JSON.stringify(idtf)) : idtf }}
-                                                </span>
                                             </div>
                                         </div>
 
@@ -689,20 +654,6 @@
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" :id="'set-'+main.id" :value="main.id" v-model="tempSettings.selectedCategories">
                                             <label class="form-check-label text-dark fw-bold" :for="'set-'+main.id"><i :class="main.icon || getCategoryIcon(main.name)" class="text-warning me-1"></i> {{ main.name }}</label>
-                                        </div>
-                                        <div v-if="main.children && main.children.length > 0" class="ms-4 mt-2 border-start border-2 ps-3 border-light">
-                                            <div v-for="sub in main.children" :key="sub.id" class="mb-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" :id="'set-'+sub.id" :value="sub.id" v-model="tempSettings.selectedCategories">
-                                                    <label class="form-check-label text-secondary fw-semibold" :for="'set-'+sub.id"><i class="fas fa-level-up-alt fa-rotate-90 text-muted me-1" style="font-size: 0.8rem;"></i> {{ sub.name }}</label>
-                                                </div>
-                                                <div v-if="sub.children && sub.children.length > 0" class="ms-4 mt-1 border-start border-2 ps-3 border-light">
-                                                    <div class="form-check mb-1" v-for="grand in sub.children" :key="grand.id">
-                                                        <input class="form-check-input" type="checkbox" :id="'set-'+grand.id" :value="grand.id" v-model="tempSettings.selectedCategories">
-                                                        <label class="form-check-label text-muted" :for="'set-'+grand.id"><i class="fas fa-minus text-muted me-1" style="font-size: 0.7rem;"></i> {{ grand.name }}</label>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -751,7 +702,6 @@
                 </div>
             </div>
             
-            <!-- 🌟 PERBAIKAN: RUNNING TEXT MARQUEE PROMO Diletakkan DI LUAR mode media agar selalu tampil di semua mode -->
             <div class="bg-danger text-white overflow-hidden py-2 px-3 fw-bold d-flex align-items-center shadow-lg w-100" style="font-size: 0.9rem; letter-spacing: 0.5px; z-index: 10; flex-shrink: 0;">
                 <i class="fas fa-bullhorn me-3 fs-5"></i>
                 <marquee behavior="scroll" direction="left" scrollamount="6" class="flex-grow-1">
@@ -765,7 +715,6 @@
     <!-- AREA KERANJANG KANAN -->
     <div class="cart-area position-relative"> 
         
-        <!-- HEADER KERANJANG (LAYOUT KIRI KANAN) -->
         <div class="cart-header-box">
             <h5 class="mb-3 fw-bold fs-6 text-center">{{ storeName }}</h5>
             
@@ -779,7 +728,7 @@
                 <div class="text-end d-flex flex-column gap-1 opacity-75">
                     <span><i class="fas fa-user-circle me-1"></i> Kasir: 
                         <span class="fw-bold">
-                            <!-- 🌟 PERBAIKAN: Memanggil cashierName yang sudah diset dari data firebase/lokal -->
+                            <!-- NAMA KASIR -->
                             {{ cashierName }}
                         </span>
                     </span>
@@ -807,11 +756,13 @@
                     <div class="d-flex justify-content-between align-items-center mt-1">
                         <div class="item-price">
                             <span class="fw-bold text-dark">{{ item.qty }}</span> x 
-                            <!-- 🌟 PERBAIKAN: Harga coret keranjang dengan number casting -->
-                            <span v-if="Number(item.originalPrice || item.hargaNormal || 0) > Number(item.sellPrice || item.price || 0)" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(item.originalPrice || item.hargaNormal) }}</span>
-                            <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice || item.price) }}</span>
+                            
+                            <!-- 🌟 PERBAIKAN HARGA CORET DI KERANJANG MENGGUNAKAN FUNGSI DETEKSI PINTAR -->
+                            <span v-if="getOriginalPrice(item) > getFinalPrice(item)" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(getOriginalPrice(item)) }}</span>
+                            
+                            <span class="text-danger fw-semibold">Rp {{ formatRupiah(getFinalPrice(item)) }}</span>
                         </div>
-                        <div class="item-total">Rp {{ formatRupiah(item.qty * (item.sellPrice || item.price || 0)) }}</div>
+                        <div class="item-total">Rp {{ formatRupiah(item.qty * getFinalPrice(item)) }}</div>
                     </div>
                 </div>
             </div>
@@ -877,7 +828,7 @@
                 outletName: '', 
                 invoiceNumber: '', 
                 currentTime: '',
-                cashierName: deviceId || 'Menunggu...', // MENAMPUNG NAMA KASIR
+                cashierName: deviceId || 'Menunggu...',
                 
                 isPaymentOpen: false, 
                 paymentMethod: null, 
@@ -913,8 +864,6 @@
                     welcomeText: '' 
                 },
                 currentImage: '', 
-                imageIndex: 0, 
-                slideInterval: null,
                 
                 categories: [], 
                 products: [], 
@@ -969,20 +918,12 @@
 
             activeVariantImage() {
                 if (this.activeVariant) {
-                    if (this.activeVariant.imageBase64 && this.activeVariant.imageBase64.trim() !== '') {
-                        return this.activeVariant.imageBase64;
-                    }
-                    if (this.activeVariant.image || this.activeVariant.gambar) {
-                        return this.activeVariant.image || this.activeVariant.gambar;
-                    }
+                    if (this.activeVariant.imageBase64 && this.activeVariant.imageBase64.trim() !== '') return this.activeVariant.imageBase64;
+                    if (this.activeVariant.image || this.activeVariant.gambar) return this.activeVariant.image || this.activeVariant.gambar;
                 }
                 if (this.selectedProduct) {
-                    if (this.selectedProduct.imageBase64 && this.selectedProduct.imageBase64.trim() !== '') {
-                        return this.selectedProduct.imageBase64;
-                    }
-                    if (this.selectedProduct.image || this.selectedProduct.gambar) {
-                        return this.selectedProduct.image || this.selectedProduct.gambar;
-                    }
+                    if (this.selectedProduct.imageBase64 && this.selectedProduct.imageBase64.trim() !== '') return this.selectedProduct.imageBase64;
+                    if (this.selectedProduct.image || this.selectedProduct.gambar) return this.selectedProduct.image || this.selectedProduct.gambar;
                 }
                 return null;
             },
@@ -1016,11 +957,8 @@
                     let allowedCatNames = this.categories.filter(c => allowedCatIds.includes(c.id)).map(c => c.name);
                     
                     result = result.filter(p => 
-                        allowedCatIds.includes(p.categoryId) || 
-                        allowedCatIds.includes(p.kategoriId) || 
-                        allowedCatIds.includes(p.id_kategori) || 
-                        allowedCatNames.includes(p.category) || 
-                        allowedCatNames.includes(p.kategori)
+                        allowedCatIds.includes(p.categoryId) || allowedCatIds.includes(p.kategoriId) || 
+                        allowedCatNames.includes(p.category) || allowedCatNames.includes(p.kategori)
                     );
                 } 
                 else if (this.localSettings.selectedCategories && this.localSettings.selectedCategories.length > 0) {
@@ -1031,37 +969,24 @@
                     let allAllowedNames = this.categories.filter(c => allAllowedIds.includes(c.id)).map(c => c.name);
                     
                     result = result.filter(p => 
-                        allAllowedIds.includes(p.categoryId) || 
-                        allAllowedIds.includes(p.kategoriId) || 
-                        allAllowedIds.includes(p.id_kategori) || 
-                        allAllowedNames.includes(p.category) || 
-                        allAllowedNames.includes(p.kategori)
+                        allAllowedIds.includes(p.categoryId) || allAllowedIds.includes(p.kategoriId) || 
+                        allAllowedNames.includes(p.category) || allAllowedNames.includes(p.kategori)
                     );
                 }
                 
-                if (this.localSettings.hideOutOfStock) {
-                    result = result.filter(p => !this.isOutOfStock(p));
-                }
+                if (this.localSettings.hideOutOfStock) result = result.filter(p => !this.isOutOfStock(p));
 
                 if (this.searchQuery && this.searchQuery.trim() !== '') {
                     const q = this.searchQuery.toLowerCase();
-                    result = result.filter(p => {
-                        const name = (p.name || '').toLowerCase();
-                        const sku = (p.sku || p.variantSku || '').toLowerCase();
-                        return name.includes(q) || sku.includes(q);
-                    });
+                    result = result.filter(p => (p.name || '').toLowerCase().includes(q) || (p.sku || p.variantSku || '').toLowerCase().includes(q));
                 }
 
                 if (this.sortBy === 'terlaris') {
-                    result = result.sort((a, b) => {
-                        let soldA = Number(a.terjual || a.sold || a.sales || 0);
-                        let soldB = Number(b.terjual || b.sold || b.sales || 0);
-                        return soldB - soldA;
-                    });
+                    result = result.sort((a, b) => Number(b.terjual || b.sold || 0) - Number(a.terjual || a.sold || 0));
                 } else if (this.sortBy === 'termurah') {
-                    result = result.sort((a, b) => Number(a.sellPrice || a.price || 0) - Number(b.sellPrice || b.price || 0));
+                    result = result.sort((a, b) => this.getFinalPrice(a) - this.getFinalPrice(b));
                 } else if (this.sortBy === 'termahal') {
-                    result = result.sort((a, b) => Number(b.sellPrice || b.price || 0) - Number(a.sellPrice || a.price || 0));
+                    result = result.sort((a, b) => this.getFinalPrice(b) - this.getFinalPrice(a));
                 } else if (this.sortBy === 'az') {
                     result = result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
                 } else if (this.sortBy === 'za') {
@@ -1073,27 +998,45 @@
             
             detailTotalPrice() {
                 if (!this.selectedProduct) return 0;
-                
-                let basePrice = 0;
-                if (this.activeVariant) {
-                    basePrice = this.activeVariant.sellPrice || this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
-                } else {
-                    basePrice = this.selectedProduct.sellPrice || this.selectedProduct.price || 0;
-                }
-
+                let basePrice = this.getFinalPrice(this.activeVariant || this.selectedProduct);
                 let modPrice = 0;
                 if (this.selectedModifiers) {
                     Object.values(this.selectedModifiers).forEach(arr => {
-                        arr.forEach(opt => {
-                            modPrice += Number(opt.price || 0);
-                        });
+                        arr.forEach(opt => { modPrice += Number(opt.price || 0); });
                     });
                 }
-                
-                return Number(basePrice) + modPrice;
+                return basePrice + modPrice;
             }
         },
         methods: {
+            // 🌟 FUNGSI DETEKSI HARGA CORET CERDAS
+            getOriginalPrice(item) {
+                if (!item) return 0;
+                
+                // 1. Cek parameter harga normal eksplisit
+                let explicit = Number(item.originalPrice || item.hargaNormal || item.hargaCoret || item.basePrice || 0);
+                if (explicit > 0) return explicit;
+                
+                // 2. Cek apakah ada diskon dari (sellPrice vs price)
+                let p = Number(item.price || 0);
+                let sp = Number(item.sellPrice || 0);
+                if (p > sp && sp > 0) return p;
+                
+                // 3. Cek apakah menggunakan sistem discountValue / diskon nominal
+                let disc = Number(item.discountValue || item.discount || 0);
+                if (disc > 0 && sp > 0) return sp + disc;
+                if (disc > 0 && p > 0) return p + disc;
+
+                return 0; // Tidak ada harga coret
+            },
+            getFinalPrice(item) {
+                if (!item) return 0;
+                let sp = Number(item.sellPrice || 0);
+                let p = Number(item.price || 0);
+                if (sp > 0 && p > 0) return Math.min(sp, p);
+                return sp > 0 ? sp : p;
+            },
+
             toggleSearch() {
                 this.isSearchActive = true;
                 this.$nextTick(() => {
@@ -1101,15 +1044,11 @@
                     if (input) input.focus();
                 });
             },
-            getCategoryIcon(catName) {
-                return 'fas fa-tag';
-            },
-            
+            getCategoryIcon(catName) { return 'fas fa-tag'; },
             openProductDetail(prod) {
                 this.selectedProduct = prod;
                 this.activeVariant = null;
                 this.selectedModifiers = {};
-                
                 if (prod.modifiers && prod.modifiers.length > 0) {
                     prod.modifiers.forEach((mod, idx) => {
                         if (mod.isRequired && mod.options && mod.options.length > 0) {
@@ -1125,28 +1064,20 @@
                 this.activeVariant = null;
                 this.selectedModifiers = {};
             },
-            
             toggleModifier(mIdx, opt, isRequired) {
-                if (!this.selectedModifiers[mIdx]) {
-                    this.selectedModifiers[mIdx] = [];
-                }
-
+                if (!this.selectedModifiers[mIdx]) this.selectedModifiers[mIdx] = [];
                 if (isRequired) {
                     this.selectedModifiers[mIdx] = [opt];
                 } else {
                     const existingIdx = this.selectedModifiers[mIdx].findIndex(o => o.name === opt.name);
-                    if (existingIdx >= 0) {
-                        this.selectedModifiers[mIdx].splice(existingIdx, 1);
-                    } else {
-                        this.selectedModifiers[mIdx].push(opt);
-                    }
+                    if (existingIdx >= 0) this.selectedModifiers[mIdx].splice(existingIdx, 1);
+                    else this.selectedModifiers[mIdx].push(opt);
                 }
             },
             isModifierSelected(mIdx, opt) {
                 if (!this.selectedModifiers[mIdx]) return false;
                 return this.selectedModifiers[mIdx].some(o => o.name === opt.name);
             },
-            
             openSettingsModal() {
                 this.tempSettings = JSON.parse(JSON.stringify(this.localSettings));
                 this.isSettingsOpen = true;
@@ -1157,15 +1088,9 @@
                 this.isSettingsOpen = false;
                 this.selectedMainCategory = 'ALL'; 
                 this.selectedProduct = null;
-                this.activeVariant = null;
             },
-            toggleAllCategories(e) {
-                if (e.target.checked) this.tempSettings.selectedCategories = [];
-            },
-            selectMainCategory(catId) {
-                this.selectedMainCategory = catId;
-                this.selectedSubCategory = 'ALL';
-            },
+            toggleAllCategories(e) { if (e.target.checked) this.tempSettings.selectedCategories = []; },
+            selectMainCategory(catId) { this.selectedMainCategory = catId; this.selectedSubCategory = 'ALL'; },
             getDescendantCategoryIds(parentId) {
                 let ids = [parentId];
                 let children = this.categories.filter(c => {
@@ -1173,9 +1098,7 @@
                     if (pId === '0' || pId === '') pId = null;
                     return pId === parentId;
                 });
-                for (let child of children) { 
-                    ids = ids.concat(this.getDescendantCategoryIds(child.id)); 
-                }
+                for (let child of children) { ids = ids.concat(this.getDescendantCategoryIds(child.id)); }
                 return ids;
             },
             formatRupiah(number) {
@@ -1187,9 +1110,7 @@
                 let totalStock = 0; let outId = outletId || 'global';
                 if (prod.variants && prod.variants.length > 0) {
                     prod.variants.forEach(v => { 
-                        if (v.outletStocks && v.outletStocks[outId] !== undefined) {
-                            totalStock += Number(v.outletStocks[outId]); 
-                        }
+                        if (v.outletStocks && v.outletStocks[outId] !== undefined) totalStock += Number(v.outletStocks[outId]); 
                     });
                 } else if (prod.baseOutletStocks && prod.baseOutletStocks[outId] !== undefined) {
                     totalStock = Number(prod.baseOutletStocks[outId]);
@@ -1232,14 +1153,7 @@
                 let cats = [];
                 snapshot.forEach(doc => {
                     let data = doc.data();
-                    cats.push({ 
-                        id: doc.id, 
-                        name: data.name || data.nama || data.kategori || 'Kategori', 
-                        icon: data.icon || null, 
-                        parentId: data.parentId || data.parent_id || data.parent || null, 
-                        level: data.level || 1, 
-                        ...data 
-                    });
+                    cats.push({ id: doc.id, name: data.name || data.nama || data.kategori || 'Kategori', ...data });
                 });
                 cats.sort((a, b) => a.name.localeCompare(b.name));
                 this.categories = cats;
@@ -1254,10 +1168,7 @@
 
             setInterval(() => {
                 const now = new Date();
-                const options = { 
-                    day: '2-digit', month: 'short', year: 'numeric', 
-                    hour: '2-digit', minute: '2-digit', second: '2-digit' 
-                };
+                const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
                 this.currentTime = now.toLocaleDateString('id-ID', options).replace(',', ' -');
             }, 1000);
 
@@ -1273,8 +1184,8 @@
                     this.outletName = data.outletName || ''; 
                     this.invoiceNumber = data.invoiceNumber || '';
                     
-                    // 🌟 PERBAIKAN: Mengambil nama kasir dari Firebase jika tersedia, memprioritaskan field namaKasir dan cashierName
-                    this.cashierName = data.namaKasir || data.cashierName || data.kasir || data.activeUserName || deviceId || 'Menunggu...';
+                    // 🌟 PERBAIKAN: Menangkap prioritas `cashierName` (Sesuai dengan `trxRaw` pada script Anda)
+                    this.cashierName = data.cashierName || data.cashier || data.namaKasir || data.kasir || data.operatorName || data.activeUserName || deviceId || 'Admin/Kasir';
                     
                     let signalOpen = data.isPaymentOpen !== undefined ? data.isPaymentOpen : data.isPaymentModalOpen;
                     this.isPaymentOpen = (signalOpen === true || signalOpen === "true");
@@ -1309,9 +1220,7 @@
             onSnapshot(doc(db, "settings", companyId), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    if (data.cdsSettings) {
-                        this.cdsSettings = data.cdsSettings;
-                    }
+                    if (data.cdsSettings) this.cdsSettings = data.cdsSettings;
                 }
             });
         }
