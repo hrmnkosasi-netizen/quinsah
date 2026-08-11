@@ -188,7 +188,6 @@
 
 <div id="cdsApp" class="split-screen" :class="(isPaymentOpen || paymentStatus === 'LUNAS') ? 'mobile-payment-active' : 'mobile-cart-active'" v-cloak>
     
-    <!-- KIRI: AREA PROMO / KATALOG ATAU LAYAR PEMBAYARAN -->
     <div class="promo-area">
         <div v-if="isPaymentOpen || paymentStatus === 'LUNAS'" class="payment-overlay d-flex flex-column align-items-center justify-content-center text-dark">
             
@@ -348,7 +347,6 @@
 
         <template v-else>
             <div class="w-100 flex-grow-1 position-relative d-flex overflow-hidden">
-                <!-- KATALOG MENU / CDS INTERAKTIF -->
                 <div v-if="cdsSettings.mediaType === 'catalog'" class="w-100 h-100 d-flex flex-column text-start bg-light fade-in position-relative">
                     
                     <div class="d-flex flex-grow-1 overflow-hidden w-100 h-100">
@@ -426,7 +424,6 @@
                                 </div>
                             </div>
 
-                            <!-- LIST PRODUK -->
                             <div class="row g-3 align-content-start" 
                                  :class="[
                                     viewMode === 'grid' ? 'row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5' : '', 
@@ -479,7 +476,6 @@
                                             </div>
                                             
                                             <div class="mt-auto pt-1 d-flex flex-column">
-                                                <!-- 🌟 PERBAIKAN HARGA CORET MENGGUNAKAN FUNGSI DETEKSI PINTAR -->
                                                 <span v-if="getOriginalPrice(prod) > getFinalPrice(prod)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
                                                     Rp {{ formatRupiah(getOriginalPrice(prod)) }}
                                                 </span>
@@ -497,7 +493,6 @@
                         </div>
                     </div>
 
-                    <!-- OVERLAY DETAIL PRODUK & KODE/FOTO VARIAN -->
                     <div v-if="selectedProduct" class="position-absolute top-0 start-0 w-100 h-100 bg-white fade-in d-flex flex-column" style="z-index: 50;">
                         
                         <div class="p-3 border-bottom d-flex align-items-center shadow-sm sticky-top bg-white">
@@ -542,14 +537,13 @@
                                             <span>Varian: <span class="text-dark">{{ activeVariant.name }}</span></span>
                                         </h5>
                                         
-                                        <!-- 🌟 PERBAIKAN HARGA CORET MENGGUNAKAN FUNGSI DETEKSI PINTAR -->
                                         <div class="d-flex align-items-end gap-2 mb-4">
                                             <div class="text-danger fw-black" style="font-size: 2.2rem; letter-spacing: -1px; line-height: 1;">
                                                 Rp {{ formatRupiah(detailTotalPrice) }}
                                             </div>
-                                            <div v-if="getOriginalPrice(activeVariant || selectedProduct) > getFinalPrice(activeVariant || selectedProduct)" 
+                                            <div v-if="getOriginalPrice(activeVariant || selectedProduct, selectedProduct) > getFinalPrice(activeVariant || selectedProduct, selectedProduct)" 
                                                  class="text-decoration-line-through text-muted fw-semibold" style="font-size: 1.2rem; margin-bottom: 2px;">
-                                                Rp {{ formatRupiah(getOriginalPrice(activeVariant || selectedProduct)) }}
+                                                Rp {{ formatRupiah(getOriginalPrice(activeVariant || selectedProduct, selectedProduct)) }}
                                             </div>
                                         </div>
                                         
@@ -583,10 +577,9 @@
                                                                     </span>
                                                                 </div>
 
-                                                                <!-- 🌟 PERBAIKAN HARGA CORET DI VARIAN MENGGUNAKAN FUNGSI DETEKSI PINTAR -->
                                                                 <div>
-                                                                    <span v-if="getOriginalPrice(v) > getFinalPrice(v)" class="text-decoration-line-through text-muted me-1" style="font-size: 0.75rem;">Rp {{ formatRupiah(getOriginalPrice(v)) }}</span>
-                                                                    <span class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(getFinalPrice(v) || getFinalPrice(selectedProduct)) }}</span>
+                                                                    <span v-if="getOriginalPrice(v, selectedProduct) > getFinalPrice(v, selectedProduct)" class="text-decoration-line-through text-muted me-1" style="font-size: 0.75rem;">Rp {{ formatRupiah(getOriginalPrice(v, selectedProduct)) }}</span>
+                                                                    <span class="text-danger fw-bold" style="font-size: 0.9rem;">Rp {{ formatRupiah(getFinalPrice(v, selectedProduct)) }}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -631,7 +624,6 @@
                         </div>
                     </div>
 
-                    <!-- MODAL PENGATURAN CDS -->
                     <div v-if="isSettingsOpen" class="position-absolute top-0 start-0 w-100 h-100 glass-overlay d-flex align-items-center justify-content-center" style="z-index: 100;">
                         <div class="card border-0 shadow-lg slide-up" style="width: 500px; max-width: 90%; border-radius: 20px; overflow: hidden;">
                             <div class="card-header bg-dark text-white p-3 px-4 d-flex justify-content-between align-items-center border-0">
@@ -719,16 +711,13 @@
             <h5 class="mb-3 fw-bold fs-6 text-center">{{ storeName }}</h5>
             
             <div class="d-flex justify-content-between align-items-end" style="font-size: 0.75rem;">
-                <!-- Kolom Kiri -->
                 <div class="text-start d-flex flex-column gap-1 opacity-75">
                     <span><i class="fas fa-store me-1"></i> {{ outletName && outletName !== '-' ? outletName : 'Pusat' }}</span>
                     <span><i class="fas fa-file-invoice me-1"></i> {{ invoiceNumber || 'INV-...' }}</span>
                 </div>
-                <!-- Kolom Kanan -->
                 <div class="text-end d-flex flex-column gap-1 opacity-75">
                     <span><i class="fas fa-user-circle me-1"></i> Kasir: 
                         <span class="fw-bold">
-                            <!-- NAMA KASIR -->
                             {{ cashierName }}
                         </span>
                     </span>
@@ -757,7 +746,6 @@
                         <div class="item-price">
                             <span class="fw-bold text-dark">{{ item.qty }}</span> x 
                             
-                            <!-- 🌟 PERBAIKAN HARGA CORET DI KERANJANG MENGGUNAKAN FUNGSI DETEKSI PINTAR -->
                             <span v-if="getOriginalPrice(item) > getFinalPrice(item)" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(getOriginalPrice(item)) }}</span>
                             
                             <span class="text-danger fw-semibold">Rp {{ formatRupiah(getFinalPrice(item)) }}</span>
@@ -998,7 +986,7 @@
             
             detailTotalPrice() {
                 if (!this.selectedProduct) return 0;
-                let basePrice = this.getFinalPrice(this.activeVariant || this.selectedProduct);
+                let basePrice = this.getFinalPrice(this.activeVariant || this.selectedProduct, this.selectedProduct);
                 let modPrice = 0;
                 if (this.selectedModifiers) {
                     Object.values(this.selectedModifiers).forEach(arr => {
@@ -1009,32 +997,65 @@
             }
         },
         methods: {
-            // 🌟 FUNGSI DETEKSI HARGA CORET CERDAS
-            getOriginalPrice(item) {
+            // FUNGSI HARGA PINTAR: MENDETEKSI CORET VS DISKON DENGAN AKURAT
+            getOriginalPrice(item, parentProduct = null) {
                 if (!item) return 0;
+                
+                let sp = Number(item.sellPrice || 0);
+                let p = Number(item.price || 0);
+                let explicit = Number(item.originalPrice || item.hargaNormal || item.hargaCoret || item.basePrice || 0);
                 
                 // 1. Cek parameter harga normal eksplisit
-                let explicit = Number(item.originalPrice || item.hargaNormal || item.hargaCoret || item.basePrice || 0);
-                if (explicit > 0) return explicit;
+                let finalPrice = this.getFinalPrice(item, parentProduct);
+                if (explicit > finalPrice) return explicit;
                 
-                // 2. Cek apakah ada diskon dari (sellPrice vs price)
-                let p = Number(item.price || 0);
-                let sp = Number(item.sellPrice || 0);
+                // 2. Cek apakah ada diskon dari perbedaan price vs sellPrice
                 if (p > sp && sp > 0) return p;
-                
-                // 3. Cek apakah menggunakan sistem discountValue / diskon nominal
-                let disc = Number(item.discountValue || item.discount || 0);
-                if (disc > 0 && sp > 0) return sp + disc;
-                if (disc > 0 && p > 0) return p + disc;
 
+                // 3. Cek apakah ada sistem discount nominal
+                let disc = Number(item.discountValue || item.discount || 0);
+                if (disc === 0 && parentProduct) {
+                    disc = Number(parentProduct.discountValue || parentProduct.discount || 0);
+                }
+
+                // Jika memiliki nominal diskon, berarti harga dasarnya adalah harga sebelum diskon
+                if (disc > 0) {
+                    return (sp > 0) ? sp : p; 
+                }
+                
                 return 0; // Tidak ada harga coret
             },
-            getFinalPrice(item) {
+            
+            getFinalPrice(item, parentProduct = null) {
                 if (!item) return 0;
                 let sp = Number(item.sellPrice || 0);
                 let p = Number(item.price || 0);
-                if (sp > 0 && p > 0) return Math.min(sp, p);
-                return sp > 0 ? sp : p;
+                
+                let explicit = Number(item.originalPrice || item.hargaNormal || item.hargaCoret || item.basePrice || 0);
+                let basePrice = (sp > 0) ? sp : p;
+                
+                // Jika price > sellPrice, gunakan sellPrice sebagai base
+                if (p > sp && sp > 0) {
+                    basePrice = sp;
+                }
+                
+                // Jika explicit originalPrice lebih tinggi, basePrice sudah merupakan harga akhir
+                if (explicit > basePrice) {
+                    return basePrice;
+                }
+
+                // Hitung pengurangan dari diskon nominal
+                let disc = Number(item.discountValue || item.discount || 0);
+                if (disc === 0 && parentProduct) {
+                    disc = Number(parentProduct.discountValue || parentProduct.discount || 0);
+                }
+
+                // Kurangi nominal diskon untuk menemukan harga jual final
+                if (disc > 0 && basePrice > disc) {
+                    return basePrice - disc;
+                }
+                
+                return basePrice;
             },
 
             toggleSearch() {
@@ -1184,7 +1205,6 @@
                     this.outletName = data.outletName || ''; 
                     this.invoiceNumber = data.invoiceNumber || '';
                     
-                    // 🌟 PERBAIKAN: Menangkap prioritas `cashierName` (Sesuai dengan `trxRaw` pada script Anda)
                     this.cashierName = data.cashierName || data.cashier || data.namaKasir || data.kasir || data.operatorName || data.activeUserName || deviceId || 'Admin/Kasir';
                     
                     let signalOpen = data.isPaymentOpen !== undefined ? data.isPaymentOpen : data.isPaymentModalOpen;
