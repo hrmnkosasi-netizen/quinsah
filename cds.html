@@ -500,8 +500,8 @@
                                             </div>
                                             
                                             <div class="mt-auto pt-1 d-flex flex-column">
-                                                <!-- 🌟 PERBAIKAN: HARGA CORET DIKEMBALIKAN KE VARIABEL ASLI (originalPrice/hargaNormal) -->
-                                                <span v-if="(prod.originalPrice || prod.hargaNormal) > (prod.price || prod.sellPrice)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
+                                                <!-- 🌟 PERBAIKAN: HARGA CORET DIPERBAIKI DENGAN NUMBER CASTING -->
+                                                <span v-if="Number(prod.originalPrice || prod.hargaNormal || 0) > Number(prod.price || prod.sellPrice || 0)" class="text-decoration-line-through text-muted" style="font-size: 0.75rem; margin-bottom: -2px;">
                                                     Rp {{ formatRupiah(prod.originalPrice || prod.hargaNormal) }}
                                                 </span>
                                                 <!-- 🌟 PERBAIKAN: HARGA JUAL DIKEMBALIKAN KE VARIABEL ASLI (price/sellPrice) -->
@@ -569,13 +569,12 @@
                                             <span>Varian: <span class="text-dark">{{ activeVariant.name }}</span></span>
                                         </h5>
                                         
-                                        <!-- 🌟 PERBAIKAN: HARGA CORET DI HALAMAN DETAIL MENGGUNAKAN VARIABEL ASLI -->
+                                        <!-- 🌟 PERBAIKAN: HARGA CORET DI HALAMAN DETAIL DENGAN NUMBER CASTING -->
                                         <div class="d-flex align-items-end gap-2 mb-4">
                                             <div class="text-danger fw-black" style="font-size: 2.2rem; letter-spacing: -1px; line-height: 1;">
                                                 Rp {{ formatRupiah(detailTotalPrice) }}
                                             </div>
-                                            <!-- Logic: Cek harga asli varian jika varian dipilih, jika tidak cek harga asli produk parent -->
-                                            <div v-if="(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal) : (selectedProduct.originalPrice || selectedProduct.hargaNormal)) > (activeVariant ? (activeVariant.price || activeVariant.sellPrice) : (selectedProduct.price || selectedProduct.sellPrice))" 
+                                            <div v-if="Number(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal || 0) : (selectedProduct.originalPrice || selectedProduct.hargaNormal || 0)) > Number(activeVariant ? (activeVariant.price || activeVariant.sellPrice || 0) : (selectedProduct.price || selectedProduct.sellPrice || 0))" 
                                                  class="text-decoration-line-through text-muted fw-semibold" style="font-size: 1.2rem; margin-bottom: 2px;">
                                                 Rp {{ formatRupiah(activeVariant ? (activeVariant.originalPrice || activeVariant.hargaNormal) : (selectedProduct.originalPrice || selectedProduct.hargaNormal)) }}
                                             </div>
@@ -780,8 +779,8 @@
                 <div class="text-end d-flex flex-column gap-1 opacity-75">
                     <span><i class="fas fa-user-circle me-1"></i> Kasir: 
                         <span class="fw-bold">
-                            <!-- 🌟 PERBAIKAN: Memanggil activeUserName sesuai script JS Anda -->
-                            {{ activeUserName || cashierName || 'Menunggu...' }}
+                            <!-- 🌟 PERBAIKAN: Memanggil cashierName yang sudah diset dari data firebase/lokal -->
+                            {{ cashierName }}
                         </span>
                     </span>
                     <span><i class="fas fa-clock me-1"></i> {{ currentTime }}</span>
@@ -808,10 +807,11 @@
                     <div class="d-flex justify-content-between align-items-center mt-1">
                         <div class="item-price">
                             <span class="fw-bold text-dark">{{ item.qty }}</span> x 
-                            <span v-if="item.originalPrice > item.sellPrice" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(item.originalPrice) }}</span>
-                            <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice) }}</span>
+                            <!-- 🌟 PERBAIKAN: Harga coret keranjang dengan number casting -->
+                            <span v-if="Number(item.originalPrice || item.hargaNormal || 0) > Number(item.sellPrice || item.price || 0)" class="text-decoration-line-through text-muted mx-1" style="font-size: 0.8em;">Rp {{ formatRupiah(item.originalPrice || item.hargaNormal) }}</span>
+                            <span class="text-danger fw-semibold">Rp {{ formatRupiah(item.sellPrice || item.price) }}</span>
                         </div>
-                        <div class="item-total">Rp {{ formatRupiah(item.qty * item.sellPrice) }}</div>
+                        <div class="item-total">Rp {{ formatRupiah(item.qty * (item.sellPrice || item.price || 0)) }}</div>
                     </div>
                 </div>
             </div>
@@ -877,7 +877,7 @@
                 outletName: '', 
                 invoiceNumber: '', 
                 currentTime: '',
-                cashierName: deviceId || 'Kasir', // MENAMPUNG NAMA KASIR
+                cashierName: deviceId || 'Menunggu...', // MENAMPUNG NAMA KASIR
                 
                 isPaymentOpen: false, 
                 paymentMethod: null, 
@@ -1274,7 +1274,7 @@
                     this.invoiceNumber = data.invoiceNumber || '';
                     
                     // 🌟 PERBAIKAN: Mengambil nama kasir dari Firebase jika tersedia, memprioritaskan field namaKasir dan cashierName
-                    this.cashierName = data.namaKasir || data.cashierName || data.kasir || deviceId || 'Menunggu...';
+                    this.cashierName = data.namaKasir || data.cashierName || data.kasir || data.activeUserName || deviceId || 'Menunggu...';
                     
                     let signalOpen = data.isPaymentOpen !== undefined ? data.isPaymentOpen : data.isPaymentModalOpen;
                     this.isPaymentOpen = (signalOpen === true || signalOpen === "true");
