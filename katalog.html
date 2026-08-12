@@ -80,7 +80,7 @@
                     <!-- Search Input -->
                     <div class="relative flex-1">
                         <i class="fa-solid fa-search absolute left-3.5 top-3 text-zinc-400 text-sm"></i>
-                        <input type="text" v-model="searchQuery" placeholder="Cari produk..." class="w-full pl-9 pr-8 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-zinc-900 focus:bg-white text-sm transition-all placeholder:text-zinc-400">
+                        <input type="text" v-model="searchQuery" placeholder="Cari produk atau SKU..." class="w-full pl-9 pr-8 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-zinc-900 focus:bg-white text-sm transition-all placeholder:text-zinc-400">
                         <i v-if="searchQuery" @click="searchQuery = ''" class="fa-solid fa-circle-xmark absolute right-3 top-3 text-zinc-300 text-sm cursor-pointer hover:text-zinc-500"></i>
                     </div>
                 </div>
@@ -113,10 +113,10 @@
                 </div>
             </div>
             
-            <!-- HORIZONTAL KATEGORI -->
+            <!-- HORIZONTAL KATEGORI (Desain Diperbaiki Lebih Rapi) -->
             <div v-if="companyIdValid && !isLoading" class="mb-6 flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-5 px-5 snap-x">
-                <button @click="selectCategory('')" :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-600 border-zinc-200'" class="whitespace-nowrap px-4 py-2 rounded-full border text-xs font-bold snap-start transition-all">Semua</button>
-                <button v-for="cat in validCategories" :key="cat.id" @click="selectCategory(cat.name || cat.nama)" :class="selectedCategory === (cat.name || cat.nama) ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-600 border-zinc-200'" class="whitespace-nowrap px-4 py-2 rounded-full border text-xs font-bold snap-start transition-all">{{ cat.name || cat.nama }}</button>
+                <button @click="selectCategory('')" :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50'" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg border text-[11px] font-bold snap-start transition-all">Semua</button>
+                <button v-for="cat in validCategories" :key="cat.id" @click="selectCategory(cat.id)" :class="selectedCategory === cat.id ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50'" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg border text-[11px] font-bold snap-start transition-all">{{ cat.name || cat.nama }}</button>
             </div>
 
             <!-- STATE KOSONG (PRODUK TIDAK DITEMUKAN) -->
@@ -162,7 +162,11 @@
                     </div>
                     
                     <div class="flex flex-col flex-1 justify-between bg-white" :class="viewMode === 'grid3' ? 'p-2' : 'p-3'">
-                        <h3 class="font-semibold text-zinc-800 line-clamp-2 leading-snug mb-1" :class="viewMode === 'grid3' ? 'text-[11px]' : 'text-[13px]'">{{ prod.name }}</h3>
+                        <div>
+                            <!-- Tampilkan SKU di Katalog -->
+                            <div v-if="prod.sku" class="text-[9px] text-zinc-400 font-semibold mb-0.5"><i class="fa-solid fa-barcode mr-1"></i>{{ prod.sku }}</div>
+                            <h3 class="font-bold text-zinc-800 line-clamp-2 leading-snug mb-1" :class="viewMode === 'grid3' ? 'text-[10px]' : 'text-xs'">{{ prod.name }}</h3>
+                        </div>
                         
                         <!-- Penyesuaian Harga Coret -->
                         <div class="flex flex-col justify-end mt-auto">
@@ -198,11 +202,22 @@
                             </span>
                         </div>
 
-                        <div class="flex justify-between items-start mb-2">
-                            <h2 class="text-xl font-extrabold text-zinc-900 leading-tight flex-1 pr-4">{{ selectedProduct.name }}</h2>
+                        <!-- Info SKU & Stok -->
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            <div v-if="activeVariant && activeVariant.sku" class="inline-flex items-center gap-1.5 px-2 py-1 bg-zinc-100 text-zinc-600 rounded text-[10px] font-bold tracking-wider border border-zinc-200">
+                                <i class="fa-solid fa-barcode"></i> SKU: {{ activeVariant.sku }}
+                            </div>
+                            <div v-else-if="selectedProduct.sku" class="inline-flex items-center gap-1.5 px-2 py-1 bg-zinc-100 text-zinc-600 rounded text-[10px] font-bold tracking-wider border border-zinc-200">
+                                <i class="fa-solid fa-barcode"></i> SKU: {{ selectedProduct.sku }}
+                            </div>
+
                             <div class="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded text-[10px] font-bold uppercase tracking-wider border border-green-100 whitespace-nowrap">
                                 <i class="fa-solid fa-box"></i> Stok: {{ selectedProduct.stock > 900 ? 'Tersedia' : selectedProduct.stock }}
                             </div>
+                        </div>
+
+                        <div class="flex justify-between items-start mb-2">
+                            <h2 class="text-xl font-extrabold text-zinc-900 leading-tight flex-1 pr-4">{{ selectedProduct.name }}</h2>
                         </div>
                         
                         <!-- Harga Coret di Detail -->
@@ -215,8 +230,9 @@
                     <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="p-6 border-b border-zinc-100 bg-white">
                         <h3 class="text-xs font-bold text-zinc-800 uppercase tracking-widest mb-4">Pilih Varian</h3>
                         <div class="flex flex-wrap gap-2.5">
+                            <!-- Loop object variant yang sudah diperbarui dengan field SKU dll -->
                             <button v-for="(v, index) in selectedProduct.variants" :key="index" @click="activeVariant = v" :class="activeVariant === v ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border border-zinc-200'" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200">
-                                {{ v }}
+                                {{ v.name }}
                             </button>
                         </div>
                     </div>
@@ -345,7 +361,6 @@
             },
             computed: {
                 validCategories() {
-                    // Menyaring agar nama kategori unik dan tidak kosong
                     let uniqueCats = [];
                     let names = [];
                     this.categories.forEach(cat => {
@@ -359,8 +374,23 @@
                 },
                 filteredProducts() {
                     let result = this.products.filter(p => {
-                        const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase());
-                        const matchesCategory = !this.selectedCategory || p.category === this.selectedCategory;
+                        // Fitur Cari (Nama & SKU)
+                        const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+                                              (p.sku && p.sku.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                        
+                        let matchesCategory = true;
+                        if (this.selectedCategory) {
+                            // Perbaikan Logika Filter Kategori (mencocokkan ID & Nama)
+                            let catObj = this.categories.find(c => c.id === this.selectedCategory);
+                            let selectedCatName = catObj ? (catObj.name || catObj.nama) : '';
+
+                            matchesCategory = p.categoryId === this.selectedCategory ||
+                                              p.kategoriId === this.selectedCategory ||
+                                              (selectedCatName && p.category === selectedCatName) ||
+                                              (selectedCatName && p.kategori === selectedCatName) ||
+                                              p.category === this.selectedCategory;
+                        }
+                        
                         return matchesSearch && matchesCategory;
                     });
 
@@ -513,15 +543,26 @@
                             
                             if (isNaN(finalStock)) finalStock = 0;
 
+                            // Pembacaan Varian agar menangkap Code / SKU varian
                             let productVariants = [];
                             if (data.variants && Array.isArray(data.variants)) {
-                                productVariants = data.variants.map(v => typeof v === 'object' ? v.name : v).filter(v => v);
+                                productVariants = data.variants.map(v => {
+                                    if (typeof v === 'object') {
+                                        return {
+                                            name: v.name || v.nama || 'Unnamed',
+                                            sku: v.variantSku || v.sku || v.kode || v.code || '',
+                                            price: v.price || finalPrice
+                                        };
+                                    }
+                                    return { name: v, sku: '', price: finalPrice };
+                                }).filter(v => v.name);
                             }
 
                             return {
                                 id: doc.id,
                                 ...data,
                                 name: data.name || data.nama || 'Tanpa Nama',
+                                sku: data.sku || data.kode || data.code || '', // SKu Produk Utama Ditambahkan Disini
                                 price: finalPrice,
                                 originalPrice: originalPrice,
                                 tags: tagList,
@@ -549,7 +590,7 @@
                     setTimeout(() => { this.toast.show = false; }, 2500);
                 },
 
-                selectCategory(catName) { this.selectedCategory = catName; },
+                selectCategory(catId) { this.selectedCategory = catId; }, // Sekarang filter menggunakan catId
                 
                 openProductDetail(product) {
                     this.selectedProduct = product;
@@ -573,7 +614,8 @@
                         return;
                     }
 
-                    const cartItemId = this.selectedProduct.id + '-' + (this.activeVariant || 'default');
+                    // Buat ID unik berdasar item & varian (ambil .name nya)
+                    const cartItemId = this.selectedProduct.id + '-' + (this.activeVariant ? this.activeVariant.name : 'default');
                     const existingItem = this.cart.find(item => item.cartItemId === cartItemId);
                     
                     if (existingItem) {
@@ -587,7 +629,7 @@
                             price: this.selectedProduct.price,
                             originalPrice: this.selectedProduct.originalPrice,
                             displayImage: this.selectedProduct.displayImage,
-                            variant: this.activeVariant,
+                            variant: this.activeVariant ? this.activeVariant.name : null, // simpan nama varian
                             qty: 1
                         });
                         this.showToast("Berhasil masuk keranjang");
