@@ -113,8 +113,8 @@
                 </div>
             </div>
             
-            <!-- HORIZONTAL KATEGORI (Desain Diperbaiki Lebih Rapi) -->
-            <div v-if="companyIdValid && !isLoading" class="mb-6 flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-5 px-5 snap-x">
+            <!-- HORIZONTAL KATEGORI (Sejajar dengan Search & Urutkan) -->
+            <div v-if="companyIdValid && !isLoading" class="mb-6 flex overflow-x-auto gap-2 pb-2 scrollbar-hide snap-x w-full">
                 <button @click="selectCategory('')" :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50'" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg border text-[11px] font-bold snap-start transition-all">Semua</button>
                 <button v-for="cat in validCategories" :key="cat.id" @click="selectCategory(cat.id)" :class="selectedCategory === cat.id ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50'" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg border text-[11px] font-bold snap-start transition-all">{{ cat.name || cat.nama }}</button>
             </div>
@@ -230,7 +230,6 @@
                     <div v-if="selectedProduct.variants && selectedProduct.variants.length > 0" class="p-6 border-b border-zinc-100 bg-white">
                         <h3 class="text-xs font-bold text-zinc-800 uppercase tracking-widest mb-4">Pilih Varian</h3>
                         <div class="flex flex-wrap gap-2.5">
-                            <!-- Loop object variant yang sudah diperbarui dengan field SKU dll -->
                             <button v-for="(v, index) in selectedProduct.variants" :key="index" @click="activeVariant = v" :class="activeVariant === v ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border border-zinc-200'" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200">
                                 {{ v.name }}
                             </button>
@@ -380,7 +379,6 @@
                         
                         let matchesCategory = true;
                         if (this.selectedCategory) {
-                            // Perbaikan Logika Filter Kategori (mencocokkan ID & Nama)
                             let catObj = this.categories.find(c => c.id === this.selectedCategory);
                             let selectedCatName = catObj ? (catObj.name || catObj.nama) : '';
 
