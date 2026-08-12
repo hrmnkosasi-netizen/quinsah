@@ -24,6 +24,8 @@
         .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fade-in-up { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         .toast-enter { animation: fade-in-up 0.3s ease-out forwards; }
+        @keyframes scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .img-cover { width: 100%; height: 100%; object-fit: cover; object-position: center; }
         .img-contain { width: 100%; height: 100%; object-fit: contain; background-color: #f8f9fa; }
     </style>
@@ -59,14 +61,8 @@
                 <p class="text-xs text-red-600 px-4">Kami tidak dapat menemukan data toko untuk subdomain ini. Pastikan alamat URL Anda sudah benar.</p>
             </div>
 
-            <!-- TAMPILAN LOADING AWAL SAAT MENCARI SUBDOMAIN -->
-            <div v-if="isLoading && !companyIdValid" class="flex flex-col items-center justify-center py-20">
-                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-zinc-900 mb-4"></div>
-                <p class="text-sm font-semibold text-zinc-500">Menghubungkan ke toko...</p>
-            </div>
-
             <!-- HERO BANNER -->
-            <div v-if="companyIdValid && !isLoading" class="mb-5 relative rounded-2xl overflow-hidden bg-zinc-900 text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] group">
+            <div v-if="companyIdValid" class="mb-5 relative rounded-2xl overflow-hidden bg-zinc-900 text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] group">
                 <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop" class="w-full h-32 object-cover opacity-60">
                 <div class="absolute inset-0 p-5 flex flex-col justify-center">
                     <span class="text-[10px] font-bold tracking-widest text-zinc-300 mb-1 uppercase drop-shadow-md">Katalog Online</span>
@@ -75,7 +71,7 @@
             </div>
 
             <!-- TOOLBAR: SEARCH, SORT & VIEW MODE -->
-            <div v-if="companyIdValid && !isLoading" class="flex flex-col gap-3 mb-4">
+            <div v-if="companyIdValid" class="flex flex-col gap-3 mb-4">
                 <div class="flex gap-2 w-full">
                     <!-- Search Input -->
                     <div class="relative flex-1">
@@ -114,9 +110,27 @@
             </div>
             
             <!-- HORIZONTAL KATEGORI (Sejajar dengan Search & Urutkan) -->
-            <div v-if="companyIdValid && !isLoading" class="mb-6 flex overflow-x-auto gap-2 pb-2 scrollbar-hide snap-x w-full">
+            <div v-if="companyIdValid" class="mb-6 flex overflow-x-auto gap-2 pb-2 scrollbar-hide snap-x w-full">
                 <button @click="selectCategory('')" :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50'" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg border text-[11px] font-bold snap-start transition-all">Semua</button>
                 <button v-for="cat in validCategories" :key="cat.id" @click="selectCategory(cat.id)" :class="selectedCategory === cat.id ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50'" class="whitespace-nowrap px-3.5 py-1.5 rounded-lg border text-[11px] font-bold snap-start transition-all">{{ cat.name || cat.nama }}</button>
+            </div>
+
+            <!-- SKELETON LOADING UI (Animasi Pemuatan Keren) -->
+            <div v-if="isLoading && companyIdValid" class="grid w-full gap-3 animate-pulse" :class="{'grid-cols-1': viewMode === 'list', 'grid-cols-2': viewMode === 'grid2', 'grid-cols-3': viewMode === 'grid3'}">
+                <div v-for="n in 6" :key="n" class="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden flex relative" :class="viewMode === 'list' ? 'flex-row h-32' : 'flex-col'">
+                    <div class="bg-zinc-200 flex-shrink-0" :class="viewMode === 'list' ? 'w-32 h-full' : 'aspect-square w-full'"></div>
+                    <div class="flex flex-col flex-1 justify-between p-3">
+                        <div>
+                            <div class="h-2 bg-zinc-200 rounded-full w-1/3 mb-2"></div>
+                            <div class="h-3 bg-zinc-200 rounded-full w-3/4 mb-1"></div>
+                            <div class="h-3 bg-zinc-200 rounded-full w-1/2"></div>
+                        </div>
+                        <div class="flex flex-col justify-end mt-auto gap-1">
+                            <div class="h-2 bg-zinc-200 rounded-full w-1/4"></div>
+                            <div class="h-4 bg-zinc-200 rounded-full w-1/3"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- STATE KOSONG (PRODUK TIDAK DITEMUKAN) -->
@@ -128,7 +142,7 @@
             </div>
 
             <!-- GRID PRODUK AKTIF -->
-            <div v-if="companyIdValid && !isLoading" 
+            <div v-if="companyIdValid && !isLoading && filteredProducts.length > 0" 
                  class="grid w-full gap-3" 
                  :class="{
                     'grid-cols-1': viewMode === 'list',
@@ -178,6 +192,14 @@
             </div>
         </main>
 
+        <!-- FULLSCREEN IMAGE ZOOM OVERLAY -->
+        <div v-if="zoomedImage" class="fixed inset-0 z-[70] bg-zinc-900/95 backdrop-blur-md flex items-center justify-center" @click="zoomedImage = null">
+            <button class="absolute top-5 right-5 text-white bg-white/10 rounded-full w-10 h-10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <img :src="zoomedImage" class="max-w-[90%] max-h-[85vh] object-contain animate-scale-in drop-shadow-2xl">
+        </div>
+
         <!-- BOTTOM SHEET: DETAIL PRODUK & VARIAN -->
         <div v-if="selectedProduct" class="fixed inset-0 z-50 flex items-end justify-center">
             <div class="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm transition-opacity" @click="closeProductDetail"></div>
@@ -188,9 +210,13 @@
                 </button>
 
                 <div class="flex-1 overflow-y-auto pb-28">
-                    <div class="w-full bg-zinc-50 relative h-[350px] flex items-center justify-center">
+                    <!-- Klik gambar untuk ZOOM -->
+                    <div class="w-full bg-zinc-50 relative h-[350px] flex items-center justify-center cursor-zoom-in" @click="selectedProduct.displayImage ? zoomedImage = selectedProduct.displayImage : null">
                         <img v-if="selectedProduct.displayImage" :src="selectedProduct.displayImage" class="img-contain p-4">
                         <i v-else class="fa-solid fa-image text-6xl text-zinc-300"></i>
+                        <div v-if="selectedProduct.displayImage" class="absolute bottom-6 right-4 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-zinc-600 shadow-sm pointer-events-none">
+                            <i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Zoom
+                        </div>
                     </div>
                     
                     <div class="p-6 border-b border-zinc-100 bg-white relative -mt-5 rounded-t-[24px]">
@@ -238,8 +264,16 @@
                 </div>
 
                 <div class="absolute bottom-0 left-0 right-0 p-5 bg-white border-t border-zinc-100 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
-                    <button @click="addToCartFromDetail" :disabled="selectedProduct.stock <= 0" :class="selectedProduct.stock <= 0 ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed' : 'bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.98] shadow-md'" class="w-full py-4 rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all">
-                        <i class="fa-solid fa-cart-plus"></i> {{ selectedProduct.stock <= 0 ? 'Stok Habis' : 'Masukkan Keranjang' }}
+                    <button @click="addToCartFromDetail" :disabled="selectedProduct.stock <= 0 || isAddingToCart" :class="selectedProduct.stock <= 0 ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed' : (isAddingToCart ? 'bg-green-500 text-white' : 'bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.98] shadow-md')" class="w-full py-4 rounded-2xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all duration-300">
+                        <template v-if="selectedProduct.stock <= 0">
+                            <i class="fa-solid fa-ban"></i> Stok Habis
+                        </template>
+                        <template v-else-if="isAddingToCart">
+                            <i class="fa-solid fa-circle-check animate-scale-in"></i> Berhasil Ditambahkan
+                        </template>
+                        <template v-else>
+                            <i class="fa-solid fa-cart-plus"></i> Masukkan Keranjang
+                        </template>
                     </button>
                 </div>
             </div>
@@ -345,16 +379,20 @@
                     categories: [],
                     cart: [],
                     
-                    // Filter & Sort State
                     searchQuery: '',
                     selectedCategory: '',
                     sortBy: 'default',
-                    viewMode: 'grid2', // Options: 'list', 'grid2', 'grid3'
+                    viewMode: 'grid2',
                     
                     isLoading: true,
                     isCartOpen: false,
                     selectedProduct: null,
                     activeVariant: null,
+                    
+                    // State untuk Fitur UX Baru
+                    zoomedImage: null,
+                    isAddingToCart: false,
+                    
                     toast: { show: false, message: '', icon: 'fa-solid fa-circle-check' }
                 }
             },
@@ -373,7 +411,6 @@
                 },
                 filteredProducts() {
                     let result = this.products.filter(p => {
-                        // Fitur Cari (Nama & SKU)
                         const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
                                               (p.sku && p.sku.toLowerCase().includes(this.searchQuery.toLowerCase()));
                         
@@ -392,7 +429,6 @@
                         return matchesSearch && matchesCategory;
                     });
 
-                    // Logika Sort (Urutkan)
                     if (this.sortBy === 'termurah') {
                         result = result.sort((a, b) => a.price - b.price);
                     } else if (this.sortBy === 'termahal') {
@@ -453,7 +489,6 @@
                 }
             },
             methods: {
-                // LOGIKA DETEKSI HARGA CORET
                 getOriginalPrice(item) {
                     if (!item) return 0;
                     let sp = Number(item.sellPrice || 0);
@@ -519,12 +554,11 @@
                             let finalPrice = this.getFinalPrice(data);
                             let originalPrice = this.getOriginalPrice(data);
 
-                            // Mengumpulkan Semua Tag dari Data
                             let tagList = [];
                             if (data.tag && typeof data.tag === 'string') tagList.push(data.tag);
                             if (data.tags && Array.isArray(data.tags)) tagList = tagList.concat(data.tags);
                             if (data.productTags && Array.isArray(data.productTags)) tagList = tagList.concat(data.productTags);
-                            tagList = [...new Set(tagList)]; // Hilangkan duplikat
+                            tagList = [...new Set(tagList)]; 
 
                             let finalStock = 999;
                             if (data.stock !== undefined) {
@@ -541,7 +575,6 @@
                             
                             if (isNaN(finalStock)) finalStock = 0;
 
-                            // Pembacaan Varian agar menangkap Code / SKU varian
                             let productVariants = [];
                             if (data.variants && Array.isArray(data.variants)) {
                                 productVariants = data.variants.map(v => {
@@ -560,7 +593,7 @@
                                 id: doc.id,
                                 ...data,
                                 name: data.name || data.nama || 'Tanpa Nama',
-                                sku: data.sku || data.kode || data.code || '', // SKu Produk Utama Ditambahkan Disini
+                                sku: data.sku || data.kode || data.code || '', 
                                 price: finalPrice,
                                 originalPrice: originalPrice,
                                 tags: tagList,
@@ -588,7 +621,7 @@
                     setTimeout(() => { this.toast.show = false; }, 2500);
                 },
 
-                selectCategory(catId) { this.selectedCategory = catId; }, // Sekarang filter menggunakan catId
+                selectCategory(catId) { this.selectedCategory = catId; }, 
                 
                 openProductDetail(product) {
                     this.selectedProduct = product;
@@ -612,27 +645,31 @@
                         return;
                     }
 
-                    // Buat ID unik berdasar item & varian (ambil .name nya)
-                    const cartItemId = this.selectedProduct.id + '-' + (this.activeVariant ? this.activeVariant.name : 'default');
-                    const existingItem = this.cart.find(item => item.cartItemId === cartItemId);
+                    // Mulai Micro-interaction Animasi
+                    this.isAddingToCart = true;
                     
-                    if (existingItem) {
-                        existingItem.qty++;
-                        this.showToast("Jumlah ditambahkan");
-                    } else {
-                        this.cart.unshift({
-                            cartItemId: cartItemId,
-                            id: this.selectedProduct.id,
-                            name: this.selectedProduct.name,
-                            price: this.selectedProduct.price,
-                            originalPrice: this.selectedProduct.originalPrice,
-                            displayImage: this.selectedProduct.displayImage,
-                            variant: this.activeVariant ? this.activeVariant.name : null, // simpan nama varian
-                            qty: 1
-                        });
-                        this.showToast("Berhasil masuk keranjang");
-                    }
-                    this.closeProductDetail();
+                    setTimeout(() => {
+                        const cartItemId = this.selectedProduct.id + '-' + (this.activeVariant ? this.activeVariant.name : 'default');
+                        const existingItem = this.cart.find(item => item.cartItemId === cartItemId);
+                        
+                        if (existingItem) {
+                            existingItem.qty++;
+                        } else {
+                            this.cart.unshift({
+                                cartItemId: cartItemId,
+                                id: this.selectedProduct.id,
+                                name: this.selectedProduct.name,
+                                price: this.selectedProduct.price,
+                                originalPrice: this.selectedProduct.originalPrice,
+                                displayImage: this.selectedProduct.displayImage,
+                                variant: this.activeVariant ? this.activeVariant.name : null, 
+                                qty: 1
+                            });
+                        }
+                        
+                        this.isAddingToCart = false; // matikan animasi
+                        this.closeProductDetail();
+                    }, 600); // Tahan tombol Hijau "Berhasil" selama 0.6 detik
                 },
                 
                 updateQty(index, change) {
