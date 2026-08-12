@@ -66,25 +66,57 @@
             </div>
 
             <!-- HERO BANNER -->
-            <div v-if="companyIdValid && !isLoading" class="mb-6 relative rounded-2xl overflow-hidden bg-zinc-900 text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] group">
-                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop" class="w-full h-40 object-cover opacity-60">
+            <div v-if="companyIdValid && !isLoading" class="mb-5 relative rounded-2xl overflow-hidden bg-zinc-900 text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] group">
+                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop" class="w-full h-32 object-cover opacity-60">
                 <div class="absolute inset-0 p-5 flex flex-col justify-center">
                     <span class="text-[10px] font-bold tracking-widest text-zinc-300 mb-1 uppercase drop-shadow-md">Katalog Online</span>
-                    <h2 class="text-xl font-black leading-tight mb-3 drop-shadow-md">Temukan Gaya<br>Terbaikmu</h2>
+                    <h2 class="text-xl font-black leading-tight drop-shadow-md">Temukan Gaya Terbaikmu</h2>
                 </div>
             </div>
 
-            <!-- SEARCH BAR -->
-            <div v-if="companyIdValid && !isLoading" class="relative mb-6">
-                <i class="fa-solid fa-search absolute left-4 top-3.5 text-zinc-400 text-sm"></i>
-                <input type="text" v-model="searchQuery" placeholder="Cari produk..." class="w-full pl-11 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-zinc-900 focus:bg-white text-sm transition-all placeholder:text-zinc-400">
-                <i v-if="searchQuery" @click="searchQuery = ''" class="fa-solid fa-circle-xmark absolute right-4 top-3.5 text-zinc-300 text-sm cursor-pointer hover:text-zinc-500"></i>
+            <!-- TOOLBAR: SEARCH, SORT & VIEW MODE -->
+            <div v-if="companyIdValid && !isLoading" class="flex flex-col gap-3 mb-4">
+                <div class="flex gap-2 w-full">
+                    <!-- Search Input -->
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-search absolute left-3.5 top-3 text-zinc-400 text-sm"></i>
+                        <input type="text" v-model="searchQuery" placeholder="Cari produk..." class="w-full pl-9 pr-8 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-zinc-900 focus:bg-white text-sm transition-all placeholder:text-zinc-400">
+                        <i v-if="searchQuery" @click="searchQuery = ''" class="fa-solid fa-circle-xmark absolute right-3 top-3 text-zinc-300 text-sm cursor-pointer hover:text-zinc-500"></i>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 items-center justify-between w-full">
+                    <!-- Sort Dropdown -->
+                    <div class="relative">
+                        <select v-model="sortBy" class="appearance-none bg-zinc-50 border border-zinc-200 text-zinc-700 text-xs font-semibold rounded-xl pl-3 pr-8 py-2.5 focus:outline-none focus:border-zinc-900 cursor-pointer shadow-sm">
+                            <option value="default">Urutkan</option>
+                            <option value="termurah">Termurah</option>
+                            <option value="termahal">Termahal</option>
+                            <option value="az">A - Z</option>
+                            <option value="za">Z - A</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-3 text-zinc-400 text-[10px] pointer-events-none"></i>
+                    </div>
+
+                    <!-- View Toggles (List, Grid 2, Grid 3) -->
+                    <div class="flex bg-zinc-50 border border-zinc-200 rounded-xl p-1 shadow-sm">
+                        <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-white shadow border border-zinc-100 text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'" class="w-8 h-7 rounded-lg flex items-center justify-center transition-all" title="List Mode">
+                            <i class="fa-solid fa-list text-xs"></i>
+                        </button>
+                        <button @click="viewMode = 'grid2'" :class="viewMode === 'grid2' ? 'bg-white shadow border border-zinc-100 text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'" class="w-8 h-7 rounded-lg flex items-center justify-center transition-all mx-1" title="2 Grid Mode">
+                            <i class="fa-solid fa-table-cells-large text-xs"></i>
+                        </button>
+                        <button @click="viewMode = 'grid3'" :class="viewMode === 'grid3' ? 'bg-white shadow border border-zinc-100 text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'" class="w-8 h-7 rounded-lg flex items-center justify-center transition-all" title="3 Grid Mode">
+                            <i class="fa-solid fa-table-cells text-xs"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <!-- HORIZONTAL KATEGORI -->
-            <div v-if="companyIdValid && !isLoading" class="mb-6 flex overflow-x-auto gap-2.5 pb-2 scrollbar-hide -mx-5 px-5 snap-x">
-                <button @click="selectCategory('')" :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border-zinc-200'" class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all">Semua</button>
-                <button v-for="cat in categories" :key="cat.id" @click="selectCategory(cat.name || cat.nama)" :class="selectedCategory === (cat.name || cat.nama) ? 'bg-zinc-900 text-white shadow-md' : 'bg-white text-zinc-600 border-zinc-200'" class="whitespace-nowrap px-5 py-2.5 rounded-full border text-sm font-semibold snap-start transition-all">{{ cat.name || cat.nama }}</button>
+            <div v-if="companyIdValid && !isLoading" class="mb-6 flex overflow-x-auto gap-2 pb-2 scrollbar-hide -mx-5 px-5 snap-x">
+                <button @click="selectCategory('')" :class="selectedCategory === '' ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-600 border-zinc-200'" class="whitespace-nowrap px-4 py-2 rounded-full border text-xs font-bold snap-start transition-all">Semua</button>
+                <button v-for="cat in validCategories" :key="cat.id" @click="selectCategory(cat.name || cat.nama)" :class="selectedCategory === (cat.name || cat.nama) ? 'bg-zinc-900 text-white shadow-md border-zinc-900' : 'bg-white text-zinc-600 border-zinc-200'" class="whitespace-nowrap px-4 py-2 rounded-full border text-xs font-bold snap-start transition-all">{{ cat.name || cat.nama }}</button>
             </div>
 
             <!-- STATE KOSONG (PRODUK TIDAK DITEMUKAN) -->
@@ -96,14 +128,23 @@
             </div>
 
             <!-- GRID PRODUK AKTIF -->
-            <div v-if="companyIdValid && !isLoading" class="grid grid-cols-2 gap-4 w-full">
-                <div v-for="prod in filteredProducts" :key="prod.id" @click="openProductDetail(prod)" class="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden flex flex-col relative cursor-pointer active:scale-[0.97] transition-all hover:shadow-md">
+            <div v-if="companyIdValid && !isLoading" 
+                 class="grid w-full gap-3" 
+                 :class="{
+                    'grid-cols-1': viewMode === 'list',
+                    'grid-cols-2': viewMode === 'grid2',
+                    'grid-cols-3': viewMode === 'grid3'
+                 }">
+                 
+                <div v-for="prod in filteredProducts" :key="prod.id" @click="openProductDetail(prod)" 
+                     class="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden relative cursor-pointer active:scale-[0.97] transition-all hover:shadow-md"
+                     :class="viewMode === 'list' ? 'flex flex-row h-32' : 'flex flex-col'">
                     
-                    <div class="aspect-square w-full relative overflow-hidden bg-zinc-50 border-b border-zinc-100 flex items-center justify-center">
+                    <div :class="viewMode === 'list' ? 'w-32 h-full flex-shrink-0 border-r border-zinc-100' : 'aspect-square w-full border-b border-zinc-100'" class="relative overflow-hidden bg-zinc-50 flex items-center justify-center">
                         
                         <!-- Tampilan Tags / Label Khusus di pojok kiri atas foto -->
                         <div v-if="prod.tags && prod.tags.length > 0" class="absolute top-2 left-2 flex flex-col gap-1 z-20">
-                            <span v-for="t in prod.tags" :key="t" class="bg-red-600/90 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                            <span v-for="t in prod.tags" :key="t" class="bg-red-600/90 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
                                 {{ t }}
                             </span>
                         </div>
@@ -112,21 +153,21 @@
                             <img :src="prod.displayImage" @error="handleImageError(prod)" class="img-cover">
                         </template>
                         <template v-else>
-                            <i class="fa-solid fa-image text-4xl text-zinc-300"></i>
+                            <i class="fa-solid fa-image text-3xl text-zinc-300"></i>
                         </template>
                         
                         <div v-if="prod.stock <= 0" class="absolute inset-0 bg-white/70 backdrop-blur-[2px] flex items-center justify-center z-10">
-                            <span class="bg-zinc-900 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Habis</span>
+                            <span class="bg-zinc-900 text-white text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-widest">Habis</span>
                         </div>
                     </div>
                     
-                    <div class="p-3.5 flex flex-col flex-1 justify-between bg-white">
-                        <h3 class="text-[13px] font-semibold text-zinc-800 line-clamp-2 leading-snug mb-2">{{ prod.name }}</h3>
+                    <div class="flex flex-col flex-1 justify-between bg-white" :class="viewMode === 'grid3' ? 'p-2' : 'p-3'">
+                        <h3 class="font-semibold text-zinc-800 line-clamp-2 leading-snug mb-1" :class="viewMode === 'grid3' ? 'text-[11px]' : 'text-[13px]'">{{ prod.name }}</h3>
                         
                         <!-- Penyesuaian Harga Coret -->
                         <div class="flex flex-col justify-end mt-auto">
-                            <span v-if="prod.originalPrice > prod.price" class="text-[10px] font-bold text-zinc-400 line-through decoration-zinc-400 -mb-0.5">Rp{{ formatRupiah(prod.originalPrice) }}</span>
-                            <span class="text-sm font-extrabold text-red-600">Rp{{ formatRupiah(prod.price) }}</span>
+                            <span v-if="prod.originalPrice > prod.price" class="font-bold text-zinc-400 line-through decoration-zinc-400 -mb-0.5" :class="viewMode === 'grid3' ? 'text-[9px]' : 'text-[10px]'">Rp{{ formatRupiah(prod.originalPrice) }}</span>
+                            <span class="font-extrabold text-red-600" :class="viewMode === 'grid3' ? 'text-xs' : 'text-sm'">Rp{{ formatRupiah(prod.price) }}</span>
                         </div>
                     </div>
                 </div>
@@ -288,8 +329,13 @@
                     products: [],
                     categories: [],
                     cart: [],
+                    
+                    // Filter & Sort State
                     searchQuery: '',
                     selectedCategory: '',
+                    sortBy: 'default',
+                    viewMode: 'grid2', // Options: 'list', 'grid2', 'grid3'
+                    
                     isLoading: true,
                     isCartOpen: false,
                     selectedProduct: null,
@@ -298,12 +344,38 @@
                 }
             },
             computed: {
+                validCategories() {
+                    // Menyaring agar nama kategori unik dan tidak kosong
+                    let uniqueCats = [];
+                    let names = [];
+                    this.categories.forEach(cat => {
+                        let cName = cat.name || cat.nama;
+                        if (cName && !names.includes(cName)) {
+                            names.push(cName);
+                            uniqueCats.push(cat);
+                        }
+                    });
+                    return uniqueCats;
+                },
                 filteredProducts() {
-                    return this.products.filter(p => {
+                    let result = this.products.filter(p => {
                         const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase());
                         const matchesCategory = !this.selectedCategory || p.category === this.selectedCategory;
                         return matchesSearch && matchesCategory;
                     });
+
+                    // Logika Sort (Urutkan)
+                    if (this.sortBy === 'termurah') {
+                        result = result.sort((a, b) => a.price - b.price);
+                    } else if (this.sortBy === 'termahal') {
+                        result = result.sort((a, b) => b.price - a.price);
+                    } else if (this.sortBy === 'az') {
+                        result = result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                    } else if (this.sortBy === 'za') {
+                        result = result.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+                    }
+
+                    return result;
                 },
                 cartCount() { return this.cart.reduce((sum, item) => sum + item.qty, 0); },
                 cartTotal() { return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0); }
