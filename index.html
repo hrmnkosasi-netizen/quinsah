@@ -15183,190 +15183,200 @@ updateDynamicManifest(namaToko, logoUrl) {
     },
           
       async fetchDashboardData() {
-        if (!this.userProfile || !this.userProfile.companyId) return;
-        this.isLoadingDashboard = true;
+    if (!this.userProfile || !this.userProfile.companyId) return;
+    this.isLoadingDashboard = true;
 
-        try {
-            const companyId = this.userProfile.companyId;
-            const todayStr = new Date().toLocaleDateString('id-ID'); // Format: DD/MM/YYYY
-            const selectedBranch = this.dashData.selectedBranch; // 🌟 Ambil state filter cabang yang dipilih
+    try {
+        const companyId = this.userProfile.companyId;
+        const todayStr = new Date().toLocaleDateString('id-ID'); // Format: DD/MM/YYYY
+        const selectedBranch = this.dashData.selectedBranch; // Berisi ID Cabang dari dropdown
 
-            const qTrx = query(collection(db, "transactions"), where("companyId", "==", companyId));
-            const snapTrx = await getDocs(qTrx);
+        // 🌟 CARI NAMA CABANG DARI MASTER OUTLET (Untuk pencocokan transaksi lama)
+        const selectedOutletObj = (this.outlets || []).find(o => String(o.id) === String(selectedBranch));
+        const selectedOutletName = selectedOutletObj ? selectedOutletObj.name : '';
+
+        const qTrx = query(collection(db, "transactions"), where("companyId", "==", companyId));
+        const snapTrx = await getDocs(qTrx);
+        
+        let omzet = 0;
+        let laba = 0; 
+        let trxCount = 0;
+        let productSales = {}; 
+        let last7DaysSales = { 6:0, 5:0, 4:0, 3:0, 2:0, 1:0, 0:0 };
+        let paymentMethods = {}; 
+        let allTransactions = []; 
+        let hourlyCount = {}; 
+        
+        let last7DaysDates = [];
+        for (let i = 0; i <= 6; i++) {
+            let d = new Date();
+            d.setDate(d.getDate() - i);
+            last7DaysDates.push(d.toLocaleDateString('id-ID')); 
+        }
+
+        snapTrx.forEach(doc => {
+            let data = doc.data();
+            data.id = doc.id;
             
-            let omzet = 0;
-            let laba = 0; 
-            let trxCount = 0;
-            let productSales = {}; 
-            let last7DaysSales = { 6:0, 5:0, 4:0, 3:0, 2:0, 1:0, 0:0 };
-            let paymentMethods = {}; 
-            let allTransactions = []; 
-            let hourlyCount = {}; 
-            
-            let last7DaysDates = [];
-            for (let i = 0; i <= 6; i++) {
-                let d = new Date();
-                d.setDate(d.getDate() - i);
-                last7DaysDates.push(d.toLocaleDateString('id-ID')); 
+            // 🌟 FILTER CABANG SUPER LENGKAP & TOLERAN (Mengecek ID & Nama)
+            if (selectedBranch) {
+                const trxBranchId = String(data.outletId || data.branchId || data.branch || '');
+                const trxBranchName = String(data.outletName || data.outlet || data.branch || '');
+
+                const isMatchId = trxBranchId === String(selectedBranch);
+                const isMatchName = selectedOutletName && (trxBranchName === String(selectedOutletName));
+
+                if (!isMatchId && !isMatchName) return; // Lewati jika tidak cocok
             }
 
-            snapTrx.forEach(doc => {
-                let data = doc.data();
-                data.id = doc.id;
-                
-                // 🌟 Filter Cabang untuk Transaksi (Mendukung pencocokan nama cabang atau branchId)
-                if (selectedBranch) {
-                    let matchBranch = (data.branch === selectedBranch || data.branchId === selectedBranch || data.outletName === selectedBranch);
-                    if (!matchBranch) return; // Lewati jika tidak sesuai cabang
+            allTransactions.push(data); 
+            
+            let trxDateStr = data.dateStr ? data.dateStr.split(',')[0] : (data.date || '').split(',')[0];
+            let isBatalTotal = (Number(data.total || 0) === 0 || data.paymentStatus === 'RETUR FULL' || data.status === 'RETUR FULL');
+            
+            // 1. OLAH DATA HARI INI
+            if (trxDateStr === todayStr) {
+                omzet += Number(data.total || 0);
+                trxCount++;
+
+                // Pecah Pembayaran Split untuk Grafik Donat
+                let details = data.splitPayments || (data.paymentData ? data.paymentData.splitPayments : null) || data.splits;
+                if (typeof details === 'string' && (details.startsWith('{') || details.startsWith('['))) {
+                    try { details = JSON.parse(details); } catch(e) {}
                 }
 
-                allTransactions.push(data); 
-                
-                let trxDateStr = data.dateStr ? data.dateStr.split(',')[0] : (data.date || '').split(',')[0];
-                let isBatalTotal = (Number(data.total || 0) === 0 || data.paymentStatus === 'RETUR FULL' || data.status === 'RETUR FULL');
-                
-                // 1. OLAH DATA HARI INI
-                if (trxDateStr === todayStr) {
-                    omzet += Number(data.total || 0);
-                    trxCount++;
-
-                    // Pecah Pembayaran Split untuk Grafik Donat
-                    let details = data.splitPayments || (data.paymentData ? data.paymentData.splitPayments : null) || data.splits;
-                    if (typeof details === 'string' && (details.startsWith('{') || details.startsWith('['))) {
-                        try { details = JSON.parse(details); } catch(e) {}
-                    }
-
-                    if (Array.isArray(details) && details.length > 0) {
-                        details.forEach(d => {
-                            let m = String(d.method || d.paymentMethod || 'CASH').toUpperCase();
-                            if (!paymentMethods[m]) paymentMethods[m] = 0;
-                            paymentMethods[m] += Number(d.amount || d.nominal || 0);
-                        });
-                    } else {
-                        let payMethod = String(data.paymentMethod || 'TUNAI').toUpperCase();
-                        if (!paymentMethods[payMethod]) paymentMethods[payMethod] = 0;
-                        paymentMethods[payMethod] += Number(data.total || 0);
-                    }
-
-                    // Hitung HPP Aman (Cegah Laba Minus karena Retur)
-                    let totalHpp = 0;
-                    if (!isBatalTotal && data.items && Array.isArray(data.items)) {
-                        data.items.forEach(item => {
-                            if (item.productId !== 'EXCHANGE') {
-                                let qty = Number(item.qty) || 0;
-                                if (item.totalCogs && item.totalCogs > 0) {
-                                    totalHpp += Number(item.totalCogs);
-                                } else {
-                                    let hppSatuan = Number(item.hppPrice || item.basePrice || item.cost || item.capitalPrice || 0);
-                                    totalHpp += (hppSatuan * qty);
-                                }
-                            }
-                        });
-                    }
-                    laba += (Number(data.total || 0) - totalHpp);
-
-                    // Perekam Jam Teramai
-                    let timeStr = data.dateStr ? data.dateStr.split(', ')[1] : ''; 
-                    if (timeStr) {
-                        let hour = timeStr.replace(':', '.').split('.')[0]; 
-                        hourlyCount[hour] = (hourlyCount[hour] || 0) + 1;
-                    }
+                if (Array.isArray(details) && details.length > 0) {
+                    details.forEach(d => {
+                        let m = String(d.method || d.paymentMethod || 'CASH').toUpperCase();
+                        if (!paymentMethods[m]) paymentMethods[m] = 0;
+                        paymentMethods[m] += Number(d.amount || d.nominal || 0);
+                    });
+                } else {
+                    let payMethod = String(data.paymentMethod || 'TUNAI').toUpperCase();
+                    if (!paymentMethods[payMethod]) paymentMethods[payMethod] = 0;
+                    paymentMethods[payMethod] += Number(data.total || 0);
                 }
 
-                // 2. OLAH DATA 7 HARI TERAKHIR (Untuk Grafik Garis)
-                let dayIndex = last7DaysDates.indexOf(trxDateStr);
-                if (dayIndex !== -1) {
-                    last7DaysSales[dayIndex] += Number(data.total || 0);
-                }
-
-                // 3. OLAH DATA PRODUK TERLARIS BULAN INI
+                // Hitung HPP Aman (Cegah Laba Minus karena Retur)
+                let totalHpp = 0;
                 if (!isBatalTotal && data.items && Array.isArray(data.items)) {
                     data.items.forEach(item => {
                         if (item.productId !== 'EXCHANGE') {
-                            let namaBarang = item.name || 'Produk Kustom';
-                            if (!productSales[namaBarang]) productSales[namaBarang] = 0;
-                            productSales[namaBarang] += (Number(item.qty) || 0);
+                            let qty = Number(item.qty) || 0;
+                            if (item.totalCogs && item.totalCogs > 0) {
+                                totalHpp += Number(item.totalCogs);
+                            } else {
+                                let hppSatuan = Number(item.hppPrice || item.basePrice || item.cost || item.capitalPrice || 0);
+                                totalHpp += (hppSatuan * qty);
+                            }
                         }
                     });
                 }
-            });
+                laba += (Number(data.total || 0) - totalHpp);
 
-            // Menghitung Jam Teramai
-            let peakHour = '-';
-            let maxTrx = 0;
-            for (let h in hourlyCount) {
-                if (hourlyCount[h] > maxTrx) {
-                    maxTrx = hourlyCount[h];
-                    peakHour = `${h}:00 - ${String(Number(h)+1).padStart(2,'0')}:00`;
+                // Perekam Jam Teramai
+                let timeStr = data.dateStr ? data.dateStr.split(', ')[1] : ''; 
+                if (timeStr) {
+                    let hour = timeStr.replace(':', '.').split('.')[0]; 
+                    hourlyCount[hour] = (hourlyCount[hour] || 0) + 1;
                 }
             }
 
-            // Menerapkan data ke State Dashboard
-            this.dashData.omzetHariIni = omzet;
-            this.dashData.labaHariIni = laba;
-            this.dashData.transaksiHariIni = trxCount;
-            this.dashData.paymentMethods = paymentMethods;
-            this.dashData.jamTeramai = maxTrx > 0 ? `${peakHour}` : 'Belum Ada';
-            this.dashData.rataRataTransaksi = trxCount > 0 ? (omzet / trxCount) : 0;
+            // 2. OLAH DATA 7 HARI TERAKHIR (Untuk Grafik Garis)
+            let dayIndex = last7DaysDates.indexOf(trxDateStr);
+            if (dayIndex !== -1) {
+                last7DaysSales[dayIndex] += Number(data.total || 0);
+            }
 
-            // Ambil 5 Transaksi Terakhir secara Akurat (Anti-Crash)
-            this.dashData.recentTransactions = allTransactions
-                .sort((a, b) => {
-                    let timeA = (a.createdAt && typeof a.createdAt.toMillis === 'function') ? a.createdAt.toMillis() : (a.timestamp && typeof a.timestamp.toMillis === 'function' ? a.timestamp.toMillis() : 0);
-                    let timeB = (b.createdAt && typeof b.createdAt.toMillis === 'function') ? b.createdAt.toMillis() : (b.timestamp && typeof b.timestamp.toMillis === 'function' ? b.timestamp.toMillis() : 0);
-                    return timeB - timeA;
-                })
-                .slice(0, 5);
+            // 3. OLAH DATA PRODUK TERLARIS BULAN INI
+            if (!isBatalTotal && data.items && Array.isArray(data.items)) {
+                data.items.forEach(item => {
+                    if (item.productId !== 'EXCHANGE') {
+                        let namaBarang = item.name || 'Produk Kustom';
+                        if (!productSales[namaBarang]) productSales[namaBarang] = 0;
+                        productSales[namaBarang] += (Number(item.qty) || 0);
+                    }
+                });
+            }
+        });
 
-            // Sorting Top Products (Ambil 5 Teratas)
-            let sortedProducts = Object.keys(productSales).map(key => {
-                return { name: key, qty: productSales[key] };
-            }).sort((a, b) => b.qty - a.qty).slice(0, 5);
-            this.dashData.topProducts = sortedProducts;
-
-            // Ambil Data Hutang PO (Pembelian ke Supplier) dengan Filter Cabang Opsional
-            const qPo = query(collection(db, "purchases"), where("companyId", "==", companyId));
-            const snapPo = await getDocs(qPo);
-            let hutang = 0;
-            snapPo.forEach(doc => {
-                let data = doc.data();
-                // 🌟 Filter Cabang untuk PO jika ada properti cabang
-                if (selectedBranch && data.branch !== selectedBranch && data.branchId !== selectedBranch && data.outletName !== selectedBranch) {
-                    return;
-                }
-                if (data.paymentStatus !== 'LUNAS' && data.poStatus !== 'VOID') {
-                    hutang += (Number(data.total || 0) - Number(data.paidAmount || 0));
-                }
-            });
-            this.dashData.hutangPO = hutang;
-
-            // Ambil Peringatan Stok Menipis (Berdasarkan stok di cabang tersebut atau global)
-            const qProd = query(collection(db, "products"), where("companyId", "==", companyId));
-            const snapProd = await getDocs(qProd);
-            let lowStockCount = 0;
-            snapProd.forEach(doc => {
-                let p = doc.data();
-                if (selectedBranch && p.baseOutletStocks) {
-                    // Cek stok spesifik pada outlet/cabang yang dipilih
-                    let branchStock = Number(p.baseOutletStocks[selectedBranch] || 0);
-                    if (branchStock <= 5 && p.isSellable !== false) lowStockCount++;
-                } else {
-                    // Akumulasi global jika pilih Semua Cabang
-                    let totalBaseStock = Object.values(p.baseOutletStocks || {}).reduce((a,b) => a + Number(b), 0);
-                    if (totalBaseStock <= 5 && p.isSellable !== false) lowStockCount++;
-                }
-            });
-            this.dashData.stokMenipis = lowStockCount;
-
-            // Render Ulang Grafik
-            this.renderChart(last7DaysSales);
-            this.renderPaymentChart(paymentMethods);
-
-        } catch (e) {
-            console.error("Gagal load dashboard", e);
+        // Menghitung Jam Teramai
+        let peakHour = '-';
+        let maxTrx = 0;
+        for (let h in hourlyCount) {
+            if (hourlyCount[h] > maxTrx) {
+                maxTrx = hourlyCount[h];
+                peakHour = `${h}:00 - ${String(Number(h)+1).padStart(2,'0')}:00`;
+            }
         }
-        this.isLoadingDashboard = false;
-    },
+
+        // Menerapkan data ke State Dashboard
+        this.dashData.omzetHariIni = omzet;
+        this.dashData.labaHariIni = laba;
+        this.dashData.transaksiHariIni = trxCount;
+        this.dashData.paymentMethods = paymentMethods;
+        this.dashData.jamTeramai = maxTrx > 0 ? `${peakHour}` : 'Belum Ada';
+        this.dashData.rataRataTransaksi = trxCount > 0 ? (omzet / trxCount) : 0;
+
+        // Ambil 5 Transaksi Terakhir secara Akurat (Anti-Crash)
+        this.dashData.recentTransactions = allTransactions
+            .sort((a, b) => {
+                let timeA = (a.createdAt && typeof a.createdAt.toMillis === 'function') ? a.createdAt.toMillis() : (a.timestamp && typeof a.timestamp.toMillis === 'function' ? a.timestamp.toMillis() : 0);
+                let timeB = (b.createdAt && typeof b.createdAt.toMillis === 'function') ? b.createdAt.toMillis() : (b.timestamp && typeof b.timestamp.toMillis === 'function' ? b.timestamp.toMillis() : 0);
+                return timeB - timeA;
+            })
+            .slice(0, 5);
+
+        // Sorting Top Products (Ambil 5 Teratas)
+        let sortedProducts = Object.keys(productSales).map(key => {
+            return { name: key, qty: productSales[key] };
+        }).sort((a, b) => b.qty - a.qty).slice(0, 5);
+        this.dashData.topProducts = sortedProducts;
+
+        // Ambil Data Hutang PO (Pembelian ke Supplier)
+        const qPo = query(collection(db, "purchases"), where("companyId", "==", companyId));
+        const snapPo = await getDocs(qPo);
+        let hutang = 0;
+        snapPo.forEach(doc => {
+            let data = doc.data();
+            if (selectedBranch) {
+                const poBranchId = String(data.outletId || data.branchId || data.branch || '');
+                const poBranchName = String(data.outletName || data.outlet || data.branch || '');
+                const isMatchPo = (poBranchId === String(selectedBranch)) || (selectedOutletName && poBranchName === String(selectedOutletName));
+                if (!isMatchPo) return;
+            }
+            if (data.paymentStatus !== 'LUNAS' && data.poStatus !== 'VOID') {
+                hutang += (Number(data.total || 0) - Number(data.paidAmount || 0));
+            }
+        });
+        this.dashData.hutangPO = hutang;
+
+        // Ambil Peringatan Stok Menipis
+        const qProd = query(collection(db, "products"), where("companyId", "==", companyId));
+        const snapProd = await getDocs(qProd);
+        let lowStockCount = 0;
+        snapProd.forEach(doc => {
+            let p = doc.data();
+            if (selectedBranch && p.baseOutletStocks) {
+                // Cek berdasarkan ID maupun Nama Outlet
+                let branchStock = Number(p.baseOutletStocks[selectedBranch] || p.baseOutletStocks[selectedOutletName] || 0);
+                if (branchStock <= 5 && p.isSellable !== false) lowStockCount++;
+            } else {
+                let totalBaseStock = Object.values(p.baseOutletStocks || {}).reduce((a,b) => a + Number(b), 0);
+                if (totalBaseStock <= 5 && p.isSellable !== false) lowStockCount++;
+            }
+        });
+        this.dashData.stokMenipis = lowStockCount;
+
+        // Render Ulang Grafik
+        this.renderChart(last7DaysSales);
+        this.renderPaymentChart(paymentMethods);
+
+    } catch (e) {
+        console.error("Gagal load dashboard", e);
+    }
+    this.isLoadingDashboard = false;
+},
 
 // 🌟 FUNGSI BARU: Untuk menggambar Grafik Donat (Metode Pembayaran)
 renderPaymentChart(paymentData) {
