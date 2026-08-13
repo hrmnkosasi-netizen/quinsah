@@ -1001,11 +1001,10 @@ body.sidebar-open {
         <div class="d-flex gap-2 align-items-center">
             <!-- Tambahan: Dropdown Filter Cabang -->
             <select class="form-select form-select-sm shadow-sm border-0 fw-bold text-dark" v-model="dashData.selectedBranch" @change="fetchDashboardData" style="min-width: 200px; background-color: #f8f9fa;">
-                <option value="">-- Semua Cabang (Global) --</option>
-                <option value="Quinsah Seni Budaya">Quinsah Seni Budaya</option>
-                <option value="Quinsah Tanah Abang">Quinsah Tanah Abang</option>
-                <option value="Quinsah Teluk Gong 2">Quinsah Teluk Gong 2</option>
-            </select>
+    <option value="">-- Semua Cabang (Global) --</option>
+    <!-- Mengambil langsung dari master outlets agar ID dan Namanya sinkron 100% -->
+    <option v-for="ot in outlets" :key="ot.id" :value="ot.name">{{ ot.name }}</option>
+</select>
             
             <!-- Tombol Refresh (w-100 dihapus agar rapi berdampingan) -->
             <button class="btn btn-sm btn-outline-danger shadow-sm text-nowrap" @click="fetchDashboardData" :disabled="isLoadingDashboard">
