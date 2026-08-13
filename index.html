@@ -993,13 +993,22 @@ body.sidebar-open {
 </div>
             
             <div v-show="currentView === 'dashboard'" class="dashboard-card p-3 p-md-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom gap-3">
         <div>
             <h5 class="fw-bold mb-0">Ringkasan Bisnis</h5>
             <div class="text-muted small mt-1">Pantau performa toko Anda secara real-time.</div>
         </div>
-        <div>
-            <button class="btn btn-sm btn-outline-danger w-100 shadow-sm text-nowrap" @click="fetchDashboardData" :disabled="isLoadingDashboard">
+        <div class="d-flex gap-2 align-items-center">
+            <!-- Tambahan: Dropdown Filter Cabang -->
+            <select class="form-select form-select-sm shadow-sm border-0 fw-bold text-dark" v-model="dashData.selectedBranch" @change="fetchDashboardData" style="min-width: 200px; background-color: #f8f9fa;">
+                <option value="">-- Semua Cabang (Global) --</option>
+                <option value="Quinsah Seni Budaya">Quinsah Seni Budaya</option>
+                <option value="Quinsah Tanah Abang">Quinsah Tanah Abang</option>
+                <option value="Quinsah Teluk Gong 2">Quinsah Teluk Gong 2</option>
+            </select>
+            
+            <!-- Tombol Refresh (w-100 dihapus agar rapi berdampingan) -->
+            <button class="btn btn-sm btn-outline-danger shadow-sm text-nowrap" @click="fetchDashboardData" :disabled="isLoadingDashboard">
                 <i class="bi bi-arrow-clockwise me-1" :class="{'spinner-border spinner-border-sm': isLoadingDashboard}"></i> Refresh
             </button>
         </div>
@@ -10140,6 +10149,7 @@ body.sidebar-open {
                 // STATE KHUSUS DASHBOARD
                 isLoadingDashboard: false,
                 dashData: {
+                    selectedBranch: ""
                     omzetHariIni: 0,
                     labaHariIni: 0, 
                     transaksiHariIni: 0,
