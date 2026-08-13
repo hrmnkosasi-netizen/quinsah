@@ -15189,6 +15189,7 @@ updateDynamicManifest(namaToko, logoUrl) {
         try {
             const companyId = this.userProfile.companyId;
             const todayStr = new Date().toLocaleDateString('id-ID'); // Format: DD/MM/YYYY
+            const selectedBranch = this.dashData.selectedBranch; // 🌟 Ambil state filter cabang yang dipilih
 
             const qTrx = query(collection(db, "transactions"), where("companyId", "==", companyId));
             const snapTrx = await getDocs(qTrx);
@@ -15212,6 +15213,13 @@ updateDynamicManifest(namaToko, logoUrl) {
             snapTrx.forEach(doc => {
                 let data = doc.data();
                 data.id = doc.id;
+                
+                // 🌟 Filter Cabang untuk Transaksi (Mendukung pencocokan nama cabang atau branchId)
+                if (selectedBranch) {
+                    let matchBranch = (data.branch === selectedBranch || data.branchId === selectedBranch || data.outletName === selectedBranch);
+                    if (!matchBranch) return; // Lewati jika tidak sesuai cabang
+                }
+
                 allTransactions.push(data); 
                 
                 let trxDateStr = data.dateStr ? data.dateStr.split(',')[0] : (data.date || '').split(',')[0];
@@ -15222,7 +15230,7 @@ updateDynamicManifest(namaToko, logoUrl) {
                     omzet += Number(data.total || 0);
                     trxCount++;
 
-                    // 🌟 PERBAIKAN: Pecah Pembayaran Split untuk Grafik Donat
+                    // Pecah Pembayaran Split untuk Grafik Donat
                     let details = data.splitPayments || (data.paymentData ? data.paymentData.splitPayments : null) || data.splits;
                     if (typeof details === 'string' && (details.startsWith('{') || details.startsWith('['))) {
                         try { details = JSON.parse(details); } catch(e) {}
@@ -15240,7 +15248,7 @@ updateDynamicManifest(namaToko, logoUrl) {
                         paymentMethods[payMethod] += Number(data.total || 0);
                     }
 
-                    // 🌟 PERBAIKAN: Hitung HPP Aman (Cegah Laba Minus karena Retur)
+                    // Hitung HPP Aman (Cegah Laba Minus karena Retur)
                     let totalHpp = 0;
                     if (!isBatalTotal && data.items && Array.isArray(data.items)) {
                         data.items.forEach(item => {
@@ -15274,7 +15282,6 @@ updateDynamicManifest(namaToko, logoUrl) {
                 // 3. OLAH DATA PRODUK TERLARIS BULAN INI
                 if (!isBatalTotal && data.items && Array.isArray(data.items)) {
                     data.items.forEach(item => {
-                        // Abaikan barang bayangan Tukar Tambah
                         if (item.productId !== 'EXCHANGE') {
                             let namaBarang = item.name || 'Produk Kustom';
                             if (!productSales[namaBarang]) productSales[namaBarang] = 0;
@@ -15302,7 +15309,7 @@ updateDynamicManifest(namaToko, logoUrl) {
             this.dashData.jamTeramai = maxTrx > 0 ? `${peakHour}` : 'Belum Ada';
             this.dashData.rataRataTransaksi = trxCount > 0 ? (omzet / trxCount) : 0;
 
-            // 🌟 PERBAIKAN: Ambil 5 Transaksi Terakhir secara Akurat (Anti-Crash)
+            // Ambil 5 Transaksi Terakhir secara Akurat (Anti-Crash)
             this.dashData.recentTransactions = allTransactions
                 .sort((a, b) => {
                     let timeA = (a.createdAt && typeof a.createdAt.toMillis === 'function') ? a.createdAt.toMillis() : (a.timestamp && typeof a.timestamp.toMillis === 'function' ? a.timestamp.toMillis() : 0);
@@ -15317,26 +15324,37 @@ updateDynamicManifest(namaToko, logoUrl) {
             }).sort((a, b) => b.qty - a.qty).slice(0, 5);
             this.dashData.topProducts = sortedProducts;
 
-            // Ambil Data Hutang PO (Pembelian ke Supplier)
+            // Ambil Data Hutang PO (Pembelian ke Supplier) dengan Filter Cabang Opsional
             const qPo = query(collection(db, "purchases"), where("companyId", "==", companyId));
             const snapPo = await getDocs(qPo);
             let hutang = 0;
             snapPo.forEach(doc => {
                 let data = doc.data();
+                // 🌟 Filter Cabang untuk PO jika ada properti cabang
+                if (selectedBranch && data.branch !== selectedBranch && data.branchId !== selectedBranch && data.outletName !== selectedBranch) {
+                    return;
+                }
                 if (data.paymentStatus !== 'LUNAS' && data.poStatus !== 'VOID') {
                     hutang += (Number(data.total || 0) - Number(data.paidAmount || 0));
                 }
             });
             this.dashData.hutangPO = hutang;
 
-            // Ambil Peringatan Stok Menipis (Di bawah 5 Pcs)
+            // Ambil Peringatan Stok Menipis (Berdasarkan stok di cabang tersebut atau global)
             const qProd = query(collection(db, "products"), where("companyId", "==", companyId));
             const snapProd = await getDocs(qProd);
             let lowStockCount = 0;
             snapProd.forEach(doc => {
                 let p = doc.data();
-                let totalBaseStock = Object.values(p.baseOutletStocks || {}).reduce((a,b) => a + Number(b), 0);
-                if (totalBaseStock <= 5 && p.isSellable !== false) lowStockCount++;
+                if (selectedBranch && p.baseOutletStocks) {
+                    // Cek stok spesifik pada outlet/cabang yang dipilih
+                    let branchStock = Number(p.baseOutletStocks[selectedBranch] || 0);
+                    if (branchStock <= 5 && p.isSellable !== false) lowStockCount++;
+                } else {
+                    // Akumulasi global jika pilih Semua Cabang
+                    let totalBaseStock = Object.values(p.baseOutletStocks || {}).reduce((a,b) => a + Number(b), 0);
+                    if (totalBaseStock <= 5 && p.isSellable !== false) lowStockCount++;
+                }
             });
             this.dashData.stokMenipis = lowStockCount;
 
