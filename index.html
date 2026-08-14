@@ -8127,59 +8127,82 @@ body.sidebar-open {
                 <div class="row g-3">
                     <div class="col-12"><h6 class="fw-bold text-dark mb-1 border-bottom pb-2"><i class="bi bi-info-circle me-2"></i>1. Informasi Dasar Produk</h6></div>
                     
+                    <!-- FOTO PRODUK MULTIPLE (MAX 8) -->
+                    <div class="col-12 mb-2">
+                        <label class="form-label small fw-bold d-flex justify-content-between">
+                            <span>Foto Produk (Maks. 8 Foto) <span class="text-danger">*</span></span>
+                            <span class="text-muted">{{ formProduct.images ? formProduct.images.length : 0 }} / 8</span>
+                        </label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <!-- Preview Image List -->
+                            <div v-if="formProduct.images && formProduct.images.length > 0" v-for="(img, idx) in formProduct.images" :key="idx" class="position-relative" style="width: 80px; height: 80px;">
+                                <img :src="img.base64 || img.url" class="w-100 h-100 rounded border object-fit-cover shadow-sm">
+                                <span v-if="idx === 0" class="position-absolute bottom-0 start-0 w-100 bg-primary text-white text-center rounded-bottom" style="font-size: 0.55rem; padding: 2px 0;">Sampul</span>
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center shadow" style="width: 22px; height: 22px; transform: translate(30%, -30%); border-radius: 50%;" @click="formProduct.images.splice(idx, 1)" title="Hapus Foto">
+                                    <i class="bi bi-x" style="font-size: 14px;"></i>
+                                </button>
+                            </div>
+
+                            <!-- Upload Button (Hidden if >= 8 images) -->
+                            <label v-if="!formProduct.images || formProduct.images.length < 8" class="border rounded d-flex flex-column align-items-center justify-content-center text-primary cursor-pointer bg-light shadow-sm" style="width: 80px; height: 80px; border-style: dashed !important; border-width: 2px !important; cursor: pointer;">
+                                <i class="bi bi-camera fs-4"></i>
+                                <span class="fw-bold mt-1" style="font-size: 0.6rem;">Tambah</span>
+                                <!-- Input file multiple -->
+                                <input type="file" class="d-none" multiple accept="image/*" @change="handleMultiImageUpload($event, formProduct)">
+                            </label>
+                        </div>
+                        <small class="text-muted mt-1 d-block" style="font-size: 0.7rem;">Format JPG, PNG. Rekomendasi rasio 1:1. Foto pertama akan menjadi foto utama.</small>
+                    </div>
+
                     <div class="col-md-3">
                         <label class="form-label small fw-bold">SKU Induk (Barcode)</label>
                         <input type="text" class="form-control form-control-sm mb-2" v-model="formProduct.sku" placeholder="Cth: QNS-SHIRT-01">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label class="form-label small fw-bold">Nama Produk</label>
                         <input type="text" class="form-control form-control-sm mb-2" v-model="formProduct.name" placeholder="Cth: Kemeja Flanel Kotak Premium">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">Kategori Produk</label>
-                        <div class="input-group input-group-sm mb-2">
-                            <select class="form-select fw-semibold" v-model="formProduct.categoryId">
-                                <option value="">-- Pilih Kategori --</option>
-                                <option v-for="cat in structuredCategories" :value="cat.id">{{ getCategoryLabel(cat) }}</option>
-                            </select>
-                            <button class="btn btn-outline-primary-custom" type="button" title="Buat Master Kategori Baru" @click="openModal('addCategoryModal')"><i class="bi bi-plus-lg"></i></button>
-                        </div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small fw-bold">Satuan (UOM)</label>
                         <div class="input-group input-group-sm mb-2">
                             <select class="form-select fw-semibold" v-model="formProduct.uom">
-                                <option value="Pcs">Pcs (Default)</option>
+                                <option value="Pcs">Pcs</option>
                                 <option v-for="u in uoms" :value="u.name">{{ u.name }}</option>
                             </select>
                             <button class="btn btn-outline-primary-custom" type="button" title="Buat Master UOM Baru" @click="openModal('addUomModal')"><i class="bi bi-plus-lg"></i></button>
                         </div>
                     </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold">Foto Produk (Utama)</label>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <input type="file" class="form-control form-control-sm" accept="image/*" @change="handleImageUpload($event, formProduct)">
-                            <img v-if="formProduct.imageBase64" :src="formProduct.imageBase64" width="70" height="70" class="rounded border object-fit-cover shadow-sm ms-2">
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Kategori Produk</label>
+                        <div class="input-group input-group-sm mb-2">
+                            <select class="form-select fw-semibold" v-model="formProduct.categoryId">
+                                <option value="">-- Pilih --</option>
+                                <option v-for="cat in structuredCategories" :value="cat.id">{{ getCategoryLabel(cat) }}</option>
+                            </select>
+                            <button class="btn btn-outline-primary-custom" type="button" title="Buat Kategori" @click="openModal('addCategoryModal')"><i class="bi bi-plus-lg"></i></button>
                         </div>
                     </div>
+
+                    <!-- DESKRIPSI PRODUK (BARU) -->
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Deskripsi Lengkap Produk</label>
+                        <textarea class="form-control form-control-sm" v-model="formProduct.description" rows="4" placeholder="Tuliskan keunggulan produk, spesifikasi bahan, panduan ukuran, atau catatan pengiriman di sini..."></textarea>
+                    </div>
                     
-                    <div class="col-md-4">
+                    <div class="col-md-4 mt-3">
                         <label class="form-label small fw-bold">HPP (Modal Dasar / Rp)</label>
                         <input type="number" class="form-control form-control-sm mb-2" v-model.number="formProduct.hppPrice" placeholder="Harga modal...">
                     </div>
-                    
-                    <div class="col-md-4">
+                    <div class="col-md-4 mt-3">
                         <label class="form-label small fw-bold text-success">Harga Jual Normal (Rp)</label>
                         <input type="number" class="form-control form-control-sm fw-bold border-success text-success mb-2" v-model.number="formProduct.sellPrice" placeholder="Harga jual ke pelanggan...">
                     </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">Tampil di Kasir (POS)</label>
+                    <div class="col-md-4 mt-3">
+                        <label class="form-label small fw-bold">Tampil di Kasir (POS) & Katalog</label>
                         <div class="form-check form-switch mt-2">
-                            <input class="form-check-input" type="checkbox" v-model="formProduct.isSellable" id="isSellable">
-                            <label class="form-check-label small" for="isSellable">
-                                {{ formProduct.isSellable ? 'Aktif (Muncul di POS)' : 'Disembunyikan' }}
+                            <input class="form-check-input cursor-pointer" type="checkbox" v-model="formProduct.isSellable" id="isSellable">
+                            <label class="form-check-label small fw-semibold cursor-pointer" for="isSellable" :class="formProduct.isSellable ? 'text-primary' : 'text-muted'">
+                                {{ formProduct.isSellable ? 'Aktif (Ditampilkan)' : 'Disembunyikan' }}
                             </label>
                         </div>
                     </div>
@@ -8247,7 +8270,7 @@ body.sidebar-open {
                         <div class="row g-2">
                             <div class="col-md-3 col-sm-4 col-6" v-for="out in outlets" :key="out.id">
                                 <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-white w-50 text-truncate small fw-semibold" style="font-size:0.75rem;">{{ out.name }}</span>
+                                    <span class="input-group-text bg-white w-50 text-truncate small fw-semibold" style="font-size:0.75rem;" :title="out.name">{{ out.name }}</span>
                                     <input type="number" class="form-control text-center fw-bold text-primary-custom" v-model.number="formProduct.baseOutletStocks[out.id]" placeholder="0">
                                 </div>
                             </div>
@@ -8255,7 +8278,7 @@ body.sidebar-open {
                     </div>
 
                     <div class="col-12 mt-4">
-                        <h6 class="fw-bold text-dark mb-2 border-bottom pb-2"><i class="bi bi-diagram-3 me-2"></i>3. Matriks Generate Varian (Opsional) & Tabel Varian Final</h6>
+                        <h6 class="fw-bold text-dark mb-2 border-bottom pb-2"><i class="bi bi-diagram-3 me-2"></i>4. Matriks Varian (Warna, Ukuran) & Tabel SKU</h6>
                         
                         <div class="row g-2 mb-3">
                             <div class="col-md-4" v-for="(vAttr, idx) in formProduct.dynamicVariantsData" :key="idx">
@@ -8287,12 +8310,12 @@ body.sidebar-open {
                         </div>
 
                         <div class="table-responsive mt-3" v-if="formProduct.variants.length > 0">
-                        <p class="fw-bold small text-primary-custom mb-1"><i class="bi bi-table me-1"></i> Tabel SKU Varian Final (Geser ke samping untuk melihat & edit)</p>
+                        <p class="fw-bold small text-primary-custom mb-1"><i class="bi bi-table me-1"></i> Tabel SKU Varian Final (Geser ke samping untuk edit Stok/Harga)</p>
                         <table class="table table-sm table-bordered align-middle text-nowrap" style="font-size: 0.75rem; min-width: 800px;">
                             <thead class="table-light text-center">
                                 <tr>
                                     <th>Nama Varian</th>
-                                    <th>Foto Spesifik</th>
+                                    <th>Foto Varian (1)</th>
                                     <th>SKU Varian</th>
                                     <th>HPP (Modal)</th>
                                     <th>Harga Jual Normal</th>
@@ -8307,9 +8330,16 @@ body.sidebar-open {
                                 <tr v-for="(v, index) in formProduct.variants" :key="index">
                                     <td><input type="text" class="form-control form-control-sm px-2 fw-bold text-primary-custom" v-model="v.name" placeholder="Nama Varian" style="min-width: 120px;"></td>
                                     <td>
-                                        <div class="d-flex flex-column align-items-center gap-1" style="min-width: 90px;">
-                                            <input type="file" class="form-control form-control-sm px-1" accept="image/*" @change="handleImageUpload($event, v, true)" style="max-width: 100%; font-size:0.65rem;">
-                                            <img v-if="v.imageBase64" :src="v.imageBase64" width="60" height="60" class="rounded border object-fit-cover shadow-sm">
+                                        <!-- Foto Spesifik per Varian -->
+                                        <div class="d-flex align-items-center gap-1" style="min-width: 120px;">
+                                            <label class="btn btn-sm btn-outline-secondary p-1 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; cursor:pointer;" title="Upload Foto Varian">
+                                                <i class="bi bi-camera"></i>
+                                                <input type="file" class="d-none" accept="image/*" @change="handleImageUpload($event, v, true)">
+                                            </label>
+                                            <div class="position-relative" v-if="v.imageBase64 || v.imageUrl">
+                                                <img :src="v.imageBase64 || v.imageUrl" width="35" height="35" class="rounded border object-fit-cover shadow-sm">
+                                                <button class="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle p-0 rounded-circle shadow" style="width: 16px; height: 16px; font-size: 10px;" @click="v.imageBase64 = null; v.imageUrl = null"><i class="bi bi-x"></i></button>
+                                            </div>
                                         </div>
                                     </td>
                                     <td><input type="text" class="form-control form-control-sm px-2 text-center font-monospace fw-semibold" v-model="v.variantSku" style="min-width: 120px;"></td>
@@ -8328,23 +8358,23 @@ body.sidebar-open {
                                     <td v-for="out in outlets" :key="out.id">
                                         <input type="number" class="form-control form-control-sm text-center px-2 text-primary-custom fw-bold" v-model.number="v.outletStocks[out.id]" placeholder="0" style="min-width: 70px;">
                                     </td>
-                                    <td class="text-center"><button class="btn btn-sm text-danger p-0" @click="formProduct.variants.splice(index, 1)"><i class="bi bi-x-circle-fill fs-5"></i></button></td>
+                                    <td class="text-center"><button class="btn btn-sm text-danger p-0" @click="formProduct.variants.splice(index, 1)"><i class="bi bi-trash fs-5"></i></button></td>
                                 </tr>
                             </tbody>
                         </table>
+                        </div>
                     </div>
-                 </div>
 
                     <div class="col-12 mt-4">
                         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-ui-checks-grid me-2"></i>4. Identifier / Modifier Khusus (Opsional)</h6>
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-ui-checks-grid me-2"></i>5. Identifier / Modifier Khusus (Opsional)</h6>
                             <button class="btn btn-sm btn-outline-primary-custom fw-bold" @click="addModifierGroupToProduct()">
                                 <i class="bi bi-plus-lg me-1"></i> Tambah Modifier
                             </button>
                         </div>
 
                         <div v-if="!formProduct.modifiers || formProduct.modifiers.length === 0" class="text-muted small text-center bg-light p-3 rounded border" style="border-style: dashed !important;">
-                            Belum ada Modifier.<br>Klik "Tambah Modifier" jika produk ini punya pilihan seperti Topping, Level Pedas, Level Es, dll.
+                            Belum ada Modifier.<br>Klik "Tambah Modifier" jika produk ini punya pilihan seperti Ekstra Topping, Level Pedas, Level Es, dll.
                         </div>
 
                         <div v-else class="row g-3">
@@ -8370,7 +8400,7 @@ body.sidebar-open {
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center mb-2 border-top pt-2">
-                                        <span class="small fw-bold">Daftar Opsi & Harga</span>
+                                        <span class="small fw-bold">Daftar Opsi & Harga Tambahan</span>
                                         <button class="btn btn-sm btn-primary-custom py-0" style="font-size: 0.7rem;" @click="mod.options.push({name: '', price: 0, linkedProductId: ''})"><i class="bi bi-plus"></i> Opsi Baru</button>
                                     </div>
 
@@ -8395,15 +8425,17 @@ body.sidebar-open {
                                             </div>
                                         </div>
                                     </div>
-                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    </div>
+                </div>
             </div>
             
             <div class="modal-footer bg-light border-top p-3">
-                <button class="btn btn-primary-custom w-100 fw-bold py-2 fs-6 shadow" @click="saveData('products', formProduct, 'addProductModal')" :disabled="isSaving"><span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span>SINKRONISASI DATA KE SERVER</button>
+                <button class="btn btn-primary-custom w-100 fw-bold py-2 fs-6 shadow" @click="saveData('products', formProduct, 'addProductModal')" :disabled="isSaving">
+                    <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span>SINKRONISASI DATA KE SERVER
+                </button>
             </div>
             
         </div>
@@ -12446,6 +12478,51 @@ financeAPList() {
             // Memaksa input URL menjadi huruf kecil dan tanpa spasi/simbol
             this.authUser.urlToko = this.authUser.urlToko.toLowerCase().replace(/[^a-z0-9]/g, '');
         },
+
+    // Script untuk mengubah beberapa file gambar sekaligus menjadi Base64
+async handleMultiImageUpload(event, formObj) {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+
+    // Pastikan variabel penampung berupa array
+    if (!formObj.images) formObj.images = [];
+
+    // Validasi batas maksimal 8 gambar
+    const remainingSlots = 8 - formObj.images.length;
+    if (remainingSlots <= 0) {
+        alert('Maksimal foto yang diizinkan hanya 8 foto.');
+        return;
+    }
+
+    // Hanya proses gambar sesuai slot yang tersisa
+    const filesToProcess = files.slice(0, remainingSlots);
+
+    for (let file of filesToProcess) {
+        try {
+            const base64 = await this.convertFileToBase64(file);
+            formObj.images.push({
+                base64: base64,
+                url: null, // Bisa dipakai jika nanti di-upload ke Storage terpisah (S3/Firebase Storage)
+                file: file // Opsional, simpan raw file jika dibutuhkan
+            });
+        } catch (error) {
+            console.error("Gagal membaca file gambar:", error);
+        }
+    }
+    
+    // Reset input agar bisa upload file yang sama jika dihapus
+    event.target.value = ''; 
+},
+
+// Fungsi utilitas pembantu (jika belum ada)
+convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+},
 
     async function uploadToCloudflareR2(file, tenantId) {
     // tenantId bisa diambil dari subdomain (misal: 'yarch') atau dari data login user
