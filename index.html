@@ -12479,50 +12479,66 @@ financeAPList() {
             this.authUser.urlToko = this.authUser.urlToko.toLowerCase().replace(/[^a-z0-9]/g, '');
         },
 
-    // Script untuk mengubah beberapa file gambar sekaligus menjadi Base64
-async handleMultiImageUpload(event, formObj) {
-    const files = Array.from(event.target.files);
-    if (!files.length) return;
+    async uploadToCloudflareR2(file, tenantId) {
+        const filename = encodeURIComponent(file.name);
+        // Pastikan URL worker ini sesuai dengan milik Anda di Cloudflare
+        const workerUrl = `https://queenpos-upload-worker.hrmnkosasi.workers.dev?companyId=${tenantId}&filename=${filename}`;
 
-    // Pastikan variabel penampung berupa array
-    if (!formObj.images) formObj.images = [];
+        const response = await fetch(workerUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": file.type || "image/jpeg"
+            },
+            body: file // Mengirim file fisik secara aman
+        });
 
-    // Validasi batas maksimal 8 gambar
-    const remainingSlots = 8 - formObj.images.length;
-    if (remainingSlots <= 0) {
-        alert('Maksimal foto yang diizinkan hanya 8 foto.');
-        return;
-    }
-
-    // Hanya proses gambar sesuai slot yang tersisa
-    const filesToProcess = files.slice(0, remainingSlots);
-
-    for (let file of filesToProcess) {
-        try {
-            const base64 = await this.convertFileToBase64(file);
-            formObj.images.push({
-                base64: base64,
-                url: null, // Bisa dipakai jika nanti di-upload ke Storage terpisah (S3/Firebase Storage)
-                file: file // Opsional, simpan raw file jika dibutuhkan
-            });
-        } catch (error) {
-            console.error("Gagal membaca file gambar:", error);
+        const result = await response.json();
+        if (result.success) {
+            return result.url; // Mengembalikan Link URL bersih dari R2
+        } else {
+            throw new Error(result.error || "Gagal upload ke R2");
         }
-    }
-    
-    // Reset input agar bisa upload file yang sama jika dihapus
-    event.target.value = ''; 
-},
+    },
 
-// Fungsi utilitas pembantu (jika belum ada)
-convertFileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-},
+    // 2. Fungsi utama yang dipicu saat user memilih file foto (bisa banyak sekaligus)
+    async handleMultiImageUpload(event, formObj) {
+        const files = Array.from(event.target.files);
+        if (!files.length) return;
+
+        if (!formObj.images) formObj.images = [];
+
+        // Batasi maksimal 8 foto
+        const remainingSlots = 8 - formObj.images.length;
+        if (remainingSlots <= 0) {
+            alert('Maksimal foto yang diizinkan adalah 8 foto.');
+            event.target.value = '';
+            return;
+        }
+
+        const filesToProcess = files.slice(0, remainingSlots);
+
+        for (let file of filesToProcess) {
+            try {
+                // Ambil ID tenant aktif (misal: 'yarch' atau dari state aplikasi)
+                const tenantId = this.companyId || 'umum';
+                
+                // Panggil fungsi helper upload di atas
+                const fileUrl = await this.uploadToCloudflareR2(file, tenantId);
+                
+                // Simpan HANYA objek yang berisi URL bersih ke dalam array images
+                formObj.images.push({
+                    url: fileUrl
+                });
+
+            } catch (error) {
+                console.error("Gagal mengupload file:", error);
+                alert("Gagal mengupload gambar: " + error.message);
+            }
+        }
+        
+        // Reset input file agar elemen bisa mendeteksi perubahan jika file yang sama dipilih lagi
+        event.target.value = '';
+    },
 
     
     async lupaPassword() {
