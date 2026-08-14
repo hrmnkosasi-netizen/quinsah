@@ -9150,18 +9150,26 @@ body.sidebar-open {
         <td style="text-align: right; padding-top:2px; font-size:0.9em;">{{ formatNumber(split.cashReceived || split.amount) }}</td>
     </tr>
     
+    <!-- 🌟 PERBAIKAN: Hitung Total Dibayar (Kecuali metode HUTANG) -->
     <tr>
         <td style="padding-top:3px; font-weight:bold;">TOTAL DIBAYAR</td>
-        <td style="text-align: right; padding-top:3px; font-weight:bold;">{{ formatNumber(activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}</td>
+        <td style="text-align: right; padding-top:3px; font-weight:bold;">
+            {{ formatNumber(activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}
+        </td>
     </tr>
 
-    <tr v-if="activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) > activePrintData.total">
+    <!-- 🌟 PERBAIKAN: Hitung Sisa Hutang atau Kembalian Berdasarkan Total Dibayar Riel -->
+    <tr v-if="activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) > activePrintData.total">
         <td style="padding-top:2px; font-weight:bold; color:green;">KEMBALI</td>
-        <td style="text-align: right; padding-top:2px; font-weight:bold; color:green;">{{ formatNumber(activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) - activePrintData.total) }}</td>
+        <td style="text-align: right; padding-top:2px; font-weight:bold; color:green;">
+            {{ formatNumber(activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) - activePrintData.total) }}
+        </td>
     </tr>
-    <tr v-else-if="(activePrintData.total - activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) > 0">
+    <tr v-else-if="(activePrintData.total - activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) > 0">
         <td style="padding-top:2px; font-weight:bold; color:red;">SISA HUTANG</td>
-        <td style="text-align: right; padding-top:2px; font-weight:bold; color:red;">{{ formatNumber(activePrintData.total - activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}</td>
+        <td style="text-align: right; padding-top:2px; font-weight:bold; color:red;">
+            {{ formatNumber(activePrintData.total - activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}
+        </td>
     </tr>
     <tr v-else>
         <td style="padding-top:2px; font-weight:bold; color:green;">STATUS</td>
@@ -9177,10 +9185,26 @@ body.sidebar-open {
                             <td style="text-align: right; font-size:0.85em; color:#555; padding-top:2px; font-weight:500;">{{ activePrintData.paymentNote }}</td>
                         </tr>
                         
-                        <tr><td style="padding-top:2px; text-transform:uppercase;">TOTAL DIBAYAR</td><td style="text-align: right; padding-top:2px;">{{ formatNumber(activePrintData.amountReceived) }}</td></tr>
+                        <!-- 🌟 PERBAIKAN: Jika non-split metode HUTANG, pastikan DIBAYAR = 0 -->
+                        <tr>
+                            <td style="padding-top:2px; text-transform:uppercase;">TOTAL DIBAYAR</td>
+                            <td style="text-align: right; padding-top:2px;">
+                                {{ formatNumber(String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived) }}
+                            </td>
+                        </tr>
                         
-                        <tr v-if="activePrintData.amountReceived >= activePrintData.total"><td style="font-weight:bold;">KEMBALI</td><td style="text-align: right; font-weight:bold;">{{ formatNumber(activePrintData.amountReceived - activePrintData.total) }}</td></tr>
-                        <tr v-else><td style="font-weight:bold; color:red;">SISA HUTANG</td><td style="text-align: right; font-weight:bold; color:red;">{{ formatNumber(activePrintData.total - activePrintData.amountReceived) }}</td></tr>
+                        <tr v-if="(String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived) > activePrintData.total">
+                            <td style="font-weight:bold;">KEMBALI</td>
+                            <td style="text-align: right; font-weight:bold;">{{ formatNumber((String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived) - activePrintData.total) }}</td>
+                        </tr>
+                        <tr v-else-if="(activePrintData.total - (String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived)) > 0">
+                            <td style="font-weight:bold; color:red;">SISA HUTANG</td>
+                            <td style="text-align: right; font-weight:bold; color:red;">{{ formatNumber(activePrintData.total - (String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived)) }}</td>
+                        </tr>
+                        <tr v-else>
+                            <td style="font-weight:bold; color:green;">STATUS</td>
+                            <td style="text-align: right; font-weight:bold; color:green;">LUNAS</td>
+                        </tr>
                     </template>
                 </table>
             </div>
@@ -9391,32 +9415,35 @@ body.sidebar-open {
     </tr>
     <tr v-for="(split, idx) in activePrintData.splitPayments" :key="idx">
         <td style="padding-top:2px; font-size:0.9em; padding-left: 5px;">- {{ split.method }}</td>
-        <!-- Ubah split.amount jadi split.cashReceived || split.amount -->
         <td style="text-align: right; padding-top:2px; font-size:0.9em;">{{ formatNumber(split.cashReceived || split.amount) }}</td>
     </tr>
     
-    <!-- Total Keseluruhan yang Diterima -->
+    <!-- 🌟 PERBAIKAN: Hitung Total Dibayar (Kecuali metode HUTANG) -->
     <tr>
         <td style="padding-top:3px; font-weight:bold;">TOTAL DIBAYAR</td>
-        <td style="text-align: right; padding-top:3px; font-weight:bold;">{{ formatNumber(activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}</td>
+        <td style="text-align: right; padding-top:3px; font-weight:bold;">
+            {{ formatNumber(activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}
+        </td>
     </tr>
 
-    <!-- Kembalian jika Split melebihi Total -->
-    <tr v-if="activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) > activePrintData.total">
+    <!-- 🌟 PERBAIKAN: Hitung Sisa Hutang atau Kembalian Berdasarkan Total Dibayar Riel -->
+    <tr v-if="activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) > activePrintData.total">
         <td style="padding-top:2px; font-weight:bold; color:green;">KEMBALI</td>
-        <td style="text-align: right; padding-top:2px; font-weight:bold; color:green;">{{ formatNumber(activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) - activePrintData.total) }}</td>
+        <td style="text-align: right; padding-top:2px; font-weight:bold; color:green;">
+            {{ formatNumber(activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) - activePrintData.total) }}
+        </td>
     </tr>
-    <!-- Sisa Hutang jika kurang -->
-    <tr v-else-if="(activePrintData.total - activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) > 0">
+    <tr v-else-if="(activePrintData.total - activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) > 0">
         <td style="padding-top:2px; font-weight:bold; color:red;">SISA HUTANG</td>
-        <td style="text-align: right; padding-top:2px; font-weight:bold; color:red;">{{ formatNumber(activePrintData.total - activePrintData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}</td>
+        <td style="text-align: right; padding-top:2px; font-weight:bold; color:red;">
+            {{ formatNumber(activePrintData.total - activePrintData.splitPayments.filter(p => !String(p.method).toUpperCase().includes('HUTANG')).reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}
+        </td>
     </tr>
-    <!-- Status Lunas jika pas -->
     <tr v-else>
         <td style="padding-top:2px; font-weight:bold; color:green;">STATUS</td>
         <td style="text-align: right; padding-top:2px; font-weight:bold; color:green;">LUNAS</td>
     </tr>
-                    </template>
+</template>
                     
                     <template v-else>
                         <tr><td style="padding: 8px 10px; color: #6b7280; font-size: 12px; border-bottom: 1px dashed #e5e7eb;">Metode Pembayaran</td><td style="padding: 8px 10px; text-align: right; font-weight: bold; text-transform: uppercase; border-bottom: 1px dashed #e5e7eb;">{{ activePrintData.paymentMethod || 'CASH' }}</td></tr>
@@ -9426,10 +9453,26 @@ body.sidebar-open {
                             <td style="padding: 6px 10px; text-align: right; font-weight: 600; color: #555; border-bottom: 1px dashed #e5e7eb;">{{ activePrintData.paymentNote }}</td>
                         </tr>
                         
-                        <tr><td style="padding: 8px 10px;">TOTAL DIBAYAR</td><td style="padding: 8px 10px; text-align: right;">Rp {{ formatNumber(activePrintData.amountReceived) }}</td></tr>
+                        <!-- 🌟 PERBAIKAN: Jika non-split metode HUTANG, pastikan DIBAYAR = 0 -->
+                        <tr>
+                            <td style="padding: 8px 10px;">TOTAL DIBAYAR</td>
+                            <td style="padding: 8px 10px; text-align: right;">
+                                Rp {{ formatNumber(String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived) }}
+                            </td>
+                        </tr>
                         
-                        <tr v-if="activePrintData.amountReceived >= activePrintData.total"><td style="padding: 8px 10px; font-weight: 800; color: #991b1b;">Kembalian</td><td style="padding: 8px 10px; font-weight: 800; text-align: right; color: #991b1b;">Rp {{ formatNumber(activePrintData.amountReceived - activePrintData.total) }}</td></tr>
-                        <tr v-else><td style="padding: 8px 10px; font-weight: 800; color: #991b1b;">Sisa Hutang</td><td style="padding: 8px 10px; font-weight: 800; text-align: right; color: #991b1b;">Rp {{ formatNumber(activePrintData.total - activePrintData.amountReceived) }}</td></tr>
+                        <tr v-if="(String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived) > activePrintData.total">
+                            <td style="padding: 8px 10px; font-weight: 800; color: #991b1b;">Kembalian</td>
+                            <td style="padding: 8px 10px; font-weight: 800; text-align: right; color: #991b1b;">Rp {{ formatNumber((String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived) - activePrintData.total) }}</td>
+                        </tr>
+                        <tr v-else-if="(activePrintData.total - (String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived)) > 0">
+                            <td style="padding: 8px 10px; font-weight: 800; color: #991b1b;">SISA HUTANG</td>
+                            <td style="padding: 8px 10px; font-weight: 800; text-align: right; color: #991b1b;">Rp {{ formatNumber(activePrintData.total - (String(activePrintData.paymentMethod).toUpperCase().includes('HUTANG') ? 0 : activePrintData.amountReceived)) }}</td>
+                        </tr>
+                        <tr v-else>
+                            <td style="padding: 8px 10px; font-weight: 800; color: #10b981;">STATUS</td>
+                            <td style="padding: 8px 10px; font-weight: 800; text-align: right; color: #10b981;">LUNAS</td>
+                        </tr>
                     </template>
                 </table>
             </div>
