@@ -12447,6 +12447,29 @@ financeAPList() {
             this.authUser.urlToko = this.authUser.urlToko.toLowerCase().replace(/[^a-z0-9]/g, '');
         },
 
+    async function uploadToCloudflareR2(file, tenantId) {
+    // tenantId bisa diambil dari subdomain (misal: 'yarch') atau dari data login user
+    const filename = encodeURIComponent(file.name);
+    
+    // Ganti URL workers.dev di bawah dengan URL Worker Cloudflare milik Anda
+    const workerUrl = `https://queenpos-upload-worker.hrmnkosasi.workers.dev?companyId=${tenantId}&filename=${filename}`;
+
+    const response = await fetch(workerUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": file.type || "image/jpeg"
+        },
+        body: file // Mengirim file fisik secara langsung
+    });
+
+    const result = await response.json();
+    if (result.success) {
+        return result.url; // Contoh hasil: https://pub-xyz.r2.dev/yarch/produk/1723712_baju.jpg
+    } else {
+        throw new Error(result.error);
+    }
+},
+    
     async lupaPassword() {
     // 1. Munculkan popup untuk meminta alamat email
     const { value: emailTarget } = await Swal.fire({
