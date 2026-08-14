@@ -12502,43 +12502,54 @@ financeAPList() {
 
     // 2. Fungsi utama yang dipicu saat user memilih file foto (bisa banyak sekaligus)
     async handleMultiImageUpload(event, formObj) {
-        const files = Array.from(event.target.files);
-        if (!files.length) return;
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
 
-        if (!formObj.images) formObj.images = [];
+    if (!formObj.images) formObj.images = [];
 
-        // Batasi maksimal 8 foto
-        const remainingSlots = 8 - formObj.images.length;
-        if (remainingSlots <= 0) {
-            alert('Maksimal foto yang diizinkan adalah 8 foto.');
-            event.target.value = '';
-            return;
-        }
-
-        const filesToProcess = files.slice(0, remainingSlots);
-
-        for (let file of filesToProcess) {
-            try {
-                // Ambil ID tenant aktif (misal: 'yarch' atau dari state aplikasi)
-                const tenantId = this.companyId || 'umum';
-                
-                // Panggil fungsi helper upload di atas
-                const fileUrl = await this.uploadToCloudflareR2(file, tenantId);
-                
-                // Simpan HANYA objek yang berisi URL bersih ke dalam array images
-                formObj.images.push({
-                    url: fileUrl
-                });
-
-            } catch (error) {
-                console.error("Gagal mengupload file:", error);
-                alert("Gagal mengupload gambar: " + error.message);
-            }
-        }
-        
-        // Reset input file agar elemen bisa mendeteksi perubahan jika file yang sama dipilih lagi
+    const remainingSlots = 8 - formObj.images.length;
+    if (remainingSlots <= 0) {
+        alert('Maksimal foto yang diizinkan adalah 8 foto.');
         event.target.value = '';
-    },
+        return;
+    }
+
+    const filesToProcess = files.slice(0, remainingSlots);
+
+    for (let file of filesToProcess) {
+        try {
+            // Otomatis deteksi tenant dari subdomain (contoh: yarch.queenpos.id -> 'yarch')
+            const hostname = window.location.hostname;
+            const tenantId = hostname.includes('queenpos.id') ? hostname.split('.')[0] : (this.companyId || 'umum');
+            
+            const filename = encodeURIComponent(file.name);
+            const workerUrl = `https://queenpos-upload-worker.hrmnkosasi.workers.dev?companyId=${tenantId}&filename=${filename}`;
+
+            const response = await fetch(workerUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": file.type || "image/jpeg"
+                },
+                body: file
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                formObj.images.push({
+                    url: result.url
+                });
+            } else {
+                console.error("Gagal mengupload ke R2:", result.error);
+                alert("Gagal mengupload gambar: " + result.error);
+            }
+        } catch (error) {
+            console.error("Error jaringan saat upload file:", error);
+            alert("Terjadi kesalahan jaringan saat mengupload foto ke Cloudflare.");
+        }
+    }
+    
+    event.target.value = '';
+}
 
     
     async lupaPassword() {
