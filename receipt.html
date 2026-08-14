@@ -39,29 +39,29 @@
                 <div class="small opacity-75 mb-1">{{ ereceiptData.id }}</div>
 
                 <div class="mt-2 mb-2 d-flex justify-content-center gap-1 flex-wrap">
-    <!-- BADGE LUNAS / BELUM LUNAS -->
-    <span v-if="ereceiptData.amountReceived >= ereceiptData.total" 
-          class="badge bg-success text-white px-3 py-1 rounded-pill border border-white shadow-sm" style="letter-spacing: 1px;">
-        <i class="bi bi-check-circle-fill me-1"></i> LUNAS
-    </span>
-    <span v-else 
-          class="badge bg-warning text-dark px-3 py-1 rounded-pill border border-white shadow-sm" style="letter-spacing: 1px;">
-        <i class="bi bi-exclamation-circle-fill me-1"></i> BELUM LUNAS
-    </span>
+                    
+                    <!-- 🌟 PERBAIKAN: BADGE LUNAS / BELUM LUNAS MENGGUNAKAN LOGIKA totalDibayarReal() -->
+                    <span v-if="totalDibayarReal() >= ereceiptData.total" 
+                          class="badge bg-success text-white px-3 py-1 rounded-pill border border-white shadow-sm" style="letter-spacing: 1px;">
+                        <i class="bi bi-check-circle-fill me-1"></i> LUNAS
+                    </span>
+                    <span v-else 
+                          class="badge bg-warning text-dark px-3 py-1 rounded-pill border border-white shadow-sm" style="letter-spacing: 1px;">
+                        <i class="bi bi-exclamation-circle-fill me-1"></i> BELUM LUNAS
+                    </span>
 
-    <!-- 🌟 KODE BARU: BADGE LABEL COD -->
-    <span v-if="ereceiptData.orderType === 'delivery'" 
-          class="badge px-3 py-1 rounded-pill border border-white shadow-sm"
-          :class="String(ereceiptData.isCOD) === 'true' || ereceiptData.isCOD === true ? 'bg-danger text-white' : 'bg-info text-dark'"
-          style="letter-spacing: 1px;">
-        <i class="bi bi-truck me-1"></i> {{ (String(ereceiptData.isCOD) === 'true' || ereceiptData.isCOD === true) ? 'COD' : 'KIRIM' }}
-    </span>
-</div>
+                    <!-- BADGE LABEL COD -->
+                    <span v-if="ereceiptData.orderType === 'delivery'" 
+                          class="badge px-3 py-1 rounded-pill border border-white shadow-sm"
+                          :class="String(ereceiptData.isCOD) === 'true' || ereceiptData.isCOD === true ? 'bg-danger text-white' : 'bg-info text-dark'"
+                          style="letter-spacing: 1px;">
+                        <i class="bi bi-truck me-1"></i> {{ (String(ereceiptData.isCOD) === 'true' || ereceiptData.isCOD === true) ? 'COD' : 'KIRIM' }}
+                    </span>
+                </div>
             </div>
             
             <div class="card-body p-4">
                 
-                <!-- 🌟 PERBAIKAN 1: HEADER TOKO TETAP TAMPIL MESKIPUN APP SETTING DIBLOKIR -->
                 <div class="text-center mb-4 border-bottom pb-3">
                     <img v-if="appSettings && appSettings.receiptLogo" :src="appSettings.receiptLogo" style="max-width: 55%; max-height: 80px; margin-bottom: 10px; object-fit: contain;">
                     <div class="fw-bold fs-5 text-dark text-uppercase" style="letter-spacing: 0.5px;">
@@ -79,7 +79,7 @@
                 <div class="d-flex justify-content-between mb-1 small">
                     <span class="text-muted">Outlet :</span>
                     <span class="fw-bold text-dark">{{ ereceiptData.outletName || ereceiptData.outlet || ereceiptData.outletId || 'Pusat' }}</span>
-                </div>              
+                </div>               
                 <div class="d-flex justify-content-between mb-1 small">
                     <span class="text-muted">Kasir :</span>
                     <span class="fw-bold text-dark">{{ ereceiptData.cashierName || ereceiptData.userName || ereceiptData.pic || 'Admin / Sistem' }}</span>
@@ -143,13 +143,11 @@
         <span>Rp {{ formatNumber(ereceiptData.surchargeFee) }}</span>
     </div>
 
-    <!-- 🌟 KODE BARU: TAMPILAN ONGKIR & KURIR -->
     <div v-if="(ereceiptData.shippingCost || 0) > 0" class="d-flex justify-content-between mb-2 text-info fw-bold">
         <span><i class="bi bi-truck me-1"></i>Ongkir ({{ ereceiptData.courier || '-' }}) :</span>
         <span>+ Rp {{ formatNumber(ereceiptData.shippingCost) }}</span>
     </div>
     
-    <!-- 🌟 KODE BARU: TAMPILAN STATUS PENGIRIMAN (COD/NON-COD) -->
     <div v-if="ereceiptData.orderType === 'delivery'" class="d-flex justify-content-between mb-2">
         <span class="text-muted">Status Pengiriman :</span>
         <span class="fw-bold" :class="String(ereceiptData.isCOD) === 'true' || ereceiptData.isCOD === true ? 'text-danger' : 'text-success'">
@@ -161,7 +159,6 @@
 
     <div class="d-flex justify-content-between fw-bold fs-6 mb-3 text-dark">
         <span>TOTAL AKHIR :</span>
-        <!-- PERBAIKAN: Menghapus tambahan surcharge manual karena total dari database sudah mencakup semuanya -->
         <span class="text-success fs-5">Rp {{ formatNumber(ereceiptData.total) }}</span>
     </div>
 
@@ -175,26 +172,24 @@
                 <div>
                     <span class="badge bg-success" style="font-size: 0.75rem;"><i class="bi bi-wallet2 me-1"></i>{{ split.method }}</span>
                 </div>
-                <!-- 🌟 DIPERBAIKI: Membaca cashReceived -->
                 <span class="fw-bold text-dark">Rp {{ formatNumber(split.cashReceived || split.amount) }}</span>
             </div>
             
+            <!-- 🌟 PERBAIKAN: Menggunakan fungsi totalDibayarReal() agar aman dari metode HUTANG -->
             <div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary small">
                 <span class="text-muted">Total Dibayar :</span>
-                <!-- 🌟 DIPERBAIKI: Total dinamis dari cashReceived -->
                 <span class="fw-bold text-success">
-                    Rp {{ formatNumber(ereceiptData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}
+                    Rp {{ formatNumber(totalDibayarReal()) }}
                 </span>
             </div>
             
-            <!-- 🌟 DIPERBAIKI: Logika Kembalian / Sisa Hutang / Lunas secara Dinamis -->
-            <div v-if="ereceiptData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) > ereceiptData.total" class="d-flex justify-content-between mt-1 text-success fw-bold small">
+            <div v-if="totalDibayarReal() > ereceiptData.total" class="d-flex justify-content-between mt-1 text-success fw-bold small">
                 <span>Kembalian :</span>
-                <span>Rp {{ formatNumber(ereceiptData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0) - ereceiptData.total) }}</span>
+                <span>Rp {{ formatNumber(totalDibayarReal() - ereceiptData.total) }}</span>
             </div>
-            <div v-else-if="(ereceiptData.total - ereceiptData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) > 0" class="d-flex justify-content-between mt-1 text-danger fw-bold small">
+            <div v-else-if="(ereceiptData.total - totalDibayarReal()) > 0" class="d-flex justify-content-between mt-1 text-danger fw-bold small">
                 <span>Sisa Hutang :</span>
-                <span>Rp {{ formatNumber(ereceiptData.total - ereceiptData.splitPayments.reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0)) }}</span>
+                <span>Rp {{ formatNumber(ereceiptData.total - totalDibayarReal()) }}</span>
             </div>
             <div v-else class="d-flex justify-content-between mt-1 text-success fw-bold small">
                 <span>Status Pembayaran :</span>
@@ -220,18 +215,19 @@
                 <span class="text-end fw-semibold text-dark">{{ ereceiptData.paymentNote }}</span>
             </div>
             
+            <!-- 🌟 PERBAIKAN: Menggunakan fungsi totalDibayarReal() agar aman dari metode HUTANG -->
             <div class="d-flex justify-content-between mb-1">
                 <span class="text-muted">Total Dibayar :</span>
-                <span class="fw-bold text-success">Rp {{ formatNumber(ereceiptData.amountReceived) }}</span>
+                <span class="fw-bold text-success">Rp {{ formatNumber(totalDibayarReal()) }}</span>
             </div>
             
-            <div v-if="ereceiptData.amountReceived >= ereceiptData.total" class="d-flex justify-content-between mt-2 pt-2 border-top">
+            <div v-if="totalDibayarReal() >= ereceiptData.total" class="d-flex justify-content-between mt-2 pt-2 border-top">
                 <span class="text-muted">Kembalian :</span>
-                <span class="fw-bold text-dark">Rp {{ formatNumber(ereceiptData.amountReceived - ereceiptData.total) }}</span>
+                <span class="fw-bold text-dark">Rp {{ formatNumber(totalDibayarReal() - ereceiptData.total) }}</span>
             </div>
             <div v-else class="d-flex justify-content-between mt-2 pt-2 border-top border-danger text-danger fw-bold">
                 <span>Sisa Hutang :</span>
-                <span>Rp {{ formatNumber(ereceiptData.total - ereceiptData.amountReceived) }}</span>
+                <span>Rp {{ formatNumber(ereceiptData.total - totalDibayarReal()) }}</span>
             </div>
         </template>
     </div>
@@ -298,7 +294,6 @@
     </div>
 </div>
 
-                <!-- 🌟 PERBAIKAN 2: FOOTER, T&C, DAN SOSMED TAHAN BANTING -->
                 <div v-if="appSettings && appSettings.termsAndConditions" class="mt-4 pt-3 border-top" style="font-size: 0.8em; text-align: left;">
                     <div class="fw-bold text-dark text-uppercase mb-1">Syarat & Ketentuan :</div>
                     <div class="text-muted" style="white-space: pre-wrap; line-height: 1.4;">{{ appSettings.termsAndConditions }}</div>
@@ -439,8 +434,6 @@
                 ereceiptData: null,
                 ereceiptRating: 0,
                 ereceiptReview: '',
-                // 🌟 PERBAIKAN 3: appSettings diubah dari null menjadi Object kosong {}
-                // Tujuannya agar logika fallback v-if di HTML tidak rusak meskipun koneksi bermasalah
                 appSettings: {}, 
                 showQr: false, 
                 customerHistory: [],
@@ -473,9 +466,23 @@
         
         methods: {
             formatNumber(num) {
-    // Math.round menyingkirkan angka desimal di belakang koma
-    return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(Math.round(Number(num) || 0));
-},
+                return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(Math.round(Number(num) || 0));
+            },
+            
+            // 🌟 FUNGSI BARU UNTUK MENGHITUNG TOTAL DIBAYAR (KECUALI HUTANG)
+            totalDibayarReal() {
+                if (!this.ereceiptData) return 0;
+                
+                // Jika pembayaran SPLIT, filter metode yang mengandung kata "HUTANG"
+                if (this.ereceiptData.splitPayments && this.ereceiptData.splitPayments.length > 0) {
+                    return this.ereceiptData.splitPayments
+                        .filter(p => !String(p.method).toUpperCase().includes('HUTANG'))
+                        .reduce((sum, p) => sum + Number(p.cashReceived || p.amount), 0);
+                }
+                
+                // Jika BUKAN SPLIT, pastikan bukan HUTANG
+                return String(this.ereceiptData.paymentMethod || '').toUpperCase().includes('HUTANG') ? 0 : Number(this.ereceiptData.amountReceived || 0);
+            },
 
             async fetchReceipt(invId) {
                 try {
@@ -488,7 +495,6 @@
                             docId: docSnap.id
                         };
                         
-                        // 🌟 PERBAIKAN 4: Paksa panggil setting meskipun field companyId di nota ternyata kosong
                         await this.fetchStoreSettings(this.ereceiptData.companyId);
 
                         const savedOutletId = this.ereceiptData.outlet || this.ereceiptData.outletId;
@@ -507,14 +513,12 @@
                 }
             }, 
 
-            // 🌟 PERBAIKAN 5: Logic Fallback Pencarian Tabel Setting
             async fetchStoreSettings(companyId) {
                 try {
                     let q;
                     if (companyId) {
                         q = query(collection(db, "settings"), where("companyId", "==", companyId));
                     } else {
-                        // Jika companyId kosong di nota, ambil setting manapun yang tersedia di tabel
                         q = query(collection(db, "settings"));
                     }
                     
@@ -523,7 +527,6 @@
                     if (!querySnapshot.empty) {
                         this.appSettings = querySnapshot.docs[0].data();
                     } else {
-                        // Jika query gagal (kasus developer menggunakan companyId sbg id dokumen, bkn field)
                         if (companyId) {
                             const docRef = doc(db, "settings", companyId);
                             const docSnap = await getDoc(docRef);
@@ -533,12 +536,11 @@
                         }
                     }
                     
-                    // Mencegah nilai kembali menjadi null 
                     if (!this.appSettings) this.appSettings = {};
 
                 } catch (error) {
                     console.error("Gagal menarik pengaturan (Biasanya dilarang Firebase Security Rules):", error);
-                    this.appSettings = {}; // Biarkan object kosong agar header & footer cadangan bisa merender
+                    this.appSettings = {}; 
                 }
             },
 
